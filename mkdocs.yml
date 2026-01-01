@@ -1,0 +1,84 @@
+site_name: Haikan
+copyright: |-
+  Copyright &copy; 2022-2023 Volvo Car Corporation //
+  Copyright &copy; 2024-2025 Zenseact AB
+  Copyright &copy; 2026 Oleksandr Khorolskyi
+repo_url: https://github.com/Horolsky/haikan
+# docs_dir: '.'
+
+nav:
+  - Home: index.md
+  - User Guide: guide.md
+  - Reference: reference.md
+
+theme:
+  favicon: images/logo.svg
+  logo: images/logo.svg
+  name: material
+  language: en
+  features:
+    - content.code.select
+    - content.code.copy
+    - content.code.annotate
+    - navigation.footer
+  icon:
+    repo: fontawesome/brands/github
+  palette:
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep purple
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep purple
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+extra:
+  version:
+    provider: mike
+
+plugins:
+  - search
+  - tags
+  - plantuml: # mkdocs_puml
+      puml_url: https://www.plantuml.com/plantuml/
+      puml_keyword: plantuml
+  - mike:
+      # These fields are all optional; the defaults are as below...
+      alias_type: symlink
+      redirect_template: null
+      deploy_prefix: ''
+      canonical_version: latest
+      version_selector: true
+      css_dir: css
+      javascript_dir: js
+
+markdown_extensions:
+  - attr_list
+  - md_in_html
+  - admonition
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+extra_javascript:
+  - docs/javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js

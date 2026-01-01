@@ -1,8 +1,6 @@
 Haikan
 ================
 
-[![Test Linux](https://github.com/horolsky/haikan/actions/workflows/test-linux.yml/badge.svg)](https://github.com/horolsky/haikan/actions/workflows/test-linux.yml)
-
 A tiny, embeddable expression language for declarative, inspectable data transformation.
 
 
