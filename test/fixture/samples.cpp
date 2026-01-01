@@ -1,0 +1,812 @@
+#include "samples.hpp"
+#include "haikan/logger.hpp"
+#include "haikan/logger.hpp"
+#include "haikan/impl/tag_invoke_complex.hpp"
+
+#include "haikan/decorators/precise_real.hpp"
+#include "haikan/decorators/underlying.hpp"
+
+using namespace haikan;
+using namespace haikan::decorators;
+using haikan::impl::Keyword;
+using haikan::impl::type;
+
+using L = boost::json::array;
+
+std::ostream& operator<<(std::ostream& os, TestEvalSample const& sample)
+{
+    return os << "{expr: " << sample.expr.prettify()
+             << ", x: " << sample.x.prettify()
+             << ", expected: " << sample.expected.prettify() << "}";
+}
+
+
+std::vector<TestEvalSample> const& TestSamples()
+{
+static std::vector<TestEvalSample> const samples
+{ // expr                       , x                     , expected
+    // identity
+    {Id                         , 42                    , 42                    },
+    {Id                         , ""                    , ""                    },
+    {Id                         , nullptr               , nullptr               },
+    {Id                         , {1,2,3}               , {1,2,3}               },
+
+    /// Refer
+    {"$x"                       , 42                    , 42                    },
+    {"$x"|Mul("$x")             , 3                     , 9                     },
+    {Q(3)|"$x"|Mul("$x")        , {}                    , 9                  },
+
+
+
+    {Default(42)                , nullptr               , 42                    },
+    {Default(42)                , ""                    , ""                    },
+    {Default(42)                , {1,2,3}               , {1,2,3}               },
+
+    { 2 | Div(0) | IsErr        , nullptr               , true                  },
+    { 2 | Div(0) | Default(42)  , nullptr               , 42                    },
+
+
+    // boolean cast
+    {Bool                       , true                  , true                  },
+    {Bool                       , 42                    , true                  },
+    {Bool                       , 42.1                  , true                  },
+    {Bool                       , "false"               , true                  },
+    {Bool                       , {1,2}                 , true                  },
+    {Bool                       , false                 , false                 },
+    {Bool                       , 0                     , false                 },
+    {Bool                       , 0.0                   , false                 },
+    {Bool                       , ""                    , false                 },
+    {Bool                       , L()                   , false                 },
+
+    {Nil                       , ""                    , true                   },
+    {Nil                       , L()                   , true                   },
+    {Nil                       , "false"               , false                  },
+    {Nil                       , {1,2  }               , false                  },
+
+    // basic constants
+    {True                       , {}                    , true                  },
+    {False                      , {}                    , false                 },
+    {Null                       , {}                    , nullptr               },
+    {Noop                       , {}                    , true                  },
+    {Noop                       , true                  , true                  },
+    {Noop                       , false                 , true                  },
+    {Noop                       , "foo"                 , true                  },
+
+    // math constants
+    { Pi                        , {}                    , *Pi                   },
+    { E                         , {}                    , *E                    },
+    { Inf                       , {}                    , *Inf                  },
+    { Eps                       , {}                    , *Eps                  },
+
+    { Thread | Nil | Not        , {}                    , true                  },
+
+    // random
+    { Rand | Ge(0)              , {}                    , true                  },
+    { Rand | Lt(1)              , {}                    , true                  },
+    { 16 | Sequence(RandInt(1)) | SetEq({0,1}), {}      , true                  },
+    {  3 | Sequence(RandInt(9)) , {}                    , {5,5,0} /* seed = 42*/},
+    { RandInt(0) | IsErr        , {}                    , true                  },
+    { RandInt(1, 1) | IsErr     , {}                    , true                  },
+    { RandInt(-3) | IsErr       , {}                    , true                  },
+    { 999 | Sequence(Rand) | All(
+            Size|Eq(999),
+            Each(Ge(0)),
+            Each(Lt(1)),
+            Avg|Near({0.5, 0.1})
+        )                       , {}                    , true                   },
+
+
+    // comparison
+    {Eq(42)                     , 42                    , true                  },
+    {Eq(42)                     , 13                    , false                 },
+    {Eq                         , {42, 42}              , true                  },
+    {Eq                         , {13, 42}              , false                 },
+    {Ne(42)                     , 42                    , false                 },
+    {Ne(42)                     , 13                    , true                  },
+    {Ne                         , {42, 42}              , false                 },
+    {Ne                         , {13, 42}              , true                  },
+
+    {Q(42)                      , 13                    , 42                    },
+    {Q                          , 13                    , nullptr               },
+    {Q(42)                      , nullptr               , 42                    },
+    {Q(42)                      , nullptr               , 42                    },
+
+    {Approx(42)                 , 42                    , true                  },
+    {Approx(42)                 , 42.0 + 1e-09          , true                  },
+    {Approx({42.0, 1e-09})      , 42                    , true                  },
+    {Approx                     , {42, 42.0 + 1e-09}    , true                  },
+    {Approx(42.001)             , 42                    , false                 },
+
+    // relative tolerance
+    {Approx({3.14, 0.001})      , *Pi                   , true                  },
+    {Approx({2.71, 0.005})      , *E                    , true                  },
+    // absolute tolerance
+    {Approx({3.14, 0, 0.01})    , *Pi                   , true                  },
+    {Approx({2.71, 0, 0.01})    , *E                    , true                  },
+    {Approx                     , {*Pi, {3.14, 0.001}}  , true                  },
+    {Approx                     , {*Pi, {3.15, 0.001}}  , false                 },
+    // range check
+    {All(Gt(3.14), Lt(3.15))    , *Pi                   , true                  },
+
+    {Round                      ,  1.49999               ,  1                   },
+    {Round                      ,  1.5                   ,  2                   },
+    {Round                      ,  0.49999               ,  0                   },
+    {Round                      , -0.49999               ,  0                   },
+    {Round                      , -0.5                   , -1                   },
+    {Round                      , -1.49999               , -1                   },
+    {Round                      , -1.5                   , -2                   },
+
+    {Mul(2)|Round|Div(2)        ,  1.49999               ,  1.5                 },
+
+    // order relation
+    {Lt(42)                     , 41                    , true                  },
+    {Lt(42)                     , 42                    , false                 },
+    {Lt                         , {41, 42}              , true                  },
+    {Lt                         , {42, 42}              , false                 },
+    {Gt(42)                     , 43                    , true                  },
+    {Gt(42)                     , 42                    , false                 },
+    {Gt                         , {43, 42}              , true                  },
+    {Gt                         , {42, 42}              , false                 },
+    {Le(42)                     , 41                    , true                  },
+    {Le(42)                     , 42                    , true                  },
+    {Le(42)                     , 43                    , false                 },
+    {Le                         , {41, 42}              , true                  },
+    {Le                         , {42, 42}              , true                  },
+    {Le                         , {43, 42}              , false                 },
+    {Ge(42)                     , 43                    , true                  },
+    {Ge(42)                     , 42                    , true                  },
+    {Ge(42)                     , 41                    , false                 },
+    {Ge                         , {43, 42}              , true                  },
+    {Ge                         , {42, 42}              , true                  },
+    {Ge                         , {41, 42}              , false                 },
+
+    // lexicographical_compare
+    {Gt("aaaa")                 , "bbbb"                , true                  },
+    {Gt("aa")                   , "aaaa"                , true                  },
+    {Gt({1,1,1})                , {1,2,3}               , true                  },
+
+    // set relation
+    {        Subset({1,2,3})    , {1,3}                 , true                  },
+    {        Subset({1,3}  )    , {1,2,3}               , false                 },
+    {        Subset({1,2}  )    , {1,2}                 , true                  },
+    {      Superset({1,3}  )    , {1,2,3}               , true                  },
+    {      Superset({1,2,3})    , {1,3}                 , false                 },
+    {      Superset({1,2})      , {1,2}                 , true                  },
+    {  PSubset({1,2,3})         , {1,3}                 , true                  },
+    {  PSubset({1,3}  )         , {1,2,3}               , false                 },
+    {  PSubset({1,2}  )         , {1,2}                 , false                 },
+    {PSuperset({1,3}  )         , {1,2,3}               , true                  },
+    {PSuperset({1,2,3})         , {1,3}                 , false                 },
+    {PSuperset({1,2})           , {1,2}                 , false                 },
+
+    {        Subset, {{1,3}     , {1,2,3}}              , true                  },
+    {      Superset, {{1,2,3}   , {1,3}  }              , true                  },
+    {  PSubset, {{1,3}          , {1,2,3}}              , true                  },
+    {PSuperset, {{1,2,3}        , {1,3}  }              , true                  },
+
+    {        Subset({1})        , L{}                   , true                  },
+    {      Superset({1})        , L{}                   , false                 },
+    {  PSubset({1})             , L{}                   , true                  },
+    {PSuperset({1})             , L{}                   , false                 },
+
+    {        Subset(L{})        , L{1}                  , false                 },
+    {      Superset(L{})        , L{1}                  , true                  },
+    {  PSubset(L{})             , L{1}                  , false                 },
+    {PSuperset(L{})             , L{1}                  , true                  },
+
+    {        Subset(L{})        , L{}                   , true                  },
+    {      Superset(L{})        , L{}                   , true                  },
+    {  PSubset(L{})             , L{}                   , false                 },
+    {PSuperset(L{})             , L{}                   , false                 },
+
+
+    {SetEq({1,2,3})             , {1,2,3}               , true                  },
+    {SetEq({1,2,3})             , {1,3,2}               , true                  },
+    {SetEq({1,2,3})             , {1,2}                 , false                 },
+
+    {Uniques                    , {1,2,2,4,3,4}         , {3,4,2,1}             },
+
+    {Union|Sort                 , {{1,2,3},{2,3,4}}     , {1,2,3,4}             },
+    {Intersect|Sort             , {{1,2,3},{2,3,4}}     , {2,3}                 },
+    {Diff                       , {{1,2,3},{2,3,4}}     , L{1}                  },
+    {Reverse|Diff               , {{1,2,3},{2,3,4}}     , L{4}                  },
+    {Union({2,3,4})|Sort        , L{1,2,3}              , {1,2,3,4}             },
+    {Intersect({2,3,4})|Sort    , L{1,2,3}              , {2,3}                 },
+    {Diff({2,3,4})              , L{1,2,3}              , L{1}                  },
+    {Flip(Diff({2,3,4}))        , L{1,2,3}              , L{4}                  },
+    {   ~(Diff({2,3,4}))        , L{1,2,3}              , L{4}                  },
+
+    {Union                      , {L{},L{}}             , L{}                   },
+    {Intersect                  , {L{},L{}}             , L{}                   },
+    {Diff                       , {L{},L{}}             , L{}                   },
+    {Reverse|Diff               , {L{},L{}}             , L{}                   },
+
+    // element in set
+    {In({1, 2})                 , 2                     , true                  },
+    {In({1, 2})                 , 3                     , false                 },
+    {NotIn({1, 2})              , 3                     , true                  },
+    {NotIn({1, 2})              , 2                     , false                 },
+    {In                         , {2, {1, 2}}           , true                  },
+    {In                         , {3, {1, 2}}           , false                 },
+    {NotIn                      , {3, {1, 2}}           , true                  },
+    {NotIn                      , {2, {1, 2}}           , false                 },
+
+    {Ni(2)                      , {1, 2}                , true                  },
+    {Ni(3)                      , {1, 2}                , false                 },
+    {NotNi(3)                   , {1, 2}                , true                  },
+    {NotNi(2)                   , {1, 2}                , false                 },
+    {Ni                         , {{1, 2}, 2}           , true                  },
+    {Ni                         , {{1, 2}, 3}           , false                 },
+    {NotNi                      , {{1, 2}, 3}           , true                  },
+    {NotNi                      , {{1, 2}, 2}           , false                 },
+
+    {Size                       , {1,2,2,2}             , 4                     },
+    {Card                       , {1,2,2,2}             , 2                     },
+    {Card                       , {1,2,2,4,3,4}         , 4                     },
+    {Sort                       , {1,2}                 , {1,2}                 },
+    {Sort                       , {2,1}                 , {1,2}                 },
+    {Sort                       , {4,1,3,1,2,1}         , {1,1,1,2,3,4}         },
+    {Sort|Reverse               , {4,1,3,1,2,1}         , {4,3,2,1,1,1}         },
+    {Sort(Neg)                  , {4,1,3,1,2,1}         , {4,3,2,1,1,1}         },
+    {Sort                       , {{1,3},{2,1},{3,2}}   , {{1,3},{2,1},{3,2}}   },
+    {Sort                       , {{3,2},{2,1},{1,3}}   , {{1,3},{2,1},{3,2}}   },
+    {Sort(At(1))                , {{1,3},{2,1},{3,2}}   , {{2,1},{3,2},{1,3}}   },
+    {Sort(At(1))                , {{3,2},{2,1},{1,3}}   , {{2,1},{3,2},{1,3}}   },
+
+    {Min                        , {1,2,2,4,3,4,-1}      , -1                    },
+    {Max                        , {1,2,2,4,3,4,-1}      , 4                     },
+    {Argmin                     , {1,2,2,4,3,4,-1}      , 6                     },
+    {Argmax                     , {1,2,2,4,3,4,-1}      , 3                     },
+    {Min                        , {{3, 2},{2, 1},{1, 3}}, {1,3}                 },
+    {Max                        , {{3, 2},{2, 1},{1, 3}}, {3,2}                 },
+    {Min(At(1))                 , {{3, 2},{2, 1},{1, 3}}, {2,1}                 },
+    {Max(At(1))                 , {{3, 2},{2, 1},{1, 3}}, {1,3}                 },
+    {Argmin(At(1))              , {{3, 2},{2, 1},{1, 3}}, 1                     },
+    {Argmax(At(1))              , {{3, 2},{2, 1},{1, 3}}, 2                     },
+    {Min                        , L{}                   , nullptr               },
+    {Max                        , L{}                   , nullptr               },
+    {Argmin                     , L{}                   , nullptr               },
+    {Argmax                     , L{}                   , nullptr               },
+
+    {Sort                       , L{}                   , L{}                   },
+    {Reverse                    , L{}                   , L{}                   },
+
+    {Slide(3)                   , {1,2,3,4,5}           , {{1,2,3},{2,3,4},{3,4,5}}},
+    {Slide(3)|Map(Sum)          , {1,2,3,4,5}           , {6      , 9      , 12}},
+    {Slide(3)|Map(Prod)         , {1,2,3,4,5}           , {6      , 24     , 60}},
+    {Slide(3)|Map(Avg)          , {1,2,3,4,5}           , {2      , 3      ,  4}},
+    {Slide(42)                  , {1,2,3}               , L{}                   },
+    {Slide(42)                  , L{}                   , L{}                   },
+
+    {Slide(-1) | Kwrd           , L{}                   , "Err"                 },
+    {Try(Slide(-1))             , L{}                   , nullptr               },
+    {42 | Try(Div(0)) | D(13)   , {}                    , 13                    },
+
+
+    {Fork(Size|4, Size, Card)   , {2,2,3,3}             , {true, 4, 2}          },
+    {(Size|4) & Size & Card     , {2,2,3,3}             , {{true, 4}, 2}        },
+    {At(0) & At(2)              , {1,2,3}               , {1,3}                 },
+    {Reduce(Add) & Size | Div   , {2,2,3,3}             , 2.5                   },
+
+
+    {Stride(2)                  , {1,2,3,4,5,6}         , {{1,2},{3,4},{5,6}}   },
+    {Stride(3)                  , {1,2,3,4,5}           , L{{1,2,3}}            },
+    {Stride(42)                 , {1,2,3}               , L{}                   },
+    {Stride(42)                 , L{}                   , L{}                   },
+
+    {Chunks(2)                  , {1,2,3,4,5,6}         , {{1,2},{3,4},{5,6}}   },
+    {Chunks(3)                  , {1,2,3,4,5}           , {{1,2,3},{4,5}}       },
+
+    {Arange                     , 4                     , {0,1,2,3}             },
+    {Arange                     , L{4}                  , {0,1,2,3}             },
+    {4|Arange                   , nullptr               , {0,1,2,3}             },
+    {Arange                     , "2:6"                 , {2,3,4,5}             },
+    {"2:6"   |Arange            , nullptr               , {2,3,4,5}             },
+    {"1:9:2" |Arange            , nullptr               , {1,3,5,7}             },
+    {"5:1:-1"|Arange            , nullptr               , {5,4,3,2}             },
+
+    {L{2,6}   |Arange           , nullptr               , {2,3,4,5}             },
+    {L{1,9,2} |Arange           , nullptr               , {1,3,5,7}             },
+    {L{5,1,-1}|Arange           , nullptr               , {5,4,3,2}             },
+
+    {0        | Arange          , nullptr               , L{}                   },
+    {"1:9:-1" | Arange          , nullptr               , L{}                   },
+
+
+    {Items                      , {{"a", 1}, {"b", 2}}  , {L{"a", 1}, L{"b", 2}}},
+    {Keys                       , {{"a", 1}, {"b", 2}}  , {"a", "b"}            },
+    {Values                     , {{"a", 1}, {"b", 2}}  , {1, 2}                },
+    {Enumerate                  , {1,2,3}               , {{0,1},{1,2},{2,3}}   },
+    {Flatten                    , {{1,2},{3,4}}         , {1,2,3,4}             },
+    {ToList                     , 42                    , L{42}                 },
+
+
+    // composition
+    {Pipe(Size, Eq(2))          , {1,2}                 , true                  },
+    {Size|Eq(2)                 , {1,2}                 , true                  },
+    {Size|2                     , {1,2}                 , true                  },
+
+    {42 | (Size, Card)           , {}                  , {Size, Card}          },
+
+    // arithmetic
+    {Neg                        , 42                    , -42                   },
+    {Neg                        , -42                   ,  42                   },
+
+    {Sign                       , 42                    ,  1                    },
+    {Sign                       , -42                   , -1                    },
+
+    {Abs                        , 42                    ,  42                   },
+    {Abs                        , -42                   ,  42                   },
+
+    {Ceil                       , 42.1                  ,  43                   },
+    {Ceil                       , 42.9                  ,  43                   },
+    {Ceil                       , -42.1                 , -42                   },
+
+    {Floor                      , 42.1                  ,  42                   },
+    {Floor                      , 42.9                  ,  42                   },
+    {Floor                      , -42.1                 , -43                   },
+
+    {BitNot                     , 42ul                  , ~42ul                 },
+    {BitAnd                     , {1ul, 2ul}            , 2ul & 1ul             },
+    {BitOr                      , {1ul, 2ul}            , 2ul | 1ul             },
+    {BitXor                     , {1ul, 2ul}            , 2ul xor 1ul           },
+
+    {Lshift                     , {1, 1}                , 2                     },
+    {Rshift                     , {2, 1}                , 1                     },
+
+    {Add                        , {3,  2}               , 5                     },
+    {Add                        , {.5, 1}               , 1.5                   },
+    {Add                        , {.5, 1.5}             , 2                     },
+
+    {Add                        , {3, -2}               , 1                     },
+    {Add(2)                     , 3                     , 5                     },
+    {Add(-2)                    , 3                     , 1                     },
+
+    {Sub                        , {3,  2}               , 1                     },
+    {Sub                        , {3, -2}               , 5                     },
+    {Sub(2)                     , 3                     , 1                     },
+    {Sub(-2)                    , 3                     , 5                     },
+
+    // operand flip
+    {~Sub                       , {3,  2}               , -1                    },
+    {~Sub                       , {3, -2}               , -5                    },
+    {~Sub(2)                    , 3                     , -1                    },
+    {~Sub(-2)                   , 3                     , -5                    },
+
+    {Mul                        , {3,  2}               ,  6                    },
+    {Mul                        , {3, -2}               , -6                    },
+    {Mul(2)                     , 3                     ,  6                    },
+    {Mul(-2)                    , 3                     , -6                    },
+    {Mul(0.5)                   , 3                     , 1.5                   },
+    {Mul(3)                     , 0.5                   , 1.5                   },
+
+    {Div                        , {3,  2}               ,  1.5                  },
+    {Div                        , {3, -2}               , -1.5                  },
+    {Div(2)                     , 3                     ,  1.5                  },
+    {Div(-2)                    , 3                     , -1.5                  },
+    {Reverse|Div                , {-2, 3}               , -1.5                  },
+
+    {Mod                        , {4,  2}               ,  0                    },
+    {Mod                        , {7,  4}               ,  3                    },
+    {Mod                        , {7, -4}               ,  3                    },
+    {Mod(2)                     , 4                     ,  0                    },
+    {Mod(-4)                    , 7                     ,  3                    },
+    {Mod(2)                     , 11                    ,  1                    },
+    {Mod(2)                     , 12                    ,  0                    },
+    {Mod(2)                     , 13                    ,  1                    },
+    {Mod(2)                     , 14                    ,  0                    },
+
+    {Quot                       , {4 ,  2}              ,  2                    },
+    {Quot                       , {17, -4}              , -4                    },
+    {Quot(2)                    , 11                    ,  5                    },
+    {Quot(-4)                   , 7                     , -1                    },
+
+    {Pow(2)                     , 3                     ,  9                    },
+    {Pow(2)                     , 4                     , 16                    },
+    {Pow(0.5)                   , 9                     ,  3                    },
+    {Pow(0.5)                   , 16                    ,  4                    },
+    {Pow(0.5)                   , 0.25                  ,  0.5                  },
+    {Flip(Pow(3))               , 2                     ,  9                    },
+    {Flip(Pow(9))               , 0.5                   ,  3                    },
+    {Pow                        , {3, 2}                ,  9                    },
+
+    {Log(2)                     , 8                     , 3                     },
+    {Log(2)                     , 16                    , 4                     },
+    {Log(0.5)                   , 0.125                 , 3                     },
+    {Log(0.5)                   , 0.25                  , 2                     },
+    {Log(0.5)                   , 0.5                   , 1                     },
+    {Log(E.eval())              , E.eval()              , 1                     },
+    {Flip(Log(16   ))           , 2                     , 4                     },
+    {Flip(Log(0.125))           , 0.5                   , 3                     },
+    {Log                        , {8, 2}                , 3                     },
+
+    {Sqrt                       , 9                     , 3                     },
+    {Sqrt                       , 16                    , 4                     },
+    {Sqrt                       , 0.25                  , 0.5                   },
+
+    {Sin                        , 0                     , 0                     },
+    {Cos                        , 0                     , 1                     },
+    {Tan                        , 0                     , 0                     },
+    {Asin                       , 0                     , 0                     },
+    {Acos                       , 1                     , 0                     },
+    {Atan                       , 0                     , 0                     },
+    {Sinh                       , 0                     , 0                     },
+    {Cosh                       , 0                     , 1                     },
+    {Tanh                       , 0                     , 0                     },
+    {Asinh                      , 0                     , 0                     },
+    {Acosh                      , 1                     , 0                     },
+    {Atanh                      , 0                     , 0                     },
+
+    {Exp                        , 1.0/3                 , std::exp(1.0/3)       },
+    {Erf                        , 1.0/3                 , std::erf(1.0/3)       },
+    {Erfc                       , 1.0/3                 , std::erfc(1.0/3)      },
+    {Gamma                      , 1.0/3                 , std::tgamma(1.0/3)    },
+
+    // compose const and fn
+    {3|Add(2)                   , {}                    , 5                     },
+    {3|Pow(2)                   , {}                    , 9                     },
+
+    // eval operator yields literal which interpreted as Q(x)
+    {2|Add(-1)                  , {}                    , 1                     },
+
+    {Repeat(4)                  ,  1                    , {1,1,1,1}             },
+    {Repeat(3)                  , 42                    , {42,42,42}            },
+    {Repeat(3)|Repeat(2)        ,  1                    , {{1,1,1}, {1,1,1}}    },
+    {~Repeat(1)                 ,  4                    , {1,1,1,1}             },
+    {Sequence(1)                ,  4                    , {1,1,1,1}             },
+    {~Repeat(Pi)                ,  3                    , {*Pi,*Pi,*Pi}         },
+
+
+    {Reduce(Add)                , {2,2,2,2}             ,  8                    },
+    {Reduce(Add)                , {1,2,3,4}             , 10                    },
+    {Push(3)|Reduce(Add)        , {1,2,3,4}             , 13                    },
+    {Reduce(Add)                , L{42}                 , 42                    },
+    {Reduce(Add)                , L{}                   , nullptr               },
+    {Reduce                     , {{2,2,2,2}, Add}      , 8                     },
+    {(L{2,2,2,2}, Add) | Reduce , {}                    , 8                     },
+
+
+    // ternary and or
+    {And(42)|Or(13)             , true                  , 42                    },
+    {And(42)|Or(13)             , false                 , 13                    },
+    {And(42)|Or(13)|Not         , true                  , false                 },
+    {And(E)|Or(NaN)             , true                  , *E                    },
+
+    {"$X" | Eq(42) | And("X = 42") | Or("$X" | ~Fmt("X = %d")), 42, "X = 42"    },
+    {"$X" | Eq(42) | And("X = 42") | Or("$X" | ~Fmt("X = %d")), 13, "X = 13"    },
+
+    {                  If(42, "X = 42") | Else(~Fmt("X = %d")), 42, "X = 42"    },
+    {                  If(42, "X = 42") | Else(~Fmt("X = %d")), 13, "X = 13"    },
+
+    {Push("baz")|Reduce(And)    , {"foo", "bar"}        , "bar"                 },
+    {Push(""   )|Reduce(And)    , {"foo", "bar"}        , ""                    },
+    {Push(42   )|Reduce(Or )    , {"foo", "bar"}        , 42                    },
+    {Push(""   )|Reduce(Or )    , {"foo", "bar"}        , "foo"                 },
+
+    {Re("42")                   , "42"                  , true                  },
+    {Re("42")                   , "43"                  , false                 },
+    {Re("^.{3}$")               , "123"                 , true                  },
+    {Re("^.{3}$")               , "1234"                , false                 },
+    {Str|Re("\\[1,2\\]")        , {1,2}                 , true                  },
+    {Str|Re("42")               , 42                    , true                  },
+    {(At(0)|Str)&At(1)|Re       , {42, "42"}            , true                  },
+    {(At(0)|Str)&At(1)|Re       , {{1,2}, "\\[1,2\\]"}  , true                  },
+
+    {Capitalize                 , "foo"                 , "Foo"                 },
+    {UpperCase                  , "foo"                 , "FOO"                 },
+    {LowerCase                  , "FOO"                 , "foo"                 },
+
+    {At(0)                      , {1,2,3}               , 1                     },
+    {At(1)                      , {1,2,3}               , 2                     },
+    {At(2)                      , {1,2,3}               , 3                     },
+    {At(3)                      , {1,2,3}               , nullptr               },
+    {At("")                     , "foo"                 , "foo"                 },
+    {At(0)                      , 42                    , nullptr               },
+    {At("/a")                   , {{"a",42}, {"b",13}}  , 42                    },
+    {At("/b")                   , {{"a",42}, {"b",13}}  , 13                    },
+    {At({"/a", "/b"})           , {{"a",42}, {"b",13}}  , {42, 13}              },
+    {At({"/a", "/b"})           , {{"a",42}, {"b",13}}  , {42, 13}              },
+    {At({{"f","/a"},{"g","/b"}}), {{"a",42}, {"b",13}}  , {{"f",42},{"g",13}}   },
+    {At({{"$/b","/a"}})         , {{"a",42}, {"b",13}}  , {{"13",42}}           },
+    {At("::2")                  , {1,2,3,4,5,6,7,8}     , {1,3,5,7}             },
+    {At("4:")                   , {1,2,3,4,5,6,7,8}     , {5,6,7,8}             },
+    {At("::-1")                 , {1,2,3,4,5,6,7,8}     , {8,7,6,5,4,3,2,1}     },
+
+    {At                         , {{1,2,3}, 0}           , 1                    },
+
+    {At({"", ""})               , 42                     , {42, 42}             },
+    // single-element bracket init is always an array in Expression ctor
+    {At({""})                   , 42                     , L{42}                },
+
+    {First                      , {1,2,3}                , 1                    },
+    {Last                       , {1,2,3}                , 3                    },
+    {First                      , "abc"                  , 'a'                  },
+    {Last                       , "abc"                  , 'c'                  },
+
+
+    {Delete({"/lol"})           , 42                     , 42                   },
+    {Delete("")                 , 42                     , nullptr              },
+    {Delete({""})               , 42                     , nullptr              },
+    {Delete(2)                  , {1,2,3,4,5}            , {1,2,4,5}            },
+    {Delete(-2)                 , {1,2,3,4,5}            , {1,2,3,5}            },
+    {Delete("/0/1")             , {{1,2,3},4}            , {{1,3}, 4}           },
+    {Del({"/a/b/0", "/a/b/1"})  , {{"a", {{"b", {1,2,3,4}}}}} , {{"a", {{"b", {3,4}}}}}},
+    {Del({0, 1, 42, "/2"})      , {1,2,3,4,5}            , {4,5}                },
+
+    {Flip(At({1,2,3}))          , 0                      , 1                     },
+    {Lookup({1,2,3})            , 0                      , 1                     },
+    {Lookup({{"42", "lol"}})    , 42                     , nullptr               },
+    {Lookup({{"42", "lol"}})    , 0                      , {"42", "lol"}         },
+    {Lookup({{"42", "lol"}})    , -1                     , {"42", "lol"}         },
+    {Lookup({{"42", "lol"}})    , "42"                   , "lol"                 },
+    {Lookup({{"42", "lol"}})    , "/42"                  , "lol"                 },
+
+    {Lookup(Q({{1,2,3},{4,5,6}}) | At(1)), 1             , 5                     },
+    {At(False | And(0) | Or(-1)), {1,2,3,4,5}            , 5                     },
+
+    {At(0)                      , "foo"                 , 'f'                    },
+    {Lookup("foo")              , 0                     , 'f'                    },
+
+    {Lookup({1, Pi, 42})        , 1                     ,  Pi                    },
+    {Lookup({1, Pi, 42}) | Eval , 1                     , *Pi                    },
+
+    // Json Pointer
+    {Lookup({{"a", {{"b", {10,20}}}}}), "/a/b/1"        , 20                     },
+
+    // evaluation
+    {Lookup({{"pi", Pi}, {"e", E}})        , "pi"       ,  Pi                    },
+    {Lookup({{"pi", Pi}, {"e", E}}) | Eval , "pi"       , *Pi                    },
+
+    {"abcdefg" | At("-3::")     , {}                    , "efg"                  },
+    {"abcdefg" | At("-3:")      , {}                    , "efg"                  },
+    {"abcdefg" | At("-1:-3:-1") , {}                    , "gf"                   },
+    {"abcdefg" | At("1:3:1")    , {}                    , "bc"                   },
+    {"::2" | Lookup("abcdefg")  , {}                    , "aceg"                 },
+    {"1:42:3" | Lookup("")      , {}                    , ""                     },
+    {Lookup("abcdef")           , "1:-1"                , "bcde"                 },
+    {Lookup({0,1,2,3,4})        , "1:-1"                , {1,2,3}                },
+    {Lookup({0,1,2,3,4})        , "1:-2"                , {1,2}                  },
+
+
+    {Map(Add(10))               , {1,2,3,4}              , {11,12,13,14}        },
+    {Map(Mod(2))                , {1,2,3,4}              , {1,0,1,0}            },
+    {Map(Pow(0.5))              , {1,4,9,16}             , {1,2,3,4}            },
+    {Map(Flip(Pow(2)))          , {1,2,3,4}              , {2,4,8,16}           },
+    {Map(Flip(Pow(0.5)))        , {1,2,3,4}              , {.5,.25,.125,.0625}  },
+
+    {Filter(Mod(2)|0)           , {1,2,3,4}              , {2,4}                },
+    {Filter(Mod(2)|1)           , {1,2,3,4}              , {1,3}                },
+
+    {Recur( 0, Add(1) )         ,  4                     , 4                   },
+    {Recur(42, Add(-1))         , 41                     , 1                   },
+    {Recur(42, Sub(1) )         , 41                     , 1                   },
+    {Recur( 2, Pow(2) )         ,  4                     , 65536               },
+
+    {Unfold(0, Add(1))          , 4                      , {0,1,2,3,4}          },
+    {Unfold(1, Add(1))          , 4                      , {1,2,3,4,5}          },
+
+    {Recur( 4, Add(1))          ,  Ge(12)                , 11                   },
+    {Unfold(8, Add(1))          ,  Ge(12)                , {8,9,10,11}          },
+    {Q(Ge(12)) | Recur( 4, Add(1)),  {}                , 11                   },
+    {Q(Ge(12)) | Unfold(8, Add(1)),  {}                , {8,9,10,11}          },
+
+
+    {4|Recur(Q({0,0}), ((At(0)|Add(1)) & (At(1)|Sub(1)))),{}, {4, -4}          },
+
+
+    {All(Gt(5), Mod(2)|0)       , 6                      , true                 },
+    {All(Gt(5), Mod(2)|0)       , 7                      , false                },
+    {All(Gt(5), Mod(2)|0)       , 5                      , false                },
+
+    {Any(Gt(5), Mod(2)|0)       , 6                      , true                 },
+    {Any(Gt(5), Mod(2)|0)       , 7                      , true                 },
+    {Any(Gt(5), Mod(2)|0)       , 5                      , false                },
+
+    {Any(Eq(42),Eq(13))         , 42                     , true                 },
+    {Any(42,13)                 , 42                     , true                 },
+    {Any(42,13)                 , 13                     , true                 },
+    {Any(42,13)                 , 2                      , false                },
+
+    {Count(Mod(2)|0)            , {1,2,3,4,5}            , 2                    },
+    {Count(Mod(2)|1)            , {1,2,3,4,5}            , 3                    },
+
+    {Each(Gt(2))                , {1, 2, 3, 4}           , false                },
+    {Slide(2)|Each(Lt)          , {1, 2, 3, 4}           , true                 },
+    {Each(1|Add(1))             , {2, 2, 2, 2}           , true                 },
+
+    {Saturate(Eq(42), Mod(2)|0) , {2,4,8,42,1,2}         , true                 },
+    {Saturate(42, Mod(2)|0)     , {2,4,8,42,1,2}         , true                 },
+    {Saturate(42, Mod(2)|0)     , {2,4,8,41,2}           , false                },
+    {Saturate(42, Mod(2)|0)     , {2,4,8,42}             , false                },
+
+    {Concat("World!")           , "Hello, "              , "Hello, World!"      },
+    {Flip(Concat("Hello, "))    , "World!"               , "Hello, World!"      },
+    {Concat                     , L{"Hello, ", "World!"} , "Hello, World!"      },
+    {Concat({3,4})              , {1,2}                  , {1,2,3,4}            },
+
+    {Format()                   , "Hello, World!"        , "Hello, World!"      },
+    {Format("Hello", "World")   , "%s, %s!"              , "Hello, World!"      },
+    {Format(2,2,4)              , "%d + %d = %d"         , "2 + 2 = 4"          },
+    {Format({1,2,3})            , "list: %s"             , "list: [1,2,3]"      },
+    {Format                     , {"Hello, %s!", L{"World"}}, "Hello, World!"   },
+    {"%s"|Format(Pi) | Parse    , {}                     , *Pi                  },
+    {"%s"|Format(Q(Mod(3) | Eq({1,2}))), {}              , "Mod(3) | Eq([1,2])" },
+
+
+    {Parse                      , "[1,2,3]"              , {1,2,3}              },
+    {Str                        , {1,2,3}                , "[1,2,3]"            },
+
+    {Transp                     , L{}                    , L{}                  },
+    {Transp                     , L{{1,2}}               , {L{1},L{2}}          },
+    {Transp                     , {{1,2},{3,4},{5,6}}    , {{1,3,5},{2,4,6}}    },
+    {Transp                     , {{1,2},L{"a", "b"}}    , {{1, "a"},{2, "b"}}  },
+
+    {Cartesian                  , L{}                   , L{}                   },
+    {Cartesian                  , L{{1,2}}              , {L{1},L{2}}           },
+
+    {Cartesian                  , {{1,2},L{"a", "b"}}   ,
+                                                            {{1, "a"},
+                                                             {1, "b"},
+                                                             {2, "a"},
+                                                             {2, "b"}}          },
+
+    {Keyword::Noop              , nullptr               , "Noop"                },
+    {Noop                       , nullptr               , true                  },
+
+    // Binary
+    {Str                        , Cat({Keyword::At})    , R"(Cat(["At"]))"      },
+    // {Str                        , Cat({42, Keyword::At, precise<float>()})
+                                // , R"(Cat([42,"At","0x0p+0"]))"                  },
+    // HiOrd
+    {Str                        , Max({Keyword::At})    , R"(Max(["At"]))"      },
+
+    {2|Add(1|Add(1))            , {}                    , 4                     },
+
+    {Pi|Cos                     , {}                    , -1                    },
+    {Pi|Div(2)|Sin              , {}                    , 1                     },
+    {Pi|Div(6)|Sin|Approx(0.5)  , {}                    , true                  },
+    {Pi|Div(4)|Tan|Approx(1)    , {}                    , true                  },
+
+    {42.5  | Try(Cast(type<int>))        , {}            , 42                    },
+    {42.5  | Try(Cast(type<std::string>)), {}            , nullptr               },
+    {0.2   | Cast(type<float>)           , {}            , 0.2f                  },
+    {0.1   | Cast(type<float>)           , {}            , 0.1f                  },
+    {~0ULL | Cast(type<std::uint8_t>)    , {}            , 255                   },
+
+    {int(Foo::Bar) | Cast(type<Foo>), {}         , "Bar"               },
+    {int(Foo::Baz) | Cast(type<Foo>), {}         , "Baz"               },
+    // Foo type is lost on serialization to string
+    {Foo::Bar | Cast(type<int>) | IsErr, {}         , true             },
+    {Foo::Bar | Cast(Underlying<Foo>)  , {}         , int(Foo::Bar)        },
+    {Foo::Baz | Cast(Underlying<Foo>)  , {}         , int(Foo::Baz)        },
+
+    { 0.1 | Cast(Precise<double>)                   , {}         , 0.1     },
+    {"0x1.999999999999ap-4" | Cast(Precise<double>) , {}         , 0.1     },
+    {"0x1.999999999999ap-4" | Cast(Precise<float>)  | IsErr , {} , true    },
+    {0.1  | Cast(Precise<float>)  | IsErr           , {}         , true    },
+    {0.1f | Cast(Precise<float>)                    , {}         , 0.1f    },
+
+
+    {42 | Bind(Add)             , {}                    , Add(42)               },
+    {42 & Q(Add) | Bind         , {}                    , Add(42)               },
+
+    {Id & Q(Add(1)) | Bind(Pipe)      , 42           , 42 | Add(1)           },
+    {Id & Q(Add(1)) | Bind(Pipe)|Eval , 42           , 43                    },
+
+    {42 | Id & Q(Add(1)) | Bind(Pipe)      , {}      , 42 | Add(1)           },
+    {42 | Id & Q(Add(1)) | Bind(Pipe)|Eval , {}      , 43                    },
+
+    { (ToList & Id) | Bind          , Fmt     , Fmt(Fmt)              },
+    { Q(Fmt) | (ToList & Id) | Bind , {}      , Fmt(Fmt)              },
+
+    {(42, Add(1), Sub(1), Mul(1)) | Bind(Pipe) , {}
+                                               , 42 | Add(1) | Sub(1) | Mul(1) },
+
+    { Q(Fmt) | Bind(Q) | Bind(Q), {}, Q(Q(Fmt))                                 },
+
+    { 3 | Recur(Q(Fmt), Bind(Q)), {}                    , Q(Q(Q(Fmt)))          },
+
+    {41 | If(Eq(41), 0) | Elif(Ge(43), 14) | Else(11)   , {},                  0},
+    {42 | If(Eq(41), 0) | Elif(Ge(43), 14) | Else(11)   , {},                 11},
+    {43 | If(Eq(41), 0) | Elif(Ge(43), 14) | Else(11)   , {},                 14},
+
+    {41 | If(Eq(41), 0)                | Id | IsErr, {} , true                  },
+    {41 | If(Ne(41), 0)                | Id | IsErr, {} , true                  },
+    {11 | If(Eq(41), 0) | Elif(11, 42) | Id | IsErr, {} , true                  },
+    {12 | If(Ne(41), 0) | Elif(11, 42) | Id | IsErr, {} , true                  },
+    {12 | Else(42) | IsErr                         , {} , true                  },
+
+    // Lispy ternary if
+    {6 | If(Gt(7), Id, Add(1))  , {}                        ,                  7},
+    {8 | If(Gt(7), Id, Add(1))  , {}                        ,                  8},
+
+    {67| If(Mod(3)|Nil, Mul(10)) | Elif(Mod(5)|Nil, Mul(100)) | Else(Id), {},  67 },
+    {9 | If(Mod(3)|Nil, Mul(10)) | Elif(Mod(5)|Nil, Mul(100)) | Else(Id), {}, 90  },
+    {25| If(Mod(3)|Nil, Mul(10)) | Elif(Mod(5)|Nil, Mul(100)) | Else(Id), {}, 2500},
+
+
+
+    {Eval                       , {}                    , {}                    },
+    {Eval                       , 42                    , 42                    },
+    {Eval(42)                   , Sub(2)                , 40                    },
+    {Eval                       , Eq(nullptr)           , true                  },
+    {Dbg(42|Trace(HAIKAN_CUR_LOC)|Sub(2)) , {}                    , 40            },
+    {Debug(Sub(2))              , 42                    , 40                    },
+    {Debug                      , 42                    , nullptr               },
+    {Debug(Trace("foo")|Add(2)|Debug(Trace("bar")|Sub(2))),    40   , 40        },
+
+    {Kwrd                       , Fold(Add)             , "Fold"                },
+    {Q(Fold(Add)) | Kwrd        , {}                    , "Fold"                },
+    {Q(Fold(Add)) | Prms        , {}                    , Tuple(Add)            },
+    {Q(Pipe(Add, Sub)) | Prms   , {}                    , (Add, Sub)             },
+
+    {Op(type<unsigned>, Eq(42))            , 42     , true                },
+    {Try(Op(type<unsigned>, Eq(42)))       , -42    , nullptr             },
+    {Op(type<std::complex<double>>, Add(1)), {.5, 2}, {1.5, 2}            },
+
+    {Op(type<int>, Eq(42) | Not|Not)       , 41     , false               }, // overload by default ignores boolean keywords
+
+    {Op(type<int>, Add(1)) | Str | Eq("42"), 41, true               },
+    {Op(type<int>, Add(1) | Str | Op("", Eq("42"))), 41, true }, // nested
+
+    {Error("foo")           , {}              , Err({
+                                                    {"message", "foo"}
+                                                })                             },
+
+    {Error("foo", "bar")    , {}              , Err({
+                                                    {"message", "foo"},
+                                                    {"context", "bar"}
+                                                })                             },
+
+    {Error(type<std::runtime_error>, "foo", "bar"), {},
+                                        Err({
+                                            {"type"   , "std::runtime_error"},
+                                            {"message", "foo"               },
+                                            {"context", "bar"               }
+                                        })                                     },
+
+    {0 | Assert(Ne(0)) | Flip(Div(1)), {}     , Err("assertion failure", "Ne(0)")},
+    {1 | Assert(Ne(0)) | Flip(Div(1)), {}     , 1                              },
+
+    {Error("foo") | IsErr            , {}     , true                           },
+
+
+    {PreProc(1)             , {}              , "$[1]"                         },
+    {PreProc("lol")         , {}              , "$[lol]"                       },
+
+
+    {Q({{"foo", {{"bar", "baz"}}}}) | FindPtr("baz") , {}, "/foo/bar"          },
+    {Q({{"foo", {{"bar", "baz"}}}}) | Find(Size|3) , {}, "baz"          },
+
+
+    {Q({{"foo", {{"bar", "baz"}}}}) | FindIdx(At(0)|"foo") , {}, 0             },
+    {Q({{"foo", {{"bar", "baz"}}}}) | FindIdx(At(0)|"foo") , {}, 0             },
+
+    {"abcd" | FindIdx('d')          , {}                     , 3               },
+
+    {42 | Link("$x") | Eq(42)       , {}                     , true            },
+    {42 | ("$x" | Eq(42))           , {}                     , true            },
+    {42 | ("$x" | Eq(42)) | Id& "$x", {}                     , {true, true}    },
+    {42 | ("$x" | Eq(42)) | Id & Get("$x"), {}               , {true, 42}      },
+    {"$f" << Add(1)                 , 42                     , 43              },
+
+    // Side effects!
+    {EnvLoad("/foo")                , {}                     , nullptr         },
+    {42 | EnvStore("/foo")          , {}                     , 42              },
+    {EnvLoad("/foo")                , {}                     , 42              },
+
+    {EnvLoad("foo")                 , {}                     , 42              },
+    {43 | EnvStore("foo")           , {}                     , 43              },
+    {EnvLoad("foo")                 , {}                     , 43              },
+    {EnvLoad("/foo")                , {}                     , 43              },
+
+    {EnvStore | IsErr               , {}                     , true            },
+    {EnvLoad  | IsErr               , {}                     , true            },
+
+    {EnvLoad("")                    , {}                     , {{"foo", 43}}   },
+    {EnvStore("") | IsErr           , {}                     , true            },
+    {EnvLoad("")                    , {}                     , {{"foo", 43}}   },
+};
+
+    return samples;
+}
