@@ -51,10 +51,10 @@ HAIKAN_DEFINE_EVALUATE_IMPL(Floor) { return real_to_number(std::floor(boost::jso
 HAIKAN_DEFINE_EVALUATE_IMPL(Round) { return real_to_number(std::round(boost::json::value_to<double>( lhs().eval() ))); }
 HAIKAN_DEFINE_EVALUATE_IMPL(Sqrt) { return boost::json::value_from(std::sqrt(boost::json::value_to<std::complex<double>>( lhs().eval() ))); }
 HAIKAN_DEFINE_EVALUATE_IMPL(Sign) { return boost::json::value_to<double>( lhs().eval() ) >= 0 ? 1 : -1; }
-HAIKAN_DEFINE_EVALUATE_IMPL(Id) { return lhs(); }
 HAIKAN_DEFINE_EVALUATE_IMPL(ToList) { return boost::json::array{ lhs().to_json() }; }
 HAIKAN_DEFINE_EVALUATE_IMPL(Parse) { return boost::json::parse( lhs().as_string()); }
 HAIKAN_DEFINE_EVALUATE_IMPL(Str) { return lhs().prettify().c_str(); }
+HAIKAN_DEFINE_EVALUATE_IMPL(Id) { return lhs(); }
 HAIKAN_DEFINE_EVALUATE_IMPL(Q) { return rhs(); }
 HAIKAN_DEFINE_EVALUATE_IMPL(D) { return (lhs().is_error() || (lhs().is_literal() && lhs().is_null())) ? rhs().eval_e({}, curr_ctx()) : lhs(); }
 HAIKAN_DEFINE_EVALUATE_IMPL(Err) { return self(); }

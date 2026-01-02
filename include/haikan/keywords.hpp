@@ -332,10 +332,13 @@ extern impl::SignatureVariadic<::haikan::impl::Keyword::Elif> const Elif;
 /// Resolving operator in If-Elif-Else pipe.
 /// Will fail if not preceded by If or Elif.
 /// See If.
+/// 
+/// Note: Errors are passed through Else as is,
+/// without evaluating the parameter expression.
+/// Input errors are handled in preceding If/Elif clauses,
+/// while errors produced by If/Elif assumed to be
+/// handled  after the Else clause.
 extern impl::SignatureBinary<::haikan::impl::Keyword::Else> const Else;
-
-/// \brief Identity function
-extern impl::SignatureUnary<::haikan::impl::Keyword::Id> const Id;
 
 /// \brief Transpose multidimensional list, turning rows into columns
 /// \details
@@ -529,6 +532,24 @@ extern impl::SignatureBinary<::haikan::impl::Keyword::Del> const Del;
 /// \brief Alias for Del
 extern impl::SignatureBinary<::haikan::impl::Keyword::Del> const Delete;
 
+/// \brief Update structure at addr with f
+/// \details
+/// The Upd keyword creates a copy of argument structure
+/// with updating the node at given address. The function
+/// f is evaluated against node original value or null, if not exist.
+/// 
+/// JSON Pointers referencing non-existing nodes will create them.
+/// Addresses with past-the-end array index are resolved by
+/// appending new item.
+/// 
+/// Possible address queries:
+///   1. Structure index (negative resolves as reverse)
+///   2. JSON Pointer
+///   3. List of queries
+extern impl::SignatureVariadic<::haikan::impl::Keyword::Upd> const Upd;
+/// \brief Alias for Upd
+extern impl::SignatureVariadic<::haikan::impl::Keyword::Upd> const Update;
+
 /// \brief Lookup table function
 /// \details
 /// Parametrized at design time with fixed array or object,
@@ -559,6 +580,9 @@ extern impl::SignatureBinary<::haikan::impl::Keyword::Lookup> const Lookup;
 /// 
 /// `Foo::Bar | Cast(Underlying<Foo>)` yields `int(Foo::Bar)` as expected.
 extern impl::SignatureCast const Cast;
+
+/// \brief Identity function
+extern impl::SignatureUnary<::haikan::impl::Keyword::Id> const Id;
 
 /// \brief Reduce sequence with binary operator
 /// \details

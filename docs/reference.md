@@ -988,21 +988,15 @@ Resolving operator in If-Elif-Else pipe.
 Will fail if not preceded by If or Elif.
 See If.
 
+Note: Errors are passed through Else as is,
+without evaluating the parameter expression.
+Input errors are handled in preceding If/Elif clauses,
+while errors produced by If/Elif assumed to be
+handled  after the Else clause.
+
 
 
 ## Unary Structural transforms
-
-### Id
-
-*Signature*: [Unary](../user-guide/expressions.md#syntax)
-
-
-Identity function
-
-
-*Examples*:
-
- * `42 | Id `$\mapsto$` 42`
 
 ### Transp
 
@@ -1125,7 +1119,7 @@ Equivalent to At([""])
 
 *Examples*:
 
- * `42 | List `$\mapsto$` [42]`
+ * `42 | ToList `$\mapsto$` [42]`
 
 ### First
 
@@ -1394,7 +1388,7 @@ Arythmetic average
  * `[1, 2, 3] | Avg `$\mapsto$` 2`
 
 
-## Binary Structural transforms
+## Structural transforms
 
 ### Slide
 
@@ -1553,6 +1547,32 @@ When deleting an object element, resulting items order may change.
  * `[[1, 2], 3] | Del("/0/1") `$\mapsto$` [[1], 3]`
  * `{"a": {"b": [1,2,3]}} | Del({"/a/b/0", "/a/b/1"}) `$\mapsto$` {"a": {"b": [3]}}`
 
+### Upd
+
+*Signature*: [Variadic](../user-guide/expressions.md#syntax)
+
+*Aliases*: Update
+
+Update structure at addr with f
+
+The Upd keyword creates a copy of argument structure
+with updating the node at given address. The function
+f is evaluated against node original value or null, if not exist.
+
+JSON Pointers referencing non-existing nodes will create them.
+Addresses with past-the-end array index are resolved by
+appending new item.
+
+Possible address queries:
+  1. Structure index (negative resolves as reverse)
+  2. JSON Pointer
+  3. List of queries
+
+*Examples*:
+
+ * `[1,2,3,4,5] | Upd(2, 42) `$\mapsto$` [1,2,42,4,5]`
+ * `[[1, 2], 3] | Upd("/0/1", Mul(-1)) `$\mapsto$` [[1, -2], 3]`
+
 ### Lookup
 
 *Signature*: [Binary](../user-guide/expressions.md#syntax)
@@ -1600,6 +1620,18 @@ JSON conversion semantics, like haikan::decorators::Underlying<E>:
 
 
 ## High-Order
+
+### Id
+
+*Signature*: [Unary](../user-guide/expressions.md#syntax)
+
+
+Identity function
+
+
+*Examples*:
+
+ * `42 | Id `$\mapsto$` 42`
 
 ### Fold
 
@@ -1892,11 +1924,10 @@ x | ("$f" << Add(1)) | "$f"  | "$f" = x + 1 + 1 + 1
 Recursive factorial:
 
 ```
-auto const factorial = "$f" << ("$x"
-  | Assert(Ge(0))
-  | Lt(2)
-  | And(1)
-  | Or("$x" | Sub(1) | "$f" | Mul("$x"))
+auto const fact = "$fact" << (
+    Assert(Ge(0))
+    | If(Lt(2), 1)
+    | Else("$x" | Sub(1) | "$fact" | Mul("$x"))
 );
 ```
 

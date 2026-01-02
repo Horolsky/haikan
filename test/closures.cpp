@@ -30,12 +30,15 @@ BOOST_AUTO_TEST_CASE(SymbolicLink)
 
 BOOST_AUTO_TEST_CASE(SymbolicLinkRecursion)
 {
-    auto const fact = "$f" << (
-        "$x"
-        | Assert(Ge(0))
-        | Lt(2)
-        | And(1)
-        | Or("$x" | Sub(1) | "$f" | Mul("$x"))
+    // equivalent Python:
+    // def fact(x):
+    //     assert x >= 0
+    //     return 1 if x < 2 else fact(x - 1) * x
+
+    auto const fact = "$fact" << (
+        Assert(Ge(0))
+        | If(Lt(2), 1)
+        | Else("$x" | Sub(1) | "$fact" | Mul("$x"))
     );
 
     BOOST_TEST_INFO(fact.prettify());
@@ -45,7 +48,9 @@ BOOST_AUTO_TEST_CASE(SymbolicLinkRecursion)
     BOOST_CHECK_EQUAL(fact.eval(3),   6);
     BOOST_CHECK_EQUAL(fact.eval(4),  24);
     BOOST_CHECK_EQUAL(fact.eval(5), 120);
-    BOOST_CHECK_EQUAL((fact | IsErr).eval(-5), true);
+    // will crash with current naive implementation xD
+    // BOOST_CHECK_EQUAL(fact.eval(20), 2432902008176640000);
+    BOOST_CHECK_EQUAL(Dbg(fact | IsErr).eval(-5), true);
 }
 
 BOOST_AUTO_TEST_CASE(Closure)

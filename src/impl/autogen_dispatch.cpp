@@ -96,7 +96,6 @@ extern template Expression dispatch_eval<Keyword::Or>(ExpressionView const&, Exp
 extern template Expression dispatch_eval<Keyword::If>(ExpressionView const&, ExpressionView const&, EvalContext);
 extern template Expression dispatch_eval<Keyword::Elif>(ExpressionView const&, ExpressionView const&, EvalContext);
 extern template Expression dispatch_eval<Keyword::Else>(ExpressionView const&, ExpressionView const&, EvalContext);
-extern template Expression dispatch_eval<Keyword::Id>(ExpressionView const&, ExpressionView const&, EvalContext);
 extern template Expression dispatch_eval<Keyword::Transp>(ExpressionView const&, ExpressionView const&, EvalContext);
 extern template Expression dispatch_eval<Keyword::Cartesian>(ExpressionView const&, ExpressionView const&, EvalContext);
 extern template Expression dispatch_eval<Keyword::Reverse>(ExpressionView const&, ExpressionView const&, EvalContext);
@@ -133,8 +132,10 @@ extern template Expression dispatch_eval<Keyword::Cat>(ExpressionView const&, Ex
 extern template Expression dispatch_eval<Keyword::Push>(ExpressionView const&, ExpressionView const&, EvalContext);
 extern template Expression dispatch_eval<Keyword::At>(ExpressionView const&, ExpressionView const&, EvalContext);
 extern template Expression dispatch_eval<Keyword::Del>(ExpressionView const&, ExpressionView const&, EvalContext);
+extern template Expression dispatch_eval<Keyword::Upd>(ExpressionView const&, ExpressionView const&, EvalContext);
 extern template Expression dispatch_eval<Keyword::Lookup>(ExpressionView const&, ExpressionView const&, EvalContext);
 extern template Expression dispatch_eval<Keyword::Cast>(ExpressionView const&, ExpressionView const&, EvalContext);
+extern template Expression dispatch_eval<Keyword::Id>(ExpressionView const&, ExpressionView const&, EvalContext);
 extern template Expression dispatch_eval<Keyword::Fold>(ExpressionView const&, ExpressionView const&, EvalContext);
 extern template Expression dispatch_eval<Keyword::Map>(ExpressionView const&, ExpressionView const&, EvalContext);
 extern template Expression dispatch_eval<Keyword::Filter>(ExpressionView const&, ExpressionView const&, EvalContext);
@@ -263,7 +264,6 @@ try
         case Keyword::If: return dispatch_eval<Keyword::If>(*this, x, context);
         case Keyword::Elif: return dispatch_eval<Keyword::Elif>(*this, x, context);
         case Keyword::Else: return dispatch_eval<Keyword::Else>(*this, x, context);
-        case Keyword::Id: return dispatch_eval<Keyword::Id>(*this, x, context);
         case Keyword::Transp: return dispatch_eval<Keyword::Transp>(*this, x, context);
         case Keyword::Cartesian: return dispatch_eval<Keyword::Cartesian>(*this, x, context);
         case Keyword::Reverse: return dispatch_eval<Keyword::Reverse>(*this, x, context);
@@ -300,8 +300,10 @@ try
         case Keyword::Push: return dispatch_eval<Keyword::Push>(*this, x, context);
         case Keyword::At: return dispatch_eval<Keyword::At>(*this, x, context);
         case Keyword::Del: return dispatch_eval<Keyword::Del>(*this, x, context);
+        case Keyword::Upd: return dispatch_eval<Keyword::Upd>(*this, x, context);
         case Keyword::Lookup: return dispatch_eval<Keyword::Lookup>(*this, x, context);
         case Keyword::Cast: return dispatch_eval<Keyword::Cast>(*this, x, context);
+        case Keyword::Id: return dispatch_eval<Keyword::Id>(*this, x, context);
         case Keyword::Fold: return dispatch_eval<Keyword::Fold>(*this, x, context);
         case Keyword::Map: return dispatch_eval<Keyword::Map>(*this, x, context);
         case Keyword::Filter: return dispatch_eval<Keyword::Filter>(*this, x, context);

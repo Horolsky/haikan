@@ -104,7 +104,6 @@ impl::SignatureBinary<::haikan::impl::Keyword::Or> const HAIKAN_KEYWORD_INIT Or 
 impl::SignatureVariadic<::haikan::impl::Keyword::If> const HAIKAN_KEYWORD_INIT If = {};
 impl::SignatureVariadic<::haikan::impl::Keyword::Elif> const HAIKAN_KEYWORD_INIT Elif = {};
 impl::SignatureBinary<::haikan::impl::Keyword::Else> const HAIKAN_KEYWORD_INIT Else = {};
-impl::SignatureUnary<::haikan::impl::Keyword::Id> const HAIKAN_KEYWORD_INIT Id = {};
 impl::SignatureUnary<::haikan::impl::Keyword::Transp> const HAIKAN_KEYWORD_INIT Transp = {};
 impl::SignatureUnary<::haikan::impl::Keyword::Cartesian> const HAIKAN_KEYWORD_INIT Cartesian = {};
 impl::SignatureUnary<::haikan::impl::Keyword::Reverse> const HAIKAN_KEYWORD_INIT Reverse = {};
@@ -147,8 +146,11 @@ impl::SignatureBinary<::haikan::impl::Keyword::Push> const HAIKAN_KEYWORD_INIT P
 impl::SignatureBinary<::haikan::impl::Keyword::At> const HAIKAN_KEYWORD_INIT At = {};
 impl::SignatureBinary<::haikan::impl::Keyword::Del> const HAIKAN_KEYWORD_INIT Del = {};
 impl::SignatureBinary<::haikan::impl::Keyword::Del> const HAIKAN_KEYWORD_INIT Delete = Del;
+impl::SignatureVariadic<::haikan::impl::Keyword::Upd> const HAIKAN_KEYWORD_INIT Upd = {};
+impl::SignatureVariadic<::haikan::impl::Keyword::Upd> const HAIKAN_KEYWORD_INIT Update = Upd;
 impl::SignatureBinary<::haikan::impl::Keyword::Lookup> const HAIKAN_KEYWORD_INIT Lookup = {};
 impl::SignatureCast const HAIKAN_KEYWORD_INIT Cast = {};
+impl::SignatureUnary<::haikan::impl::Keyword::Id> const HAIKAN_KEYWORD_INIT Id = {};
 impl::SignatureBinary<::haikan::impl::Keyword::Fold> const HAIKAN_KEYWORD_INIT Fold = {};
 impl::SignatureBinary<::haikan::impl::Keyword::Fold> const HAIKAN_KEYWORD_INIT Reduce = Fold;
 impl::SignatureBinary<::haikan::impl::Keyword::Map> const HAIKAN_KEYWORD_INIT Map = {};

@@ -105,7 +105,6 @@ boost::json::string_view keyword_to_str(Keyword const& kw)
     case Keyword::If: { return "If"; break; }
     case Keyword::Elif: { return "Elif"; break; }
     case Keyword::Else: { return "Else"; break; }
-    case Keyword::Id: { return "Id"; break; }
     case Keyword::Transp: { return "Transp"; break; }
     case Keyword::Cartesian: { return "Cartesian"; break; }
     case Keyword::Reverse: { return "Reverse"; break; }
@@ -142,8 +141,10 @@ boost::json::string_view keyword_to_str(Keyword const& kw)
     case Keyword::Push: { return "Push"; break; }
     case Keyword::At: { return "At"; break; }
     case Keyword::Del: { return "Del"; break; }
+    case Keyword::Upd: { return "Upd"; break; }
     case Keyword::Lookup: { return "Lookup"; break; }
     case Keyword::Cast: { return "Cast"; break; }
+    case Keyword::Id: { return "Id"; break; }
     case Keyword::Fold: { return "Fold"; break; }
     case Keyword::Map: { return "Map"; break; }
     case Keyword::Filter: { return "Filter"; break; }

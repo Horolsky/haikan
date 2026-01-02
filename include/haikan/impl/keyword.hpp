@@ -261,9 +261,6 @@ enum class Keyword : std::uint64_t
     /// Else
     Else,
 
-    /// Id
-    Id,
-
     /// Transp
     Transp,
 
@@ -372,11 +369,17 @@ enum class Keyword : std::uint64_t
     /// Del
     Del,
 
+    /// Upd
+    Upd,
+
     /// Lookup
     Lookup,
 
     /// Cast
     Cast,
+
+    /// Id
+    Id,
 
     /// Fold
     Fold,

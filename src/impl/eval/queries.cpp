@@ -5,6 +5,7 @@
  */
 
 #include <limits>
+#include <boost/optional.hpp>
 #include <boost/math/constants/constants.hpp>
 
 #include "haikan/impl/operator.hpp"
@@ -20,6 +21,110 @@ namespace
 {
 
 using ExpressionView = haikan::impl::ExpressionView;
+
+void update_at(
+    boost::json::value& value,
+    boost::json::value const& at,
+    ExpressionView F,
+    haikan::impl::EvalContext ctx
+)
+{
+    bool const at_is_number = at.is_number();
+    auto const value_as_array = value.if_array();
+    auto const value_as_object = value.if_object();
+
+    auto const at_as_array = at.if_array();
+    auto const at_as_string = at.if_string();
+
+
+    if (at_is_number && value_as_array)
+    {
+        boost::optional<boost::json::value&> node{};
+        auto const N = value_as_array  ? value_as_array->size(): 0;
+
+        std::size_t idx{};
+
+        switch (at.kind())
+        {
+        case boost::json::kind::int64:
+        case boost::json::kind::double_:
+            {
+                std::int64_t at_idx = boost::json::value_to<std::int64_t>(at);
+                idx = (at_idx >= 0) ? at_idx : (at_idx + N); // TODO: handle overflow
+            }
+            break;
+        case boost::json::kind::uint64:
+            idx = at.get_uint64();
+        default:
+            break;
+        }
+
+        if (idx > N)
+        {
+            return;
+        }
+        else if (idx == N)
+        {
+            value_as_array->push_back({});
+        }
+
+        try
+        {
+            node = value_as_array->at(idx);
+        }
+        catch(std::exception const&)
+        {
+            // ignore
+        }
+        if (node)
+        {
+            node.get() = F.eval(node.get(), ctx);
+        }
+    }
+    else if (at_as_array)
+    {
+        for (auto const& q: *at_as_array)
+        {
+            update_at(value, q, F, ctx);
+        }
+    }
+    else if (at_as_string)
+    {
+        auto const& token = *at_as_string;
+        if (token.starts_with("/") or token.empty())
+        {
+            boost::system::error_code ec;
+            if (boost::json::value* ptr = value.find_pointer(at.get_string(), ec))
+            {
+                *ptr = F.eval(*ptr, ctx);
+            }
+            else
+            {
+                value.set_at_pointer(at.get_string(), F.eval({}, ctx), ec);
+            }
+        }
+        else if (value_as_array)
+        {
+            auto const slice_idx = haikan::impl::str_to_slice_idx(token);
+
+            auto gen = haikan::impl::make_slice_generator(*value_as_array, slice_idx.at(0),slice_idx.at(1),slice_idx.at(2));
+            auto element = value_as_array->end();
+            while ((element = gen()) != value_as_array->end())
+            {
+                *element = F.eval(*element, ctx);
+            }
+        }
+        else if (value_as_object)
+        {
+            if (value_as_object->contains(token))
+            {
+                auto& node = value_as_object->operator[](token);
+                node = F.eval(node, ctx);
+            }
+        }
+    }
+
+}
 
 boost::json::value query_at_impl(boost::json::value const& value, boost::json::value const& at)
 {
@@ -180,6 +285,24 @@ HAIKAN_DEFINE_EVALUATE_IMPL(At)
 HAIKAN_DEFINE_EVALUATE_IMPL(Lookup)
 {
     return query_at(rhs(), lhs(), curr_ctx());
+}
+
+
+HAIKAN_DEFINE_EVALUATE_IMPL(Upd)
+{
+    auto const subexpressions = self().subexpressions_list();
+
+    ASSERT(subexpressions.size() == 2,
+    "invalid parameters, expected (query, Fn)");
+    ExpressionView const query(subexpressions.front());
+    ExpressionView const F (subexpressions.back());
+    auto const at = query.eval({}, curr_ctx());
+
+    boost::json::value result {lhs().data()};
+
+    update_at(result, at, F, curr_ctx());
+
+    return result;
 }
 
 } // namespace impl

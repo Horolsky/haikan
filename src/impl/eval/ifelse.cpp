@@ -102,6 +102,11 @@ HAIKAN_DEFINE_EVALUATE_IMPL(Else)
     }
     else if (x().is(Keyword::_Continue))
     {
+        auto const view = x().encoding_view();
+        if (view.child(1).head() == Keyword::Err)
+        {
+            return ExpressionView{view.subtree(1).freeze()};
+        }
         return rhs().eval(x().data(), curr_ctx());
     }
     else
