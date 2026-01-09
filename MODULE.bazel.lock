@@ -327,7 +327,7 @@
     "//:bazel/lua/setup.bzl%lua_and_sol": {
       "general": {
         "bzlTransitiveDigest": "CqAw9xrd1tgGqw45o+HDsEl50Mxc9hS1TvQg51uV++Q=",
-        "usagesDigest": "mF80ub4IX2gMqhN33pwbPLBam01sI+E/S2QpMZispu8=",
+        "usagesDigest": "jHpg2A+zyYfiRGLsikFHV3DGh5xUNLx2gcjmQOdRauk=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
