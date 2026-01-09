@@ -16,89 +16,112 @@
 
 namespace haikan {
 
-template <class From, class To, class = void>
+template <class To, class From, class = void>
 struct cast;
 
-template <class From, class To, class = void>
+template <class To, class From, class = void>
 struct custom_cast;
 
 namespace impl
 {
-template <class From, class To, class = void>
+template <class To, class From, class = void>
 struct default_cast;
 
 
 namespace detail
 {
-template<class From, class To>
-using custom_cast_valid = decltype(&custom_cast<From, To>::operator());
+template <class To, class From>
+using custom_cast_valid = decltype(&custom_cast<To, From>::operator());
 
-template<class From, class To>
-using default_cast_valid = decltype(&default_cast<From, To>::operator());
+template <class To, class From>
+using default_cast_valid = decltype(&default_cast<To, From>::operator());
 } // namespace detail
 
-template<class From, class To>
-using has_custom_cast = mp_valid<detail::custom_cast_valid, From, To>;
+template <class To, class From>
+using has_custom_cast = mp_valid<detail::custom_cast_valid, To, From>;
 
-template<class From, class To>
-using has_default_cast = mp_valid<detail::default_cast_valid, From, To>;
+template <class To, class From>
+using has_default_cast = mp_valid<detail::default_cast_valid, To, From>;
 
-template<class From, class To>
-using has_cast = mp_or<has_custom_cast<From, To>, has_default_cast<From, To>>;
+template <class To, class From>
+using has_cast = mp_or<has_custom_cast<To, From>, has_default_cast<To, From>>;
 
-template <class From, class To, class R = void>
-using enable_custom_cast = mp_if<has_custom_cast<From, To>, R>;
+template <class To, class From, class R = void>
+using enable_custom_cast = mp_if<has_custom_cast<To, From>, R>;
 
-template <class From, class To, class R = void>
+template <class To, class From, class R = void>
 using enable_default_cast = mp_if<mp_and<
-    has_default_cast<From, To>,
-    mp_not<has_custom_cast<From, To>>
+    has_default_cast<To, From>,
+    mp_not<has_custom_cast<To, From>>
 >, R>;
 
-template <class From, class To, class R = void>
-using enable_missing_cast = mp_if<mp_not<has_cast<From, To>>, R>;
+template <class To, class From, class R = void>
+using enable_missing_cast = mp_if<mp_not<has_cast<To, From>>, R>;
+
+
+template<class F>
+struct switch_cast_fn;
+
+template<class To, class From>
+struct switch_cast_fn<To(From)> : cast<To, From> {};
+
+template<class F>
+struct switch_cast_guard;
+
+template<class To, class From>
+struct switch_cast_guard<To(From)> : has_cast<To, From> {};
+
 
 template <>
 struct default_cast<void, void> {};
 
-template <class From, class To>
-struct default_cast<From, To, mp_if<std::is_convertible<From, To>, void>>
+
+
+// template <class To, class From>
+// struct default_cast<To, From, mp_if<std::is_reference<From>, void>> : cast<To, std::remove_reference_t<From>> {};
+
+// template <class To, class From>
+// struct default_cast<To, From, mp_if<std::is_const<From>, void>> : cast<To, std::remove_const_t<From>> {};
+
+template <class To, class From>
+struct default_cast<To, From, mp_if<std::is_convertible<From, To>, void>>
 {
-    auto operator()(From const& v) -> To
+    auto operator()(remove_qualifiers_t<From> const& v) -> To
     {
         return static_cast<To>(v);
     }
 };
 
-template <class From, class To>
-struct default_cast<From, To, mp_if<mp_and<
-    std::is_enum<From>,
+template <class To, class From>
+struct default_cast<To, From, mp_if<mp_and<
+    std::is_enum<remove_qualifiers_t<From>>,
     std::is_integral<To>
 >, void>>
 {
-    auto operator()(From const& v) -> To
+    auto operator()(remove_qualifiers_t<From> const& v) -> To
     {
-        using U = std::underlying_type_t<From>;
-        return cast<U, To>()(static_cast<U>(v));
+        using U = std::underlying_type_t<remove_qualifiers_t<From>>;
+        return cast<To, U>()(static_cast<U>(v));
     }
 };
 
-template <class From, class To>
-struct default_cast<From, To, mp_if<mp_and<
+template <class To, class From>
+struct default_cast<To, From, mp_if<mp_and<
     std::is_enum<To>,
-    std::is_integral<From>
+    std::is_integral<remove_qualifiers_t<From>>
 >, void>>
 {
-    auto operator()(From const& v) -> To
+    auto operator()(remove_qualifiers_t<From> const& v) -> To
     {
         using U = std::underlying_type_t<To>;
-        return static_cast<To>(cast<From, U>()(v));
+        return static_cast<To>(cast<U, remove_qualifiers_t<From>>()(v));
     }
 };
 
 
-template <class To>
-struct default_cast<boost::json::value, To, mp_if<mp_and<
+template <class To, class From>
+struct default_cast<To, From, mp_if<mp_and<
+    std::is_same<remove_qualifiers_t<From>, boost::json::value>,
     mp_not<std::is_convertible<boost::json::value, To>>,
     boost::json::has_value_to<To>>, void>>
 {
@@ -110,15 +133,24 @@ struct default_cast<boost::json::value, To, mp_if<mp_and<
 
 
 template <class From>
-struct default_cast<From, boost::json::value, mp_if<mp_and<
-    mp_not<std::is_convertible<boost::json::value, From>>,
+struct default_cast<boost::json::value, From, mp_if<mp_and<
+    mp_not<std::is_convertible<From, boost::json::value>>,
     boost::json::has_value_from<From>>, void>>
 {
-    auto operator()(From const& v) -> boost::json::value
+    auto operator()(remove_qualifiers_t<From> const& v) -> boost::json::value
     {
         return boost::json::value_from(v);
     }
 };
+
+// template <class To>
+// struct default_cast<To, boost::json::value const> 
+
+// template <class To, class From>
+// struct default_cast<To, From, mp_if<std::is_reference<From>, void>> : ::haikan::cast<To, std::remove_reference_t<From>> {};
+
+// template <class To, class From>
+// struct default_cast<To, From, mp_if<std::is_const<From>, void>> : ::haikan::cast<To, std::remove_const_t<From>> {};
 
 } // namespace impl
 } // namespace haikan

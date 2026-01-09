@@ -19,7 +19,7 @@
 #include "haikan/impl/traits.hpp"
 #include "haikan/impl/type_tag.hpp"
 #include "haikan/impl/error_expr.hpp"
-#include "haikan/monadic_cast.hpp"
+#include "haikan/cast.hpp"
 
 
 
@@ -159,21 +159,20 @@ class Operator
     static boost::json::value handle_decorate(boost::json::value const& arg)
     try
     {
-        monadic_cast<T> mc;
+        switch_cast<T> sc;
         switch (arg.kind())
         {
-        case boost::json::kind::uint64 : { mc = mc.try_cast(arg.get_uint64()); break; }
-        case boost::json::kind::int64  : { mc = mc.try_cast(arg.get_int64());  break; }
-        case boost::json::kind::double_: { mc = mc.try_cast(arg.get_double()); break; }
-        case boost::json::kind::string : { mc = mc.try_cast(arg.get_string()); break; }
-        case boost::json::kind::array  : { mc = mc.try_cast(arg.get_array());  break; }
-        case boost::json::kind::object : { mc = mc.try_cast(arg.get_object()); break; }
-        case boost::json::kind::null   : { mc = mc.try_cast(nullptr);          break; }
+        case boost::json::kind::uint64 : { sc = sc(arg.get_uint64()); break; }
+        case boost::json::kind::int64  : { sc = sc(arg.get_int64());  break; }
+        case boost::json::kind::double_: { sc = sc(arg.get_double()); break; }
+        case boost::json::kind::string : { sc = sc(arg.get_string()); break; }
+        case boost::json::kind::array  : { sc = sc(arg.get_array());  break; }
+        case boost::json::kind::object : { sc = sc(arg.get_object()); break; }
+        case boost::json::kind::null   : { sc = sc(nullptr);          break; }
         default:
             break;
         }
-        return mc
-            .try_cast(arg)
+        return sc(arg)
             .map([](T const& v) -> boost::json::value {
                 return boost::json::value_from(v);
             })

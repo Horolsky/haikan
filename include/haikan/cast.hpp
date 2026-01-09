@@ -9,29 +9,31 @@
 #include <boost/optional.hpp>
 
 #include "haikan/impl/cast.hpp"
+#include "haikan/impl/traits.hpp"
+#include "haikan/sfinae_switch.hpp"
 
 namespace haikan {
 
-template <class From, class To>
-struct cast<From, To, impl::enable_default_cast<From, To>>
+template <class To, class From>
+struct cast<To, From, impl::enable_default_cast<To, From>>
 {
     auto operator()(From const& v) -> To
     {
-        return impl::default_cast<From, To>()(v);
+        return impl::default_cast<To, From>()(v);
     }
 };
 
-template <class From, class To>
-struct cast<From, To, impl::enable_custom_cast<From, To>>
+template <class To, class From>
+struct cast<To, From, impl::enable_custom_cast<To, From>>
 {
     auto operator()(From const& v) -> To
     {
-        return custom_cast<From, To>()(v);
+        return custom_cast<To, From>()(v);
     }
 };
 
-template <class From, class To>
-struct cast<From, To, impl::enable_missing_cast<From, To>>
+template <class To, class From>
+struct cast<To, From, impl::enable_missing_cast<To, From>>
 {
     auto operator()(From const& v) -> To
     {
@@ -42,5 +44,9 @@ struct cast<From, To, impl::enable_missing_cast<From, To>>
         return {};
     }
 };
+
+template <class To>
+using switch_cast = sfinae_switch<To, impl::switch_cast_guard, impl::switch_cast_fn>;
+
 
 } // namespace haikan

@@ -92,6 +92,12 @@ HAIKAN_WRAP_BOOST_TRAIT(has_plus)
 
 #undef HAIKAN_WRAP_BOOST_TRAIT
 
+template <class T>
+using remove_qualifiers = std::remove_const<std::remove_reference_t<T>>;
+
+template <class T>
+using remove_qualifiers_t = typename remove_qualifiers<T>::type;
+
 }  // namespace impl
 }  // namespace haikan
 
