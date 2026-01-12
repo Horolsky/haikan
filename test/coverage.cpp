@@ -31,8 +31,7 @@ std::set<Keyword> const& CoveredInTestEval()
 BOOST_DATA_TEST_CASE(EvalTestCoverage, utf::data::xrange(std::size_t{1ul}, static_cast<std::size_t>(Keyword::_count)))
 {
     Keyword const keyword = static_cast<Keyword>(sample);
-    if (keyword == Keyword::Void) return;
-    if (keyword == Keyword::LazyToken) return;
+    if (keyword == Keyword::_Void) return;
     if (keyword == Keyword::_Resolve) return;
     if (keyword == Keyword::_Continue) return;
     if (CoveredInTestEval().count(keyword) == 0)

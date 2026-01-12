@@ -18,7 +18,6 @@ BOOST_DEFINE_FIXED_ENUM_CLASS(Foo, int, Bar, Baz)
 struct TestEvalSample
 {
     haikan::impl::Expression expr;
-    haikan::impl::Expression x;
     haikan::impl::Expression expected;
 
     friend std::ostream& operator<<(std::ostream& os, TestEvalSample const& sample);

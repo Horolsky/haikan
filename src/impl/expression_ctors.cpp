@@ -20,7 +20,7 @@ haikan::impl::EncodingView lazy_token_view()
 {
     static haikan::impl::Encoding const lazy_token = []{
         haikan::impl::Encoding enc;
-        enc.push_back(haikan::impl::Keyword::LazyToken, 0, {});
+        enc.push_back(haikan::impl::Keyword::_Void, 0, {});
         return enc;
     }();
     return haikan::impl::EncodingView(lazy_token);

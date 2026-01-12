@@ -60,7 +60,7 @@ Encoding::Encoding(boost::json::value&& value)
     }
     else
     {
-        auto k = Keyword::Literal;
+        auto k = Keyword::_Literal;
         if (is_preproc_token(value))
         {
             k = Keyword::PreProc;
@@ -481,11 +481,11 @@ bool EncodingView::is_const() const
         }
         std::size_t next{1};
         auto st = traverse_subtrees(next, next);
-        if (st.is_const() || st.head() == Keyword::Literal) return true;
+        if (st.is_const() || st.head() == Keyword::_Literal) return true;
         while(next < size())
         {
             st = traverse_subtrees(next, next);
-            if (st.is_const() && (st.head() != Keyword::Literal))
+            if (st.is_const() && (st.head() != Keyword::_Literal))
             {
                 return true;
             }

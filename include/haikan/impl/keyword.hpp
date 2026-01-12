@@ -27,14 +27,11 @@ enum class Keyword : std::uint64_t
 {
     Undefined,
 
-    /// Literal
-    Literal,
+    /// _Literal
+    _Literal,
 
-    /// Void
-    Void,
-
-    /// LazyToken
-    LazyToken,
+    /// _Void
+    _Void,
 
     /// _Continue
     _Continue,

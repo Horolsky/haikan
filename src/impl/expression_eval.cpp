@@ -22,7 +22,7 @@ namespace
 
 ExpressionView make_literal_argument_view(boost::json::value const& value)
 {
-    static Keyword const keywords[]{Keyword::Literal};
+    static Keyword const keywords[]{Keyword::_Literal};
     static std::size_t const depth[]{0};
     EncodingView literal_view{keywords, depth, &value, 1U, 0U};
     return ExpressionView(literal_view);
@@ -79,7 +79,7 @@ bool ExpressionView::eval_as_predicate(boost::json::value const& x, Expression& 
 
 Expression ExpressionView::eval_maybe_predicate(ExpressionView const& x, EvalContext ctx) const
 {
-    if (!is_noop() && is_const())
+    if (!is_noop() && !is_quote() && is_const())
     {
         if (!const_predicate_cache_)
         {

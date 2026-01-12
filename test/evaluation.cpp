@@ -26,10 +26,9 @@ BOOST_DATA_TEST_CASE(ExpressionEval, TestSamples())
     {
         BOOST_TEST_INFO("Expression: " << sample.expr.prettify());
         BOOST_TEST_INFO("  encoding: " << boost::json::value_from(sample.expr.encoding()));
-        BOOST_TEST_INFO("Input: " << sample.x.prettify());
         BOOST_TEST_INFO("Expected: " << sample.expected.prettify());
 
-        auto const result = sample.expr.eval_e(sample.x, context);
+        auto const result = sample.expr.eval_e({}, context);
         BOOST_TEST_INFO("Observed: " << result.prettify());
         BOOST_TEST_INFO("Eval log: \n" << context.log);
         BOOST_CHECK_EQUAL(result.prettify(), sample.expected.prettify());

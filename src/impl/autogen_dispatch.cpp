@@ -190,7 +190,7 @@ try
     }
     switch (keyword())
     {
-        case Keyword::Literal: return data();
+        case Keyword::_Literal: return data();
         case Keyword::Noop: return dispatch_eval<Keyword::Noop>(*this, x, context);
         case Keyword::Null: return dispatch_eval<Keyword::Null>(*this, x, context);
         case Keyword::True: return dispatch_eval<Keyword::True>(*this, x, context);

@@ -56,7 +56,7 @@ HAIKAN_DEFINE_EVALUATE_IMPL(Parse) { return boost::json::parse( lhs().as_string(
 HAIKAN_DEFINE_EVALUATE_IMPL(Str) { return lhs().prettify().c_str(); }
 HAIKAN_DEFINE_EVALUATE_IMPL(Id) { return lhs(); }
 HAIKAN_DEFINE_EVALUATE_IMPL(Q) { return rhs(); }
-HAIKAN_DEFINE_EVALUATE_IMPL(D) { return (lhs().is_error() || (lhs().is_literal() && lhs().is_null())) ? rhs().eval_e({}, curr_ctx()) : lhs(); }
+HAIKAN_DEFINE_EVALUATE_IMPL(D) { return (lhs().is_error() || lhs().is_void() || (lhs().is_literal() && lhs().is_null())) ? rhs().eval_e({}, curr_ctx()) : lhs(); }
 HAIKAN_DEFINE_EVALUATE_IMPL(Err) { return self(); }
 HAIKAN_DEFINE_EVALUATE_IMPL(IsErr) { return lhs().is_error(); }
 HAIKAN_DEFINE_EVALUATE_IMPL(PreProc) { return self(); }

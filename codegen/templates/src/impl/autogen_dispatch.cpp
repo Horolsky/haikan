@@ -40,7 +40,7 @@ try
     }
     switch (keyword())
     {
-        case Keyword::Literal: return data();
+        case Keyword::_Literal: return data();
 @for keyword in data.ApiKeywords:
         case Keyword::@keyword.Name: return dispatch_eval<Keyword::@keyword.Name>(*this, x, context);
 @end

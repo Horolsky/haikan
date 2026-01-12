@@ -90,7 +90,7 @@ HAIKAN_DEFINE_EVALUATE_IMPL(Link)
 
     ASSERT(not (symlink_found && capture_found), "corrupted context")
 
-    if(capture_found && lhs().is(Keyword::LazyToken))
+    if(capture_found && lhs().is(Keyword::_Void))
     {
         return *capture_found;
     }

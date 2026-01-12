@@ -52,9 +52,8 @@ constexpr std::uint32_t keyword_attributes(Keyword const& oc)
     using namespace attr;
     switch (oc)
     {
-    case Keyword::Literal: return is_unary | is_literal;
-    case Keyword::Void: return is_unary;
-    case Keyword::LazyToken: return is_unary;
+    case Keyword::_Literal: return is_unary | is_literal;
+    case Keyword::_Void: return is_unary;
     case Keyword::_Continue: return is_unary;
     case Keyword::_Resolve: return is_unary;
     case Keyword::Noop: return is_const | is_autogen | is_noop;

@@ -2174,7 +2174,7 @@ Introspect expression keyword.
 *Examples*:
 
  * `Q(Fold(Add)) | Kwrd `$\mapsto$` "Fold"`
- * `[1, 1, 1] | Kwrd `$\mapsto$` "Literal"`
+ * `[1, 1, 1] | Kwrd `$\mapsto$` "_Literal"`
 
 ### Prms
 

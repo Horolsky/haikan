@@ -27,9 +27,8 @@ boost::json::string_view keyword_to_str(Keyword const& kw)
     switch(kw)
     {
 
-    case Keyword::Literal: { return "Literal"; break; }
-    case Keyword::Void: { return "Void"; break; }
-    case Keyword::LazyToken: { return "LazyToken"; break; }
+    case Keyword::_Literal: { return "_Literal"; break; }
+    case Keyword::_Void: { return "_Void"; break; }
     case Keyword::_Continue: { return "_Continue"; break; }
     case Keyword::_Resolve: { return "_Resolve"; break; }
     case Keyword::Noop: { return "Noop"; break; }

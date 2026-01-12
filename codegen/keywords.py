@@ -111,7 +111,7 @@ class Keyword:
             attrs.append('is_autogen')
         if self.Name == 'Noop':
             attrs.append('is_noop')
-        if self.Name == 'Literal':
+        if self.Name == '_Literal':
             attrs.append('is_literal')
         if self.Name == 'PreProc':
             attrs.append('is_preproc')

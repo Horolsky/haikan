@@ -7,17 +7,14 @@ keyword_groups:
     defaults:
       internal: true
     keywords:
-      - name: Literal
-        brief: Literal value
+      - name: _Literal
+        brief: _Literal value
         details: |-
-          Literal value keyword with no expression API.
+          _Literal value keyword with no expression API.
           in evaluation context works as Eq(x)
 
-      - name: Void
+      - name: _Void
         brief: empty value
-
-      - name: LazyToken
-        brief: parameter evaluation argument
 
       - name: _Continue
         brief: Unresolved If/Elif unmatching argument
@@ -1747,7 +1744,7 @@ keyword_groups:
         codomain: str
         examples: |-
           Q(Fold(Add)) | Kwrd ↦ "Fold"
-          [1, 1, 1] | Kwrd ↦ "Literal"
+          [1, 1, 1] | Kwrd ↦ "_Literal"
 
       - name: Prms
         aliases: [ Parameters ]
@@ -1789,7 +1786,7 @@ keyword_groups:
         brief: Return x if not null, else return default value
         domain: [any, any]
         codegen-value:
-          cxx: '(lhs().is_error() || (lhs().is_literal() && lhs().is_null())) ? rhs().eval_e({}, curr_ctx()) : lhs()'
+          cxx: '(lhs().is_error() || lhs().is_void() || (lhs().is_literal() && lhs().is_null())) ? rhs().eval_e({}, curr_ctx()) : lhs()'
         examples: |-
           null | Default(42) ↦ 42
           13 | Default(42) ↦ 13

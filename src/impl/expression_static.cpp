@@ -34,7 +34,7 @@ namespace impl {
 Encoding Expression::encodeLiteral(boost::json::value const& params)
 {
     Encoding enc {};
-    enc.push_back(Keyword::Literal, 0, params);
+    enc.push_back(Keyword::_Literal, 0, params);
     return enc;
 }
 

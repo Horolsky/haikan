@@ -49,7 +49,7 @@ std::list<std::pair<std::string, std::string>> ExpressionView::preprocessing_par
             pp.emplace_back(item.data->as_string().c_str(), (boost::format("/data/%d") % item.index).str());
         }
         // TODO: optionally data traversing this with cli flag
-        else if((Keyword::Literal == item.keyword) && item.data)
+        else if((Keyword::_Literal == item.keyword) && item.data)
         {
             JsonTraverse([&](boost::json::value const& node, std::string const jp) -> bool {
                 if (Encoding::is_preproc_token(node))
@@ -145,7 +145,7 @@ std::vector<ExpressionView> ExpressionView::subexpressions_list() const
 
 boost::json::value ExpressionView::to_json() const
 {
-    if (is(Keyword::LazyToken))
+    if (is(Keyword::_Void))
     {
         return nullptr;
     }

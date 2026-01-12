@@ -29,9 +29,8 @@ namespace impl {
 KeywordSymbol::KeywordSymbol()
 {
     add
-    ("Literal", Keyword::Literal)
-    ("Void", Keyword::Void)
-    ("LazyToken", Keyword::LazyToken)
+    ("_Literal", Keyword::_Literal)
+    ("_Void", Keyword::_Void)
     ("_Continue", Keyword::_Continue)
     ("_Resolve", Keyword::_Resolve)
     ("Noop", Keyword::Noop)

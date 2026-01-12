@@ -168,6 +168,11 @@ public:
         return kwrd == keyword();
     }
 
+    bool is_void() const
+    {
+        return is(Keyword::_Void);
+    }
+
     bool is_identity() const
     {
         return is(Keyword::Id);
@@ -190,7 +195,7 @@ public:
 
     bool is_literal() const
     {
-        return is(Keyword::Literal);
+        return is(Keyword::_Literal);
     }
 
     bool is_preproc() const
@@ -206,6 +211,11 @@ public:
     bool is_noop() const
     {
         return is(Keyword::Noop);
+    }
+
+    bool is_quote() const
+    {
+        return is(Keyword::Q);
     }
 
     bool is_error() const
@@ -366,7 +376,7 @@ class Expression : public ExpressionView
     Expression(boost::json::value const& expr);
     Expression(boost::json::value && expr);
 
-    // construct Literal from JSON init list
+    // construct _Literal from JSON init list
     Expression(std::initializer_list<boost::json::value_ref> items);
 
     template <class T>

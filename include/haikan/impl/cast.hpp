@@ -76,13 +76,6 @@ template <>
 struct default_cast<void, void> {};
 
 
-
-// template <class To, class From>
-// struct default_cast<To, From, mp_if<std::is_reference<From>, void>> : cast<To, std::remove_reference_t<From>> {};
-
-// template <class To, class From>
-// struct default_cast<To, From, mp_if<std::is_const<From>, void>> : cast<To, std::remove_const_t<From>> {};
-
 template <class To, class From>
 struct default_cast<To, From, mp_if<std::is_convertible<From, To>, void>>
 {
@@ -143,14 +136,6 @@ struct default_cast<boost::json::value, From, mp_if<mp_and<
     }
 };
 
-// template <class To>
-// struct default_cast<To, boost::json::value const> 
-
-// template <class To, class From>
-// struct default_cast<To, From, mp_if<std::is_reference<From>, void>> : ::haikan::cast<To, std::remove_reference_t<From>> {};
-
-// template <class To, class From>
-// struct default_cast<To, From, mp_if<std::is_const<From>, void>> : ::haikan::cast<To, std::remove_const_t<From>> {};
 
 } // namespace impl
 } // namespace haikan
