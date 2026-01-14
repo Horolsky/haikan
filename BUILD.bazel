@@ -56,6 +56,8 @@ cc_library(
         ],
     ),
     deps = BOOST_LIBS + [
+        "@lua//:lua",
+        "@sol//:sol",
     ],
     copts = HAIKAN_COPTS + select({
         "//conditions:default": [],

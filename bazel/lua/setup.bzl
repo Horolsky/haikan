@@ -29,7 +29,7 @@ cc_library(
         "src/luaconf.h",
         "src/lualib.h",
     ],
-    copts = ["-w"],
+    copts = ["-w", "-x", "c++"],
     defines = ["LUA_USE_LINUX"],
     includes = ["src"],
     linkopts = [

@@ -19,7 +19,7 @@ theme:
   features:
     - content.code.select
     - content.code.copy
-    - content.code.annotate
+    - content.code.failing_on
     - navigation.footer
   icon:
     repo: fontawesome/brands/github

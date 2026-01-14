@@ -98,8 +98,9 @@ using remove_qualifiers = std::remove_const<std::remove_reference_t<T>>;
 template <class T>
 using remove_qualifiers_t = typename remove_qualifiers<T>::type;
 
+/// expose type info for readable static assertions
+template <class... T>
+constexpr bool failing_on{false};
+
 }  // namespace impl
 }  // namespace haikan
-
-
-
