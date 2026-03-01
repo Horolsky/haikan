@@ -14,7 +14,6 @@
 #include <stdexcept>
 #include <tuple>
 #include "haikan/impl/reflect_default_init.hpp"
-#include "haikan/impl/reflect_default_next_fn.hpp"
 #include "haikan/impl/type_info.hpp"
 
 #include "haikan/impl/reflect.hpp"
