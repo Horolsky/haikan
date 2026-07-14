@@ -15,11 +15,13 @@
 #include <boost/optional.hpp>
 #include <boost/utility/string_view.hpp>
 
+#include "haikan/reflect.hpp"
 #include "haikan/impl/encoding_lua.hpp"
 #include "haikan/impl/keyword.hpp"
 #include "haikan/impl/keyword_attributes.hpp"
 #include "haikan/impl/keyword_tag_invoke.hpp"
 #include "haikan/impl/keyword_grammar.hpp"
+
 
 
 
@@ -204,30 +206,58 @@ bool EncodingLua::preprocess()
 
 sol::object EncodingLua::to_object(sol::state_view sv) const
 {
-    return sol::make_object(sv.lua_state(), sol::nil);
-    // TODO: implement serialization to plain Lua
+    if (size() == 0)
+    {
+        return sol::nil;
+    }
 
-    // boost::json::array out_keywords;
-    // boost::json::array out_depth;
-    // boost::json::array out_data;
+    switch (head())
+    {
+    case Keyword::_Literal:
+    case Keyword::PreProc:
+    case Keyword::Link:
+    {
+        return data[0];
+    }
+    default:
+        break;
+    }
 
-    // out_keywords.reserve(size_);
-    // out_depth.reserve(size_);
-    // out_data.reserve(size_);
+    auto keywords_out = sv.create_table(static_cast<int>(keywords.size()), 0);
+    auto depth_out = sv.create_table(static_cast<int>(depth.size()), 0);
+    auto data_out = sv.create_table(static_cast<int>(data.size()), 0);
 
-    // auto const base = depth_ ? depth_[0] : 0U;
-    // for (std::size_t i = 0; i < size_; ++i)
-    // {
-    //     out_keywords.push_back(static_cast<std::underlying_type_t<K>>(keywords_[i]));
-    //     out_depth.push_back(depth_[i] - base);
-    //     out_data.push_back(data_[i]);
-    // }
+    using reflect_kw = haikan::reflect<Keyword>;
+    for (std::size_t i = 0; i < keywords.size(); ++i)
+    {
+        auto const lua_index = i + 1;
+        keywords_out.set(lua_index, reflect_kw::solify(keywords[i], sv));
+        depth_out.set(lua_index, depth[i]);
 
-    // return {
-    //     {"keywords", std::move(out_keywords)},
-    //     {"depth", std::move(out_depth)},
-    //     {"data", std::move(out_data)},
-    // };
+        auto const& value = data[i];
+        if (value.get_type() == sol::type::userdata)
+        {
+            sol::userdata userdata = value.as<sol::userdata>();
+            sol::optional<sol::table> metadata = userdata["__haikan"];
+            if (metadata)
+            {
+                sol::optional<sol::function> solify = metadata.value()["solify"];
+                if (solify)
+                {
+                    sol::object serialized = solify.value()(value);
+                    data_out.set(lua_index, serialized);
+                    continue;
+                }
+            }
+        }
+        data_out.set(lua_index, value);
+    }
+
+    return sv.create_table_with(
+        "keywords", keywords_out,
+        "depth", depth_out,
+        "data", data_out
+    );
 }
 
 EncodingLua EncodingLua::slice(std::size_t start, std::size_t count) const noexcept

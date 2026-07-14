@@ -1,5 +1,4 @@
 common --enable_bzlmod=true --enable_platform_specific_config --stamp
-startup --output_user_root=/tmp/build_output
 build --workspace_status_command=tools/workspace_status.sh
 
 build:linux --sandbox_add_mount_pair=/tmp

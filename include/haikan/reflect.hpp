@@ -8,17 +8,23 @@ namespace haikan {
 
 template <class T>
 struct reflect
-    : impl::select_reflect_init<T>
-    , impl::select_reflect_solify<T>
-    , impl::select_reflect_desolify<T>
+    : impl::select_reflect_utype<T>
+    , impl::select_reflect_init<T>
+    , impl::select_reflect_serialize<T>
+    , impl::select_reflect_deserialize<T>
 {
     using value_type = T;
     using optional_type = boost::optional<T>::value_type;
 
     // TODO: doxygen
     // static boost::optional<T> init();
-    // static boost::optional<T> desolify(sol::object const& value);
-    // static sol::object solify(T const& value, sol::state_view L);
+
+    // serialization to plain Lua types
+    // static sol::object serialize(T const& value, sol::state_view L);
+    // static boost::optional<T> deserialize(sol::object const& value);
+
+    // serialization to plain Lua types
+    // static void utype(ReflectionContext& ctx)
 };
 
 

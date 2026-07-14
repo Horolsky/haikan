@@ -1,6 +1,20 @@
 #include <boost/test/unit_test.hpp>
+#include <boost/describe.hpp>
 
+#include "haikan/reflect.hpp"
 #include "haikan/impl/encoding_lua.hpp"
+
+struct EncodingPayload
+{
+    int value;
+
+    friend bool operator==(EncodingPayload const& lhs, EncodingPayload const& rhs)
+    {
+        return lhs.value == rhs.value;
+    }
+};
+
+BOOST_DESCRIBE_STRUCT(EncodingPayload, (), (value))
 
 using haikan::impl::EncodingLua;
 using haikan::impl::Keyword;
@@ -84,6 +98,33 @@ BOOST_AUTO_TEST_CASE(EmptyAndMissingChildrenAreSafe)
     BOOST_CHECK_EQUAL(empty.child_idx(0), 0U);
     BOOST_CHECK(empty.child(0).size() == 0U);
     BOOST_CHECK(empty.subtree(0).size() == 0U);
+}
+
+BOOST_AUTO_TEST_CASE(ToObjectPreservesPlainPayload)
+{
+    EncodingLua encoding;
+    encoding.push_back(Keyword::Add, 0, object(17));
+
+    sol::table result = encoding.to_object(state);
+    sol::table data = result["data"];
+
+    BOOST_CHECK_EQUAL(data.get<int>(1), 17);
+}
+
+BOOST_AUTO_TEST_CASE(ToObjectSolifiesRegisteredUserdata)
+{
+    EncodingPayload expected{42};
+    sol::object payload = sol::make_object(state, expected);
+    state["payload"] = payload;
+    BOOST_REQUIRE(state.script("return payload.__haikan.serialize ~= nil").get<bool>());
+    EncodingLua encoding;
+    encoding.push_back(Keyword::Add, 0, payload);
+
+    sol::table result = encoding.to_object(state);
+    sol::table data = result["data"];
+    sol::object serialized = data[1];
+
+    BOOST_CHECK(serialized.as<EncodingPayload>() == expected);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
