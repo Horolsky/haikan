@@ -15,7 +15,8 @@
 namespace haikan {
 namespace impl {
 
-int reflect_default_next_fn(lua_State* L);
+sol::function make_reflect_default_next_fn(sol::table const& members);
+sol::function make_reflect_default_pairs_fn(sol::function const& next_fn);
 
 }
 }

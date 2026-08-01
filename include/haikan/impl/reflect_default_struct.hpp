@@ -176,10 +176,9 @@ struct default_reflect_struct_impl<T, Seen, mp_if<mp_and<mp_not<mp_contains<Seen
         });
         meta["members"] = members;
 
-        usertype.set(sol::meta_function::pairs, [](T& self) {
-            return std::make_tuple(reflect_default_next_fn, std::ref(self), sol::lua_nil_t{});
-        });
-        usertype.set(sol::meta_function::next, reflect_default_next_fn);
+        sol::function next_fn = make_reflect_default_next_fn(members);
+        usertype.set(sol::meta_function::pairs, make_reflect_default_pairs_fn(next_fn));
+        usertype.set(sol::meta_function::next, next_fn);
 
         meta.set("serialize", sol::as_function([](T const& obj, sol::this_state state) {
             return ThisType::serialize_impl(obj, sol::state_view(state));
