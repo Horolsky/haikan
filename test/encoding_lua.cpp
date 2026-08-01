@@ -3,6 +3,8 @@
 
 #include "haikan/reflect.hpp"
 #include "haikan/impl/encoding_lua.hpp"
+#include "haikan/reflection_registry.hpp"
+
 
 struct EncodingPayload
 {
@@ -116,15 +118,25 @@ BOOST_AUTO_TEST_CASE(ToObjectSolifiesRegisteredUserdata)
     EncodingPayload expected{42};
     sol::object payload = sol::make_object(state, expected);
     state["payload"] = payload;
-    BOOST_REQUIRE(state.script("return payload.__haikan.serialize ~= nil").get<bool>());
+
+    BOOST_CHECK_THROW(state.script("return payload.value == 42").get<bool>(), sol::error);
+    haikan::ReflectionRegistry::insert_auto(haikan::impl::type<EncodingPayload>);
+    haikan::ReflectionRegistry::init(state);
+    BOOST_REQUIRE(state.script("return payload.value == 42").get<bool>());
+
     EncodingLua encoding;
     encoding.push_back(Keyword::Add, 0, payload);
 
     sol::table result = encoding.to_object(state);
     sol::table data = result["data"];
-    sol::object serialized = data[1];
+    sol::object as_object = data[1];
 
-    BOOST_CHECK(serialized.as<EncodingPayload>() == expected);
+    BOOST_CHECK(as_object.as<EncodingPayload>() == expected);
+    state["as_object"] = as_object;
+
+    state.open_libraries();
+    BOOST_CHECK(state.script("return tostring(payload) == tostring(as_object)").get<bool>());
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()

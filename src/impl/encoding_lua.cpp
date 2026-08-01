@@ -227,11 +227,11 @@ sol::object EncodingLua::to_object(sol::state_view sv) const
     auto depth_out = sv.create_table(static_cast<int>(depth.size()), 0);
     auto data_out = sv.create_table(static_cast<int>(data.size()), 0);
 
-    using reflect_kw = haikan::reflect<Keyword>;
     for (std::size_t i = 0; i < keywords.size(); ++i)
     {
         auto const lua_index = i + 1;
-        keywords_out.set(lua_index, reflect_kw::solify(keywords[i], sv));
+
+        keywords_out.set(lua_index, sol::make_object(sv, keywords[i]));
         depth_out.set(lua_index, depth[i]);
 
         auto const& value = data[i];
@@ -241,10 +241,10 @@ sol::object EncodingLua::to_object(sol::state_view sv) const
             sol::optional<sol::table> metadata = userdata["__haikan"];
             if (metadata)
             {
-                sol::optional<sol::function> solify = metadata.value()["solify"];
-                if (solify)
+                sol::optional<sol::function> serialize = metadata.value()["serialize"];
+                if (serialize)
                 {
-                    sol::object serialized = solify.value()(value);
+                    sol::object serialized = serialize.value()(value);
                     data_out.set(lua_index, serialized);
                     continue;
                 }
