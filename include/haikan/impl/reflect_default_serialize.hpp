@@ -19,6 +19,8 @@
 
 #include "haikan/impl/reflect_traits.hpp"
 #include "haikan/impl/type_tag.hpp"
+#include "haikan/impl/json_ptr_lua.hpp"
+#include "haikan/impl/type_tag.hpp"
 
 namespace haikan {
 namespace impl {
@@ -44,112 +46,20 @@ inline int hexdump_value(char c)
 template <class T>
 struct default_reflect_serialize
 {
-    static sol::table get_or_create_table(sol::state_view L, sol::table parent, char const* name)
+
+    static boost::optional<sol::table> metadata(sol::state_view L)
     {
-        sol::object obj = parent[name];
-        if (obj.get_type() == sol::type::table)
-        {
-            return obj;
-        }
-        sol::table tbl = L.create_table();
-        parent[name] = tbl;
-        return tbl;
-    }
-
-
-    static bool may_have_registered_utype(sol::state_view L, std::string const& name)
-    {
-        sol::object usertype_obj = L[name];
-        return usertype_obj.get_type() != sol::type::nil && usertype_obj.get_type() != sol::type::none;
-    }
-
-    static sol::optional<sol::table> metadata_from_object(sol::object obj)
-    {
-        if (obj.get_type() != sol::type::userdata)
-        {
-            return sol::optional<sol::table>{};
-        }
-        try
-        {
-            sol::userdata userdata = obj;
-            sol::table metatable = userdata[sol::metatable_key];
-            sol::optional<sol::table> meta = metatable["__haikan"];
-            if (meta)
-            {
-                return meta;
-            }
-
-            sol::optional<sol::table> index = metatable["__index"];
-            if (index)
-            {
-                sol::optional<sol::table> index_meta = index.value()["__haikan"];
-                if (index_meta)
+        static std::size_t const tindex = typeid(T).hash_code();
+        return at_pointer(L.globals(), "/haikan/utypes")
+            .flat_map([](sol::object obj) -> boost::optional<sol::table> {
+                sol::table utypes = obj;
+                sol::object hmeta = utypes[tindex];
+                if (hmeta.get_type() == sol::type::table)
                 {
-                    return index_meta;
+                    return hmeta.as<sol::table>();
                 }
-            }
-        }
-        catch (sol::error const&)
-        {
-        }
-
-        try
-        {
-            sol::userdata userdata = obj;
-            sol::optional<sol::table> meta = userdata["__haikan"];
-            return meta;
-        }
-        catch (sol::error const&)
-        {
-            return sol::optional<sol::table>{};
-        }
-    }
-
-    static sol::optional<sol::table> metadata(sol::state_view L, T const* obj = nullptr)
-    {
-        sol::object root_obj = L["haikan"];
-        if (root_obj.get_type() != sol::type::table)
-        {
-            return sol::optional<sol::table>{};
-        }
-
-        sol::table root = root_obj;
-        sol::object utypes_obj = root["utypes"];
-        if (utypes_obj.get_type() == sol::type::table)
-        {
-            sol::table utypes = utypes_obj;
-            sol::object registered_meta = utypes[typeid(T).hash_code()];
-            if (registered_meta.get_type() == sol::type::nil || registered_meta.get_type() == sol::type::none)
-            {
-                registered_meta = utypes[std::string(sol::usertype_traits<T>::name())];
-            }
-            if (registered_meta.get_type() == sol::type::table)
-            {
-                return registered_meta.as<sol::table>();
-            }
-        }
-
-        if (!may_have_registered_utype(L, std::string(sol::usertype_traits<T>::name())))
-        {
-            return sol::optional<sol::table>{};
-        }
-
-        if (obj != nullptr)
-        {
-            sol::optional<sol::table> meta = metadata_from_object(sol::make_object(L.lua_state(), *obj));
-            if (meta)
-            {
-                return meta;
-            }
-        }
-
-        auto init = reflect<T>::init();
-        if (init)
-        {
-            return metadata_from_object(sol::make_object(L.lua_state(), init.value()));
-        }
-
-        return sol::optional<sol::table>{};
+                return boost::none;
+            });
     }
 
     template <class U = T>
@@ -223,7 +133,7 @@ struct default_reflect_serialize
 
     static sol::object serialize(T const& obj, sol::state_view L)
     {
-        sol::optional<sol::table> meta = metadata(L, &obj);
+        boost::optional<sol::table> meta = metadata(L);
         if (meta)
         {
             sol::optional<sol::function> serialize_fn = meta.value()["serialize"];
@@ -241,7 +151,7 @@ struct default_reflect_serialize
     static boost::optional<T> deserialize(sol::object obj)
     {
         sol::state_view L(obj.lua_state());
-        sol::optional<sol::table> meta = metadata(L);
+        boost::optional<sol::table> meta = metadata(L);
         if (meta)
         {
             sol::optional<sol::function> deserialize_fn = meta.value()["deserialize"];

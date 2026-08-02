@@ -55,6 +55,11 @@ public:
 
     static void init(sol::state_view L);
 
+    static boost::optional<sol::table> get_utype(std::size_t ti, sol::state_view L)
+    {
+        return L["haikan"]["utypes"][ti];
+    }
+
     template <class T>
     static boost::optional<sol::table> get_utype(impl::type_tag<T>, sol::state_view L)
     {

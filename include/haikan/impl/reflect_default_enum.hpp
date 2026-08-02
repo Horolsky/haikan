@@ -196,7 +196,7 @@ struct default_reflect_enum_impl<T, Seen, mp_if<mp_and<mp_not<mp_contains<Seen, 
         usertype.set("num", &U::value);
         usertype.set(sol::meta_function::to_string, &U::to_string);
 
-        sol::table meta = usertype["__haikan"];
+        sol::table meta = usertype.hmeta();
         meta.set("type_name", sol::usertype_traits<T>::name());
         meta.set("serialize", sol::as_function([](U const& value, sol::this_state state) {
             return ThisType::serialize(value.value(), sol::state_view(state));

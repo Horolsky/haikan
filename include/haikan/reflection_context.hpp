@@ -32,7 +32,7 @@ public:
     struct Record
     {
         std::size_t type_index_hash;
-        sol::table meta;
+        sol::table meta; // haikan meta
         std::function<void(sol::state_view)> on_init;
     };
 
@@ -55,9 +55,10 @@ public:
                 });
         }
 
-        sol::object operator[](char const* key) const
+        //
+        sol::table& hmeta()
         {
-            return table[key];
+            return table;
         }
 
     private:
@@ -81,49 +82,30 @@ public:
 
     template <class T>
     RegistrationTable<T> get_registration_table(impl::type_tag<T>)
-    // sol::table get_registration_table(impl::type_tag<T>)
     {
-        sol::table meta = state.create_table();
-        meta["type_name"] = sol::usertype_traits<T>::name();
-        meta["type_index_hash"] = typeid(T).hash_code();
-
-        sol::table tbl = state.create_table();
-        tbl.set("__haikan", meta);
+        sol::table hmeta = state.create_table();
+        hmeta["type_name"] = sol::usertype_traits<T>::name();
+        hmeta["type_index_hash"] = typeid(T).hash_code();
 
         using Action = typename RegistrationTable<T>::Action;
         auto actions = std::make_shared<std::vector<Action>>();
 
         records.emplace_back();
         auto& record = records.back();
-        record.on_init = [tbl=tbl, actions=actions](sol::state_view state){
-        // record.on_init = [tbl=tbl](sol::state_view state){
+        record.on_init = [hmeta=hmeta, actions=actions](sol::state_view state){
             sol::simple_usertype<T> ut = state.create_simple_usertype<T>();
-            // tbl.for_each([&ut](sol::object const& key, sol::object const& value) {
-            //     if (key.is<sol::meta_function>())
-            //     {
-            //         ut.set(key.as<sol::meta_function>(), value);
-            //     }
-            //     else if (key.is<std::string>())
-            //     {
-            //         ut.set(key.as<std::string>(), value);
-            //     }
-            //     else
-            //     {
-            //         throw "wrong!!!";
-            //     }
-            // });
             for (auto& action: *actions)
             {
                 action(ut);
             }
-            state.set_usertype(tbl["__haikan"]["type_name"].get<std::string>(), ut);
+            state.set_usertype(hmeta["type_name"].get<std::string>(), ut);
+            // ut.set("type_index", typeid(T).hash_code());
         };
 
         record.type_index_hash = typeid(T).hash_code();
-        record.meta = meta;
+        record.meta = hmeta;
 
-        // return tbl;
-        return RegistrationTable<T>{tbl, actions};
+        return RegistrationTable<T>{hmeta, actions};
     }
 
 private:

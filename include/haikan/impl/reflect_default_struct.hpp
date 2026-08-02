@@ -158,7 +158,7 @@ struct default_reflect_struct_impl<T, Seen, mp_if<mp_and<mp_not<mp_contains<Seen
         using Bases = boost::describe::describe_bases<T, boost::describe::mod_public>;
 
         auto usertype = ctx.get_registration_table(impl::type<T>);
-        sol::table meta = usertype["__haikan"];
+        sol::table meta = usertype.hmeta();
 
         usertype.set(sol::meta_function::construct, [](){ return reflect<T>::init().value(); });
         usertype.set(sol::meta_function::call_function, [](){ return reflect<T>::init().value(); });
