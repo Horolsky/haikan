@@ -17,7 +17,7 @@
 namespace {
 
 
-bool json_ptr_is_array_index(boost::string_view token, std::int64_t& idx)
+bool json_ptr_is_array_index(boost::string_view token, std::int64_t& idx) noexcept
 {
     if (token.empty())
     {
@@ -43,7 +43,7 @@ bool json_ptr_is_array_index(boost::string_view token, std::int64_t& idx)
 }
 
 
-char const* json_ptr_unescape(boost::string_view token, char (&out)[(HAIKAN_MAX_JPTR_TOKEN_LEN + 1)])
+bool json_ptr_unescape(boost::string_view token, char (&out)[(HAIKAN_MAX_JPTR_TOKEN_LEN + 1)]) noexcept
 {
     char* dst = out;
     char* const end = out + HAIKAN_MAX_JPTR_TOKEN_LEN;
@@ -55,29 +55,35 @@ char const* json_ptr_unescape(boost::string_view token, char (&out)[(HAIKAN_MAX_
         {
             if (++i == token.size())
             {
-                throw std::invalid_argument("Invalid JSON Pointer escape");
+                // TODO: log debug "Invalid JSON Pointer escape";
+                return false;
             }
 
             switch (token[i])
             {
             case '0': c = '~'; break;
             case '1': c = '/'; break;
-            default: throw std::invalid_argument("Invalid JSON Pointer escape");
+            default:
+                {
+                    // TODO: log debug "Invalid JSON Pointer escape";
+                    return false;
+                }
             }
         }
 
         if (dst == end)
         {
-            throw std::length_error("JSON Pointer token is too long");
+            // TODO: log debug "JSON Pointer token is too long";
+            return false;
         }
         *dst++ = c;
     }
 
     *dst = '\0';
-    return out;
+    return true;
 }
 
-boost::string_view json_ptr_next_token(boost::string_view& ptr)
+boost::string_view json_ptr_next_token(boost::string_view& ptr) noexcept
 {
     BOOST_ASSERT(!ptr.empty());
     BOOST_ASSERT(ptr.front() == '/');
@@ -96,7 +102,7 @@ boost::string_view json_ptr_next_token(boost::string_view& ptr)
     return token;
 }
 
-sol::object json_ptr_get(sol::object obj, boost::string_view ptr)
+boost::optional<sol::object> json_ptr_get(sol::object obj, boost::string_view ptr) noexcept
 {
     if (ptr.empty())
     {
@@ -104,14 +110,16 @@ sol::object json_ptr_get(sol::object obj, boost::string_view ptr)
     }
     if (ptr.front() != '/')
     {
-        throw std::invalid_argument("Invalid JSON Pointer");
+        // TODO: log debug "Invalid JSON Pointer";
+        return boost::none;
     }
 
     while (!ptr.empty())
     {
         if (obj.get_type() != sol::type::table)
         {
-            throw std::out_of_range("JSON Pointer does not reference an object");
+            // TODO: log debug "JSON Pointer does not reference an object";
+            return boost::none;
         }
 
         boost::string_view const token = json_ptr_next_token(ptr);
@@ -125,19 +133,24 @@ sol::object json_ptr_get(sol::object obj, boost::string_view ptr)
         else
         {
             char key[(HAIKAN_MAX_JPTR_TOKEN_LEN + 1)];
-            obj = table[json_ptr_unescape(token, key)];
+            if (!json_ptr_unescape(token, key))
+            {
+                return boost::none;
+            }
+            obj = table[key];
         }
 
         if (obj == sol::nil)
         {
-            throw std::out_of_range("JSON Pointer does not exist");
+            // TODO: log debug "JSON Pointer does not exist";
+            return boost::none;
         }
     }
 
     return obj;
 }
 
-bool json_ptr_set(sol::object& obj, boost::string_view ptr, sol::object value, std::error_code& ec)
+bool json_ptr_set(sol::object& obj, boost::string_view ptr, sol::object value, std::error_code& ec) noexcept
 {
     ec.clear();
 
@@ -169,9 +182,10 @@ bool json_ptr_set(sol::object& obj, boost::string_view ptr, sol::object value, s
 
         std::int64_t idx = 0;
         bool const array_index = json_ptr_is_array_index(token, idx);
-        if (!array_index)
+        if (!array_index && !json_ptr_unescape(token, key))
         {
-            json_ptr_unescape(token, key);
+            ec = std::make_error_code(std::errc::invalid_argument);
+            return false;
         }
 
         if (ptr.empty())
@@ -210,27 +224,29 @@ namespace haikan {
 namespace impl {
 
 
-sol::object
+boost::optional<sol::object>
 at_pointer(
     sol::object obj,
-    boost::string_view ptr)
+    boost::string_view ptr) noexcept
 {
     return json_ptr_get(obj, ptr);
 }
 
 
-sol::object
+boost::optional<sol::object>
 set_at_pointer(
     sol::object& obj,
     boost::string_view ptr,
-    sol::object value)
+    sol::object value) noexcept
 {
     std::error_code ec;
-    if (!json_ptr_set(obj, ptr, value, ec))
+    if (json_ptr_set(obj, ptr, value, ec))
     {
-        throw std::system_error(ec);
+        return value;
     }
-    return value;
+    return boost::none;
 }
+
+
 }
 }

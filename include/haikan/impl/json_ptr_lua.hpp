@@ -7,6 +7,7 @@
 #pragma once
 
 
+#include <boost/optional.hpp>
 #include <boost/utility/string_view.hpp>
 
 #define SOL_ALL_SAFETIES_ON
@@ -21,7 +22,7 @@ namespace impl {
 /// @param obj target object
 /// @param ptr JSON Pointer
 /// @return Object node at given pointer
-sol::object at_pointer(sol::object obj, boost::string_view ptr);
+boost::optional<sol::object> at_pointer(sol::object obj, boost::string_view ptr) noexcept;
 
 
 /// @brief JSON Pointer Lua setter
@@ -29,7 +30,7 @@ sol::object at_pointer(sol::object obj, boost::string_view ptr);
 /// @param ptr JSON Pointer
 /// @param value New node object
 /// @return Object node at given pointer
-sol::object set_at_pointer(sol::object& obj, boost::string_view ptr, sol::object value);
+boost::optional<sol::object> set_at_pointer(sol::object& obj, boost::string_view ptr, sol::object value) noexcept;
 
 }
 }
