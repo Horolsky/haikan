@@ -129,13 +129,10 @@ BOOST_AUTO_TEST_CASE(ToObjectSolifiesRegisteredUserdata)
 
     sol::table result = encoding.to_object(state);
     sol::table data = result["data"];
-    sol::object as_object = data[1];
+    sol::object serialized = data[1];
 
-    BOOST_CHECK(as_object.as<EncodingPayload>() == expected);
-    state["as_object"] = as_object;
-
-    state.open_libraries();
-    BOOST_CHECK(state.script("return tostring(payload) == tostring(as_object)").get<bool>());
+    BOOST_REQUIRE(serialized.is<sol::table>());
+    BOOST_CHECK_EQUAL(serialized.as<sol::table>().get<int>("value"), expected.value);
 
 }
 

@@ -4,8 +4,10 @@
 #include <deque>
 #include <list>
 #include <map>
+#include <memory>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "haikan/reflection_registry.hpp"
@@ -113,6 +115,48 @@ BOOST_AUTO_TEST_CASE(ReflectContainerDeserializeRejectsInvalidObjects)
     invalid.add(3);
 
     BOOST_CHECK(!haikan::reflect<std::vector<int>>::deserialize(invalid));
+}
+
+BOOST_AUTO_TEST_CASE(ReflectSharedPtr)
+{
+    sol::state state{};
+    haikan::ReflectionRegistry::insert_auto(haikan::impl::type<std::shared_ptr<Lol>>);
+    haikan::ReflectionRegistry::init(state);
+
+    auto const input = std::make_shared<Lol>(Foo::Kek, 67);
+    sol::object serialized = haikan::reflect<std::shared_ptr<Lol>>::serialize(input, state);
+    BOOST_REQUIRE(serialized.is<sol::table>());
+
+    auto deserialized = haikan::reflect<std::shared_ptr<Lol>>::deserialize(serialized);
+    BOOST_REQUIRE(deserialized);
+    BOOST_REQUIRE(*deserialized);
+    BOOST_CHECK(**deserialized == *input);
+
+    std::shared_ptr<Lol> const empty;
+    BOOST_CHECK(haikan::reflect<std::shared_ptr<Lol>>::serialize(empty, state) == sol::nil);
+    BOOST_CHECK(!haikan::reflect<std::shared_ptr<Lol>>::deserialize(sol::make_object(state, 42)));
+}
+
+BOOST_AUTO_TEST_CASE(ReflectPair)
+{
+    using Pair = std::pair<int, std::string>;
+
+    sol::state state{};
+    Pair const input{42, "Lol"};
+
+    sol::object serialized = haikan::reflect<Pair>::serialize(input, state);
+    BOOST_REQUIRE(serialized.is<sol::table>());
+    sol::table table = serialized;
+    BOOST_CHECK_EQUAL(table[1].get<int>(), input.first);
+    BOOST_CHECK_EQUAL(table[2].get<std::string>(), input.second);
+
+    auto deserialized = haikan::reflect<Pair>::deserialize(serialized);
+    BOOST_REQUIRE(deserialized);
+    BOOST_CHECK(*deserialized == input);
+
+    BOOST_CHECK(!haikan::reflect<Pair>::deserialize(sol::make_object(state, 42)));
+    table[2] = sol::nil;
+    BOOST_CHECK(!haikan::reflect<Pair>::deserialize(table));
 }
 
 BOOST_AUTO_TEST_CASE(ReflectMap)

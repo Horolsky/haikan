@@ -238,15 +238,18 @@ sol::object EncodingLua::to_object(sol::state_view sv) const
         if (value.get_type() == sol::type::userdata)
         {
             sol::userdata userdata = value.as<sol::userdata>();
-            sol::optional<sol::table> metadata = userdata["__haikan"];
-            if (metadata)
+            sol::object metadata = userdata["meta"];
+            if (metadata.is<ReflectionMeta>())
             {
-                sol::optional<sol::function> serialize = metadata.value()["serialize"];
-                if (serialize)
+                ReflectionMeta const& meta = metadata.as<ReflectionMeta const&>();
+                if (meta.serialize)
                 {
-                    sol::object serialized = serialize.value()(value);
-                    data_out.set(lua_index, serialized);
-                    continue;
+                    sol::protected_function_result result = meta.serialize(value);
+                    if (result.valid())
+                    {
+                        data_out.set(lua_index, result.get<sol::object>());
+                        continue;
+                    }
                 }
             }
         }

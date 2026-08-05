@@ -24,16 +24,39 @@ make_fixture(
     ],
 )
 
+make_fixture(
+    name = "reflect_types",
+    hdrs = [
+        "fixture/reflect_types.hpp"
+    ],
+    deps = [
+        "@boost.describe//:boost.describe",
+        "@boost.optional//:boost.optional",
+        "//:haikan",
+    ],
+)
+
 
 make_unit_tests(
     srcs = SAMPLE_TEST,
     fixtures = [":samples"]
 )
 
+REFLECT_TESTS = [
+    "reflect_basics.cpp",
+    "reflect_containers.cpp",
+    "reflect_reference.cpp",
+]
+
 make_unit_tests(
     srcs = glob([
         "*.cpp"
-    ], exclude = SAMPLE_TEST + MANUAL_TESTS),
+    ], exclude = SAMPLE_TEST + MANUAL_TESTS + REFLECT_TESTS),
+)
+
+make_unit_tests(
+    srcs = REFLECT_TESTS,
+    fixtures = [":reflect_types"],
 )
 
 make_unit_tests(

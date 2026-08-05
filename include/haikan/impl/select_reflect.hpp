@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <utility>
+
 #include <boost/optional.hpp>
 
 #define SOL_ALL_SAFETIES_ON
@@ -21,17 +23,17 @@ namespace impl {
 
 template <class T>
 struct select_reflect_utype<T, enable_custom_reflect_utype<T>> {
-    static void utype(ReflectionContext& ctx) { ::haikan::custom_reflect<T>::utype(ctx); }
+    static void utype(ReflectionContextFactory& ctx) { ::haikan::custom_reflect<T>::utype(ctx); }
 };
 
 template <class T>
 struct select_reflect_utype<T, enable_default_reflect_utype<T>> {
-    static void utype(ReflectionContext& ctx) { ::haikan::impl::default_reflect<T>::utype(ctx); }
+    static void utype(ReflectionContextFactory& ctx) { ::haikan::impl::reflect_default<T>::utype(ctx); }
 };
 
 template <class T>
 struct select_reflect_utype<T, enable_missing_reflect_utype<T>> {
-    static void utype(ReflectionContext&) {
+    static void utype(ReflectionContextFactory&) {
         static_assert(failing_on<T>, "No custom_reflect<T>::utype defined");
     };
 };
@@ -45,7 +47,7 @@ struct select_reflect_init<T, enable_custom_reflect_init<T>> {
 
 template <class T>
 struct select_reflect_init<T, enable_default_reflect_init<T>> {
-    static boost::optional<T> init() { return ::haikan::impl::default_reflect<T>::init(); }
+    static boost::optional<T> init() { return ::haikan::impl::reflect_default<T>::init(); }
 };
 
 template <class T>
@@ -66,16 +68,14 @@ struct select_reflect_serialize<T, enable_custom_reflect_serialize<T>> {
 
 template <class T>
 struct select_reflect_serialize<T, enable_default_reflect_serialize<T>> {
-    static sol::object serialize(T const& value, sol::state_view L) { return ::haikan::impl::default_reflect<T>::serialize(value, L); }
-    static sol::object serialize(T && value, sol::state_view L) { return ::haikan::impl::default_reflect<T>::serialize(std::move(value), L); }
+    static sol::object serialize(T const& value, sol::state_view L) { return ::haikan::impl::reflect_default<T>::serialize(value, L); }
+    static sol::object serialize(T && value, sol::state_view L) { return ::haikan::impl::reflect_default<T>::serialize(std::move(value), L); }
 };
 
 template <class T>
 struct select_reflect_serialize<T, enable_missing_reflect_serialize<T>> {
-    static sol::object serialize(T const&, sol::state_view) {
-        static_assert(failing_on<T>, "No custom_reflect<T>::serialize defined");
-        return {};
-    };
+    static sol::object serialize(T const& value, sol::state_view L) { return ::haikan::impl::reflect_serialize_fallback<T>::serialize(value, L); }
+    static sol::object serialize(T && value, sol::state_view L) { return ::haikan::impl::reflect_serialize_fallback<T>::serialize(std::move(value), L); }
 };
 
 
@@ -87,15 +87,12 @@ struct select_reflect_deserialize<T, enable_custom_reflect_deserialize<T>> {
 
 template <class T>
 struct select_reflect_deserialize<T, enable_default_reflect_deserialize<T>> {
-    static boost::optional<T> deserialize(sol::object const& value) { return ::haikan::impl::default_reflect<T>::deserialize(value); }
+    static boost::optional<T> deserialize(sol::object const& value) { return ::haikan::impl::reflect_default<T>::deserialize(value); }
 };
 
 template <class T>
 struct select_reflect_deserialize<T, enable_missing_reflect_deserialize<T>> {
-    static boost::optional<T> deserialize(sol::object const&) {
-        static_assert(failing_on<T>, "No custom_reflect<T>::deserialize defined");
-        return {};
-    };
+    static boost::optional<T> deserialize(sol::object const& value) { return ::haikan::impl::reflect_serialize_fallback<T>::deserialize(value); }
 };
 
 

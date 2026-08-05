@@ -2,7 +2,7 @@
 
 #include <boost/optional.hpp>
 
-#include "haikan/impl/reflect.hpp"
+#include "haikan/impl/select_reflect.hpp"
 
 namespace haikan {
 
@@ -24,7 +24,7 @@ struct reflect
     // static boost::optional<T> deserialize(sol::object const& value);
 
     // serialization to plain Lua types
-    // static void utype(ReflectionContext& ctx)
+    // static void utype(ReflectionContextFactory& ctx)
 };
 
 

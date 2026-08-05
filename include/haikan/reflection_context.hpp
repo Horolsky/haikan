@@ -11,7 +11,7 @@
 #include <functional>
 #include <memory>
 #include <string>
-#include <tuple>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -20,29 +20,29 @@
 #include <sol/sol.hpp>
 
 #include "haikan/reflection_meta.hpp"
+#include "haikan/impl/get_or_create_table.hpp"
 #include "haikan/impl/type_tag.hpp"
 
 
 namespace haikan {
 
-class ReflectionContext
+class ReflectionContextFactory
 {
 public:
 
     struct Record
     {
-        std::size_t type_index_hash;
-        sol::table meta; // haikan meta
+        ReflectionMeta meta;
         std::function<void(sol::state_view)> on_init;
     };
 
     template <class T>
-    class RegistrationTable
+    class RegistrationContext
     {
     public:
 
         template <class Key, class Value>
-        void set(Key&& key, Value&& value)
+        void usertype_set(Key&& key, Value&& value)
         {
             using key_type = typename std::decay<Key>::type;
             using value_type = typename std::decay<Value>::type;
@@ -56,63 +56,90 @@ public:
         }
 
         //
-        sol::table& hmeta()
+        ReflectionMeta& reflection_meta()
         {
-            return table;
+            return reflection_meta_.get();
+        }
+
+        sol::state_view state_view() const
+        {
+            return state;
+        }
+
+        template <class Function>
+        sol::protected_function make_function(Function&& function) const
+        {
+            return sol::make_object(
+                state.lua_state(), sol::as_function(std::forward<Function>(function)))
+                .template as<sol::protected_function>();
         }
 
     private:
 
-        friend class ReflectionContext;
+        friend class ReflectionContextFactory;
 
         using Action = std::function<void(sol::simple_usertype<T>&)>;
 
-        RegistrationTable(sol::table table, std::shared_ptr<std::vector<Action>> actions)
-        : table{std::move(table)}
+        RegistrationContext(std::reference_wrapper<ReflectionMeta> rm, std::shared_ptr<std::vector<Action>> actions, sol::state_view state)
+        : reflection_meta_{rm}
         , actions{std::move(actions)}
+        , state{state}
         {
         }
 
-        sol::table table;
+        std::reference_wrapper<ReflectionMeta> reflection_meta_;
         std::shared_ptr<std::vector<Action>> actions;
+        sol::state_view state;
     };
 
 
-    ~ReflectionContext() = default;
+    ~ReflectionContextFactory() = default;
 
-    template <class T>
-    RegistrationTable<T> get_registration_table(impl::type_tag<T>)
+    template <class T, class W = T>
+    RegistrationContext<W> make_registration_context(
+        impl::type_tag<T>, impl::type_tag<W> = {}
+    )
     {
-        sol::table hmeta = state.create_table();
-        hmeta["type_name"] = sol::usertype_traits<T>::name();
-        hmeta["type_index_hash"] = typeid(T).hash_code();
-
-        using Action = typename RegistrationTable<T>::Action;
+        using Action = typename RegistrationContext<W>::Action;
         auto actions = std::make_shared<std::vector<Action>>();
 
         records.emplace_back();
         auto& record = records.back();
-        record.on_init = [hmeta=hmeta, actions=actions](sol::state_view state){
-            sol::simple_usertype<T> ut = state.create_simple_usertype<T>();
+        record.meta.type_name = sol::usertype_traits<T>::name();
+        record.meta.type_index_hash = typeid(T).hash_code();
+        record.meta.wrapper_type_index_hash = typeid(W).hash_code();
+
+        record.on_init = [meta=std::ref(record.meta), actions=actions](sol::state_view L){
+            sol::simple_usertype<W> ut = L.create_simple_usertype<W>();
             for (auto& action: *actions)
             {
                 action(ut);
             }
-            state.set_usertype(hmeta["type_name"].get<std::string>(), ut);
-            // ut.set("type_index", typeid(T).hash_code());
+            ut.set("serialize", meta.get().serialize);
+            ut.set("deserialize", meta.get().deserialize);
+
+            sol::object lua_meta = sol::make_object(L.lua_state(), meta.get());
+
+            sol::table root = impl::get_or_create_table(L, L.globals(), "haikan");
+            sol::table utypes = impl::get_or_create_table(L, root, "utypes");
+            utypes[meta.get().type_index_hash] = lua_meta;
+            if (meta.get().wrapper_type_index_hash != meta.get().type_index_hash)
+            {
+                utypes[meta.get().wrapper_type_index_hash] = lua_meta;
+            }
+
+            ut.set("meta", lua_meta);
+            L.set_usertype(meta.get().type_name, ut);
         };
 
-        record.type_index_hash = typeid(T).hash_code();
-        record.meta = hmeta;
-
-        return RegistrationTable<T>{hmeta, actions};
+        return RegistrationContext<W>{std::ref(record.meta), actions, state};
     }
 
 private:
 
     friend class ReflectionRegistry;
 
-    ReflectionContext(sol::state_view L)
+    ReflectionContextFactory(sol::state_view L)
     : state{L}
     , records{}
     {

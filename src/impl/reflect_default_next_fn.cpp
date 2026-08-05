@@ -4,9 +4,11 @@
  * @license SPDX-License-Identifier: Apache-2.0
  */
 
+#include <cstddef>
 #include <string>
+#include <vector>
 
-#include "haikan/impl/reflect_default_next_fn.hpp"
+#include "haikan/impl/default_next_fn.hpp"
 
 
 
@@ -17,39 +19,37 @@ namespace {
 
 int reflect_default_next_fn(lua_State* L)
 {
-    sol::userdata self = sol::stack::get<sol::userdata>(L, 1);
-    sol::table members = sol::stack::get<sol::table>(L, lua_upvalueindex(1));
-
-    sol::stack_object current_key(L, 2);
-    bool const current_key_is_nil = current_key.is<sol::lua_nil_t>();
-    bool const current_key_is_str = (current_key.get_type() == sol::type::string);
-
-    if (members.empty() || !(current_key_is_nil || current_key_is_str))
+    auto const& members = sol::stack::get<std::vector<std::string>>(L, lua_upvalueindex(1));
+    int const key_type = lua_type(L, 2);
+    if (members.empty() || (key_type != LUA_TNIL && key_type != LUA_TSTRING))
     {
         return 0;
     }
 
-    if (current_key_is_nil)
+    std::size_t next_index = 0;
+    if (key_type == LUA_TSTRING)
     {
-        std::string const first_key = members.get<std::string>(1);
-        sol::stack::push(L, first_key);
-        sol::stack::push(L, self[first_key]);
-        return 2;
+        std::string const key = sol::stack::get<std::string>(L, 2);
+        next_index = members.size();
+        for (std::size_t i = 0; i + 1 < members.size(); ++i)
+        {
+            if (members[i] == key)
+            {
+                next_index = i + 1;
+                break;
+            }
+        }
     }
 
-    std::string const key = current_key.as<std::string>();
-    for (std::size_t i = 1; i < members.size(); ++i)
+    if (next_index == members.size())
     {
-        if (members.get<std::string>(i) != key)
-        {
-            continue;
-        }
-        std::string const next_key = members.get<std::string>(i + 1);
-        sol::stack::push(L, next_key);
-        sol::stack::push(L, self[next_key]);
-        return 2;
+        return 0;
     }
-    return 0;
+
+    sol::stack::push(L, members[next_index]);
+    lua_pushvalue(L, -1);
+    lua_gettable(L, 1);
+    return 2;
 }
 
 int reflect_default_pairs_fn(lua_State* L)
@@ -60,21 +60,16 @@ int reflect_default_pairs_fn(lua_State* L)
     return 3;
 }
 
-sol::function make_closure(sol::table const& members, lua_CFunction fn)
+} // namespace
+
+sol::function make_reflect_default_next_fn(std::vector<std::string> const& members, sol::state_view state)
 {
-    lua_State* L = members.lua_state();
-    members.push();
-    lua_pushcclosure(L, fn, 1);
+    lua_State* L = state.lua_state();
+    sol::stack::push(L, members);
+    lua_pushcclosure(L, reflect_default_next_fn, 1);
     sol::function result(L, -1);
     lua_pop(L, 1);
     return result;
-}
-
-} // namespace
-
-sol::function make_reflect_default_next_fn(sol::table const& members)
-{
-    return make_closure(members, reflect_default_next_fn);
 }
 
 sol::function make_reflect_default_pairs_fn(sol::function const& next_fn)

@@ -6,7 +6,9 @@
 
 #pragma once
 
+#include <functional>
 #include <type_traits>
+
 #include <boost/optional.hpp>
 
 
@@ -22,10 +24,10 @@ struct is_reference_wrapper<std::reference_wrapper<T>> : std::true_type {};
 
 
 template <class T, class = void>
-struct default_reflect_init;
+struct reflect_init_default;
 
 template <class T>
-struct default_reflect_init<T, std::enable_if_t<std::is_default_constructible<T>::value && !is_reference_wrapper<T>::value>>
+struct reflect_init_default<T, std::enable_if_t<std::is_default_constructible<T>::value && !is_reference_wrapper<T>::value>>
 {
     static boost::optional<T> init()
     {
@@ -34,7 +36,7 @@ struct default_reflect_init<T, std::enable_if_t<std::is_default_constructible<T>
 };
 
 template <class T>
-struct default_reflect_init<T, std::enable_if_t<!std::is_default_constructible<T>::value && !is_reference_wrapper<T>::value>>
+struct reflect_init_default<T, std::enable_if_t<!std::is_default_constructible<T>::value && !is_reference_wrapper<T>::value>>
 {
     static boost::optional<T> init()
     {
@@ -43,7 +45,7 @@ struct default_reflect_init<T, std::enable_if_t<!std::is_default_constructible<T
 };
 
 template <class T>
-struct default_reflect_init<std::reference_wrapper<T>, void>
+struct reflect_init_default<std::reference_wrapper<T>, void>
 {
     static boost::optional<std::reference_wrapper<T>> init()
     {

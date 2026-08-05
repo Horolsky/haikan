@@ -17,6 +17,15 @@ BOOST_AUTO_TEST_CASE(ReflectReference)
     haikan::ReflectionRegistry::insert_auto(haikan::impl::type<std::reference_wrapper<Kek>>);
     haikan::ReflectionRegistry::init(state);
 
+    sol::object serialized = haikan::reflect<std::reference_wrapper<Kek>>::serialize(std::ref(test_kek), state);
+    BOOST_REQUIRE(serialized.is<sol::table>());
+    sol::table serialized_table = serialized;
+    BOOST_CHECK_EQUAL(serialized_table["x"].get<int>(), test_kek.x);
+    BOOST_CHECK_EQUAL(serialized_table["y"].get<double>(), test_kek.y);
+    auto serialized_foo = haikan::reflect<Foo>::deserialize(serialized_table["foo"]);
+    BOOST_REQUIRE(serialized_foo);
+    BOOST_CHECK(*serialized_foo == test_kek.foo);
+
     sol::object ref_handle = sol::make_object(state, std::ref(test_kek));
     BOOST_CHECK(ref_handle.as<std::reference_wrapper<Kek>>() == test_kek);
 

@@ -7,6 +7,7 @@
 
 #include "haikan/impl/traits.hpp"
 #include "haikan/reflection_registry.hpp"
+#include "haikan/reflection_meta.hpp"
 #include "fixture/reflect_types.hpp"
 
 struct BinaryReflectPayload
@@ -71,6 +72,26 @@ BOOST_AUTO_TEST_CASE(ReflectClass)
     BOOST_CHECK(x.as<Lol>() == test_lol);
 }
 
+BOOST_AUTO_TEST_CASE(ReflectDescribedStructMembersAreAccessibleInLua)
+{
+    sol::state state{};
+    haikan::ReflectionRegistry::insert_auto(haikan::impl::type<Lol>);
+    haikan::ReflectionRegistry::init(state);
+
+    sol::object value = sol::make_object(state, Lol{Foo::Kek, 42});
+    state["value"] = value;
+
+    BOOST_CHECK_EQUAL(state.script("return value.x").get<int>(), 42);
+    BOOST_CHECK_EQUAL(state.script("return value.foo:num()").get<int>(), 67);
+
+    state.script(R"(
+        value.x = 43
+        value.foo = "Lol"
+    )");
+
+    BOOST_CHECK(value.as<Lol>() == Lol(Foo::Lol, 43));
+}
+
 BOOST_AUTO_TEST_CASE(ReflectSubclass)
 {
     static_assert(boost::describe::has_describe_members<Kek>::value, "");
@@ -92,20 +113,30 @@ BOOST_AUTO_TEST_CASE(ReflectSubclass)
     BOOST_CHECK(x.as<Kek>() == test_kek);
 }
 
+namespace haikan {
+BOOST_DESCRIBE_STRUCT(ReflectionMeta, (), (
+    type_name, type_index_hash, wrapper_type_index_hash, members, serialize, deserialize
+))
+}
+
 BOOST_AUTO_TEST_CASE(ReflectDescribedStructSerializationUsesUtypeMetadata)
 {
+    using haikan::ReflectionMeta;
     sol::state state{};
+    // static_assert(boost::describe::has_describe_members<ReflectionMeta>::value, "");
+
+    // haikan::ReflectionRegistry::insert_auto(haikan::impl::type<ReflectionMeta>);
+    // haikan::ReflectionRegistry::insert_auto(haikan::impl::type<Foo>);
     haikan::ReflectionRegistry::insert_auto(haikan::impl::type<Lol>);
     haikan::ReflectionRegistry::init(state);
     sol::object haikan_table = state["haikan"];
     sol::object utypes_table = state["haikan"]["utypes"];
     sol::object lol_metadata = state["haikan"]["utypes"][typeid(Lol).hash_code()];
+    // sol::object foo_metadata = state["haikan"]["utypes"][typeid(Foo).hash_code()];
     BOOST_REQUIRE(haikan_table.get_type() == sol::type::table);
     BOOST_REQUIRE(utypes_table.get_type() == sol::type::table);
-    BOOST_REQUIRE(lol_metadata.get_type() == sol::type::table);
-    sol::table metadata = lol_metadata;
-    sol::object serialize_fn = metadata["serialize"];
-    BOOST_REQUIRE(serialize_fn.get_type() == sol::type::function);
+    BOOST_REQUIRE(lol_metadata.is<haikan::ReflectionMeta>());
+
 
     Lol const input{Foo::Kek, 67};
     sol::object serialized = haikan::reflect<Lol>::serialize(input, state);
@@ -121,6 +152,7 @@ BOOST_AUTO_TEST_CASE(ReflectDescribedStructSerializationUsesUtypeMetadata)
     tbl["x"] = 42;
 
     auto deserialized = haikan::reflect<Lol>::deserialize(tbl);
+    //  utypes_table
     BOOST_REQUIRE(deserialized);
     BOOST_CHECK(*deserialized == Lol(Foo::Lol, 42));
 }

@@ -7,23 +7,18 @@
 #pragma once
 
 
+#include <string>
+#include <type_traits>
+
 #include <boost/describe.hpp>
 #include <boost/optional.hpp>
-#include <boost/utility/string_view.hpp>
-#include <cstring>
-#include <functional>
-#include <stdexcept>
-#include <tuple>
-
 
 #include "haikan/impl/reflect_traits.hpp"
-#include "haikan/reflection_context.hpp"
-#include "haikan/reflection_meta.hpp"
 
 namespace haikan {
 namespace impl {
 
-template <class T, class=void>
+    template <class T, class=void>
 struct enum_stringify;
 
 template <class T>
@@ -146,62 +141,6 @@ class user_data_enum
 
   private:
     value_type value_;
-};
-
-
-
-template <class T, class Seen = mp_list<>, class = void>
-struct default_reflect_enum_impl;
-
-template <class T, class Seen>
-struct default_reflect_enum_impl<T, Seen, mp_if<mp_and<mp_not<mp_contains<Seen, user_data_enum<T>>>, boost::describe::has_describe_enumerators<T>>, void>>
-{
-    using U = user_data_enum<T>;
-    using ThisType = default_reflect_enum_impl<T, Seen>;
-
-    static sol::object serialize(T const& e, sol::state_view L)
-    {
-        return sol::make_object(L.lua_state(), U(e).to_string());
-    }
-
-    static boost::optional<T> deserialize(sol::object obj)
-    {
-        if (obj.is<U>())
-        {
-            return obj.as<U>().value();
-        }
-        if (obj.is<T>())
-        {
-            return obj.as<T>();
-        }
-        if (obj.is<typename U::underlying_type>())
-        {
-            return static_cast<T>(obj.as<typename U::underlying_type>());
-        }
-        if (obj.is<std::string>())
-        {
-            return enum_stringify<T>::from_string(obj.as<std::string>());
-        }
-        return boost::none;
-    }
-
-    static void utype(ReflectionContext& ctx)
-    {
-        using ctors = typename U::sol_constructors;
-
-        auto usertype = ctx.get_registration_table(impl::type<U>);
-        usertype.set(sol::meta_function::construct, ctors());
-        usertype.set(sol::call_constructor, ctors());
-        usertype.set("str", &U::to_string);
-        usertype.set("num", &U::value);
-        usertype.set(sol::meta_function::to_string, &U::to_string);
-
-        sol::table meta = usertype.hmeta();
-        meta.set("type_name", sol::usertype_traits<T>::name());
-        meta.set("serialize", sol::as_function([](U const& value, sol::this_state state) {
-            return ThisType::serialize(value.value(), sol::state_view(state));
-        }));
-    }
 };
 
 

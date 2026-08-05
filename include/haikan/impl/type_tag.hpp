@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <boost/mp11.hpp>
+
 namespace haikan {
 namespace impl {
 
@@ -25,7 +27,7 @@ template <class T = void>
 constexpr type_tag<T> const type{};
 
 template <class T>
-using is_type_tag = mp_similar<std::decay_t<T>, type_tag<void>>;
+using is_type_tag = boost::mp11::mp_similar<std::decay_t<T>, type_tag<void>>;
 
 }  // namespace impl
 }  // namespace haikan
