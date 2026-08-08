@@ -60,15 +60,6 @@ class user_data_enum
     using value_type = T;
     using underlying_type = std::underlying_type_t<T>;
 
-    using sol_constructors = sol::constructors<
-        sol::types<>,
-        sol::types<user_data_enum const&>,
-        sol::types<user_data_enum &&>,
-        sol::types<value_type const>,
-        sol::types<underlying_type const>,
-        sol::types<std::string const&>
-    >;
-
     user_data_enum() = default;
     user_data_enum(user_data_enum const&) = default;
     user_data_enum(user_data_enum &&) = default;

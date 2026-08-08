@@ -22,6 +22,7 @@
 #include "haikan/reflection_meta.hpp"
 #include "haikan/impl/get_or_create_table.hpp"
 #include "haikan/impl/type_tag.hpp"
+#include "haikan/impl/operator_handler.hpp"
 
 
 namespace haikan {
@@ -40,6 +41,7 @@ public:
     class RegistrationContext
     {
     public:
+        using type = T;
 
         template <class Key, class Value>
         void usertype_set(Key&& key, Value&& value)
@@ -111,6 +113,7 @@ public:
 
         record.on_init = [meta=std::ref(record.meta), actions=actions](sol::state_view L){
             sol::simple_usertype<W> ut = L.create_simple_usertype<W>();
+            impl::OperatorHandler::register_utype_ops(ut);
             for (auto& action: *actions)
             {
                 action(ut);

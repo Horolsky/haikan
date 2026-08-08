@@ -286,7 +286,9 @@ struct LuaState::MemoryPool
 };
 
 LuaState::LuaState(std::size_t const initial_capacity, std::size_t const max_capacity)
-    : pool_{new MemoryPool(initial_capacity, max_capacity)}
+    : initial_capacity_{initial_capacity}
+    , max_capacity_{max_capacity}
+    , pool_{new MemoryPool(initial_capacity, max_capacity)}
     , state_{lua_newstate(&MemoryPool::allocator, pool_.get())}
 {
     if (state_ == nullptr)
@@ -322,6 +324,26 @@ LuaState& LuaState::operator=(LuaState&& other) noexcept
 
     return *this;
 }
+
+void LuaState::reset()
+{
+    if (state_ != nullptr)
+    {
+        lua_close(state_);
+    }
+
+    pool_ = std::make_unique<MemoryPool>(initial_capacity_, max_capacity_);
+    state_ = lua_newstate(&MemoryPool::allocator, pool_.get());
+    if (state_ == nullptr)
+    {
+        HAIKAN_LOG(ERROR) << "Failed to reset Lua state"
+                          << ", initial_capacity=" << initial_capacity_
+                          << ", max_capacity=" << max_capacity_;
+        throw std::bad_alloc();
+    }
+    lua_atpanic(state_, &MemoryPool::panic);
+}
+
 
 LuaState::~LuaState()
 {

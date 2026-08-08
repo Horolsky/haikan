@@ -66,6 +66,8 @@ class LuaState
         return view();
     }
 
+    void reset();
+
     void open_libraries();
 
     std::size_t used_memory() const noexcept;
@@ -73,6 +75,8 @@ class LuaState
   private:
     struct MemoryPool;
 
+    std::size_t initial_capacity_;
+    std::size_t max_capacity_;
     std::unique_ptr<MemoryPool> pool_;
     lua_State* state_;
 };

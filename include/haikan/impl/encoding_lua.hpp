@@ -12,9 +12,12 @@
 #include <list>
 #include <ostream>
 
+#include <boost/json.hpp>
+
 #include "haikan/impl/keyword.hpp"
 #include "haikan/impl/keyword_attributes.hpp"
 #include "haikan/impl/keyword_grammar.hpp"
+#include "haikan/impl/lazy_lua_object.hpp"
 
 #define SOL_ALL_SAFETIES_ON
 #define SOL_CHECK_ARGUMENTS
@@ -27,14 +30,14 @@ struct EncodingLua
 {
     std::vector<Keyword> keywords;
     std::vector<std::size_t> depth;
-    std::vector<sol::object> data;
-    // sol::table data;
-
-    static bool is_preproc_token(sol::object const& value);
-    static bool is_link_token(sol::object const& value);
+    std::vector<LazyLuaObject> data;
 
     EncodingLua() = default;
+
+    explicit EncodingLua(std::nullptr_t) = delete;
+
     explicit EncodingLua(sol::object value);
+    explicit EncodingLua(LazyLuaObject value);
 
     std::size_t size() const;
 
@@ -42,7 +45,7 @@ struct EncodingLua
 
     bool operator!=(EncodingLua const& o) const;
 
-    void push_back(Keyword const& k, std::size_t const d, sol::object v);
+    void push_back(Keyword const& k, std::size_t const d, LazyLuaObject v);
 
     void append_to_root(EncodingLua tail);
 
@@ -55,13 +58,12 @@ struct EncodingLua
 
 
     // Serialize data to plain Lua
-    sol::object to_object(sol::state_view sv = nullptr) const;
+    sol::object to_object() const;
+    sol::object to_object(sol::state_view sv) const;
 
 
-    sol::object to_json() const
-    {
-        return to_object();
-    }
+    boost::json::value to_json() const;
+    boost::json::value to_json(sol::state_view sv) const;
 
     /// Create a subview [start, start+count)
     EncodingLua slice(std::size_t start, std::size_t count) const noexcept;
@@ -91,6 +93,11 @@ struct EncodingLua
     /// Get subview on child # ord
     /// If not found, returns empty view
     EncodingLua child(int ord) const noexcept;
+
+    bool empty() const
+    {
+        return keywords.empty();
+    }
 
     bool is_const() const;
     bool is_boolean() const;

@@ -20,6 +20,7 @@ BOOST_DESCRIBE_STRUCT(EncodingPayload, (), (value))
 
 using haikan::impl::EncodingLua;
 using haikan::impl::Keyword;
+using haikan::impl::LazyLuaObject;
 
 namespace
 {
@@ -40,11 +41,11 @@ BOOST_FIXTURE_TEST_SUITE(EncodingLuaTests, EncodingLuaSuite)
 
 BOOST_AUTO_TEST_CASE(ClassifiesStringTokens)
 {
-    BOOST_CHECK(EncodingLua::is_preproc_token(sol::make_object(state, "$[value]")));
-    BOOST_CHECK(!EncodingLua::is_preproc_token(sol::make_object(state, "$value")));
-    BOOST_CHECK(EncodingLua::is_link_token(sol::make_object(state, "$value")));
-    BOOST_CHECK(!EncodingLua::is_link_token(sol::make_object(state, "$[value]")));
-    BOOST_CHECK(!EncodingLua::is_link_token(object(1)));
+    BOOST_CHECK(LazyLuaObject(sol::make_object(state, "$[value]")).is_preproc_token());
+    BOOST_CHECK(!LazyLuaObject(sol::make_object(state, "$value")).is_preproc_token());
+    BOOST_CHECK(LazyLuaObject(sol::make_object(state, "$value")).is_link_token());
+    BOOST_CHECK(!LazyLuaObject(sol::make_object(state, "$[value]")).is_link_token());
+    BOOST_CHECK(!LazyLuaObject(object(1)).is_link_token());
 }
 
 BOOST_AUTO_TEST_CASE(ConstructsLiteralAndTokens)
@@ -61,7 +62,7 @@ BOOST_AUTO_TEST_CASE(ConstructsLiteralAndTokens)
 
 BOOST_AUTO_TEST_CASE(SlicesAndTraversesTrees)
 {
-    EncodingLua tree;
+    EncodingLua tree{};
     tree.push_back(Keyword::Add, 0, object(0));
     tree.push_back(Keyword::Mul, 1, object(1));
     tree.push_back(Keyword::_Literal, 2, object(2));
@@ -74,7 +75,7 @@ BOOST_AUTO_TEST_CASE(SlicesAndTraversesTrees)
     BOOST_CHECK_EQUAL(first.size(), 2U);
     BOOST_CHECK(first.head() == Keyword::Mul);
     BOOST_CHECK_EQUAL(last.size(), 1U);
-    BOOST_CHECK_EQUAL(last.data.front().as<int>(), 3);
+    BOOST_CHECK_EQUAL(last.data.front().load(state).as<int>(), 3);
     BOOST_CHECK_EQUAL(tree.children().size(), 2U);
     BOOST_CHECK(tree.slice(4, 1).size() == 0U);
 }
@@ -82,7 +83,7 @@ BOOST_AUTO_TEST_CASE(SlicesAndTraversesTrees)
 BOOST_AUTO_TEST_CASE(AppendsAtRootDepth)
 {
     EncodingLua root(object(0));
-    EncodingLua tail;
+    EncodingLua tail{};
     tail.push_back(Keyword::Mul, 0, object(1));
     tail.push_back(Keyword::_Literal, 1, object(2));
 
@@ -95,7 +96,7 @@ BOOST_AUTO_TEST_CASE(AppendsAtRootDepth)
 
 BOOST_AUTO_TEST_CASE(EmptyAndMissingChildrenAreSafe)
 {
-    EncodingLua empty;
+    EncodingLua empty{};
 
     BOOST_CHECK_EQUAL(empty.child_idx(0), 0U);
     BOOST_CHECK(empty.child(0).size() == 0U);
@@ -104,10 +105,10 @@ BOOST_AUTO_TEST_CASE(EmptyAndMissingChildrenAreSafe)
 
 BOOST_AUTO_TEST_CASE(ToObjectPreservesPlainPayload)
 {
-    EncodingLua encoding;
+    EncodingLua encoding{};
     encoding.push_back(Keyword::Add, 0, object(17));
 
-    sol::table result = encoding.to_object(state);
+    sol::table result = encoding.to_object();
     sol::table data = result["data"];
 
     BOOST_CHECK_EQUAL(data.get<int>(1), 17);
@@ -124,10 +125,10 @@ BOOST_AUTO_TEST_CASE(ToObjectSolifiesRegisteredUserdata)
     haikan::ReflectionRegistry::init(state);
     BOOST_REQUIRE(state.script("return payload.value == 42").get<bool>());
 
-    EncodingLua encoding;
+    EncodingLua encoding{};
     encoding.push_back(Keyword::Add, 0, payload);
 
-    sol::table result = encoding.to_object(state);
+    sol::table result = encoding.to_object();
     sol::table data = result["data"];
     sol::object serialized = data[1];
 

@@ -9,7 +9,7 @@
 #include <boost/phoenix/phoenix.hpp>
 #include <boost/spirit/include/karma.hpp>
 
-#include "haikan/impl/expression.hpp"
+#include "haikan/expression_lua.hpp"
 #include "haikan/impl/keyword_grammar.hpp"
 
 namespace haikan {
@@ -17,8 +17,8 @@ namespace impl {
 
 
 template <typename OutputIterator>
-struct ExpressionGrammar : boost::spirit::karma::grammar<OutputIterator, ExpressionView()> {
-    ExpressionGrammar() : ExpressionGrammar::base_type(start)
+struct ExpressionLuaGrammar : boost::spirit::karma::grammar<OutputIterator, ExpressionLua()> {
+    ExpressionLuaGrammar() : ExpressionLuaGrammar::base_type(start)
     {
         namespace karma = boost::spirit::karma;
         namespace phoenix = boost::phoenix;
@@ -29,19 +29,19 @@ struct ExpressionGrammar : boost::spirit::karma::grammar<OutputIterator, Express
         using karma::lit;
         using karma::string;
 
-        auto const is_literal          = boost::phoenix::bind(&ExpressionView::is_literal, _val);
-        auto const is_preproc          = boost::phoenix::bind(&ExpressionView::is_preproc, _val);
-        auto const is_link             = boost::phoenix::bind(&ExpressionView::is_link, _val);
-        auto const is_valid_link       = boost::phoenix::bind(&ExpressionView::is_valid_link, _val);
-        auto const has_subexpr         = boost::phoenix::bind(&ExpressionView::has_subexpr, _val);
-        auto const serialize           = boost::phoenix::bind(&ExpressionView::serialize, _val);
-        auto const keyword_to_str      = boost::phoenix::bind(&ExpressionView::keyword_to_str, _val);
-        auto const subexpressions_list = boost::phoenix::bind(&ExpressionView::subexpressions_list, _val);
-        auto const link_parameters     = boost::phoenix::bind(&ExpressionView::link_parameters, _val);
-        auto const is_infix_pipe       = boost::phoenix::bind(&ExpressionView::is_infix_pipe, _val);
-        auto const is_infix_fork       = boost::phoenix::bind(&ExpressionView::is_infix_fork, _val);
-        auto const is_infix_tuple      = boost::phoenix::bind(&ExpressionView::is_infix_tuple, _val);
-        auto const is_complete_flip    = boost::phoenix::bind(&ExpressionView::is_complete_flip, _val);
+        auto const is_literal          = boost::phoenix::bind(&ExpressionLua::is_literal, _val);
+        auto const is_preproc          = boost::phoenix::bind(&ExpressionLua::is_preproc, _val);
+        auto const is_link             = boost::phoenix::bind(&ExpressionLua::is_link, _val);
+        auto const is_valid_link       = boost::phoenix::bind(&ExpressionLua::is_valid_link, _val);
+        auto const has_subexpr         = boost::phoenix::bind(&ExpressionLua::has_subexpr, _val);
+        auto const serialize           = boost::phoenix::bind(&ExpressionLua::serialize, _val);
+        auto const keyword_to_str      = boost::phoenix::bind(&ExpressionLua::keyword_to_str, _val);
+        auto const subexpressions_list = boost::phoenix::bind(&ExpressionLua::subexpressions_list, _val);
+        auto const link_parameters     = boost::phoenix::bind(&ExpressionLua::link_parameters, _val);
+        auto const is_infix_pipe       = boost::phoenix::bind(&ExpressionLua::is_infix_pipe, _val);
+        auto const is_infix_fork       = boost::phoenix::bind(&ExpressionLua::is_infix_fork, _val);
+        auto const is_infix_tuple      = boost::phoenix::bind(&ExpressionLua::is_infix_tuple, _val);
+        auto const is_complete_flip    = boost::phoenix::bind(&ExpressionLua::is_complete_flip, _val);
 
         start
             = eps(is_literal)      << karma::lazy(serialize)
@@ -78,8 +78,8 @@ struct ExpressionGrammar : boost::spirit::karma::grammar<OutputIterator, Express
         keyword = string[_1 = keyword_to_str] << -(eps(has_subexpr)  << parameters[_1 = subexpressions_list]);
     }
 
-    boost::spirit::karma::rule<OutputIterator, ExpressionView()> start, subexpr, keyword;
-    boost::spirit::karma::rule<OutputIterator, std::vector<ExpressionView>()> parameters, fork, pipe, tuple, link, flip, nested_pipe, nested_fork, nested_link;
+    boost::spirit::karma::rule<OutputIterator, ExpressionLua()> start, subexpr, keyword;
+    boost::spirit::karma::rule<OutputIterator, std::vector<ExpressionLua>()> parameters, fork, pipe, tuple, link, flip, nested_pipe, nested_fork, nested_link;
 };
 
 }  // namespace impl

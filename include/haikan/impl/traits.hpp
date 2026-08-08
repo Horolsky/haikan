@@ -13,6 +13,8 @@
 #include <boost/callable_traits.hpp>
 #include <boost/mp11.hpp>
 #include <boost/type_traits.hpp>
+#include <boost/utility/string_view.hpp>
+
 
 #define HAIKAN_CAT(a, b) a##b
 
@@ -101,6 +103,9 @@ using remove_qualifiers_t = typename remove_qualifiers<T>::type;
 /// expose type info for readable static assertions
 template <class... T>
 constexpr bool failing_on{false};
+
+template <class T>
+struct has_boost_string_view : std::is_convertible<T, boost::string_view> {};
 
 }  // namespace impl
 }  // namespace haikan

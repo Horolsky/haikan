@@ -17,6 +17,7 @@
 #include "haikan/impl/user_data_enum.hpp"
 #include "haikan/reflection_context.hpp"
 #include "haikan/reflection_meta.hpp"
+#include "haikan/impl/error_object.hpp"
 
 namespace haikan {
 namespace impl {
@@ -31,9 +32,55 @@ struct default_reflect_enum_impl<T, Seen, mp_if<mp_and<mp_not<mp_contains<Seen, 
     using U = user_data_enum<T>;
     using ThisType = default_reflect_enum_impl<T, Seen>;
 
-    static sol::object serialize_impl(U const& e, sol::state_view L)
+    static sol::object construct_impl(sol::variadic_args args)
     {
-        return sol::make_object(L.lua_state(), e.to_string());
+        sol::state_view L = args.lua_state();
+        boost::string_view cf = BOOST_CURRENT_FUNCTION;
+
+        if (args.leftover_count() > 1)
+        {
+            return sol::make_object(L, ErrorObject("invalid argument count", cf.data()));
+        }
+        if (args.leftover_count() == 0)
+        {
+            return reflect<T>::init()
+                .map([L](T const& v){ return sol::make_object(L, U{v}); })
+                .value_or_eval([L, cf](){
+                    return sol::make_object(L, ErrorObject("enum is not default constructible", cf.data()));
+                });
+        }
+
+        sol::object arg = *args.cbegin();
+        if (arg.is<U>())
+        {
+            return sol::make_object(L, arg.as<U>());
+        }
+
+        if (arg.is<T>())
+        {
+            return sol::make_object(L, U{arg.as<T>()});
+        }
+
+        if (arg.is<typename U::underlying_type>())
+        {
+            return sol::make_object(L, U{arg.as<typename U::underlying_type>()});
+        }
+
+        if (arg.get_type() == sol::type::string)
+        {
+            auto value = enum_stringify<T>::from_string(arg.as<std::string>());
+            if (value)
+            {
+                return sol::make_object(L, U{value.value()});
+            }
+        }
+        return sol::make_object(L, ErrorObject("invalid argument", cf.data()));
+    }
+
+
+    static sol::object serialize_impl(U const& e, sol::this_state state)
+    {
+        return sol::make_object(state.L, e.to_string());
     }
 
     static boost::optional<U> deserialize_impl(sol::object const& obj)
@@ -63,11 +110,9 @@ struct default_reflect_enum_impl<T, Seen, mp_if<mp_and<mp_not<mp_contains<Seen, 
 
     static void utype(ReflectionContextFactory& ctx)
     {
-        using ctors = typename U::sol_constructors;
-
         auto tbl = ctx.make_registration_context(impl::type<T>, impl::type<U>);
-        tbl.usertype_set(sol::meta_function::construct, ctors());
-        tbl.usertype_set(sol::call_constructor, ctors());
+        tbl.usertype_set(sol::meta_function::construct, sol::factories(&ThisType::construct_impl));
+        tbl.usertype_set(sol::call_constructor, sol::factories(&ThisType::construct_impl));
         tbl.usertype_set("str", &U::to_string);
         tbl.usertype_set("num", &U::value);
         tbl.usertype_set(sol::meta_function::to_string, &U::to_string);

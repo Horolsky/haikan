@@ -8,10 +8,12 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
 
-#include "haikan/keywords.hpp"
+#include "haikan/keywords_lua.hpp"
 
 namespace utf = boost::unit_test;
 using namespace haikan;
+
+using namespace haikan::lua;
 
 BOOST_AUTO_TEST_CASE(PrettifyExpressionTostaticBuffer)
 {
@@ -78,7 +80,7 @@ BOOST_AUTO_TEST_CASE(PrettifyExpression)
         Q("$f" << ("$x" | Assert(Ge(0)) | Lt(2) | And(1) | Or(("$x" & ("$x" | Sub(1) | "$f")) | Mul)))
     )
 
-    BOOST_CHECK_EQUAL((~Diff({2,3,4})).prettify(), "~Diff([2,3,4])"); // true JSON syntax
+    BOOST_CHECK_EQUAL((~Diff({2,3,4})).prettify(), "~Diff({2,3,4})"); // Lua table syntax
     BOOST_CHECK_EQUAL((Q & Q | Q & Q).prettify(), "(Q & Q) | (Q & Q)"); // prec(&) > prec(|)
     BOOST_CHECK_EQUAL((Q | Q & Q | Q).prettify(), "Q | (Q & Q) | Q"); // prec(&) > prec(|)
 

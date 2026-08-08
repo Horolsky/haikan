@@ -15,6 +15,7 @@
 #define SOL_CHECK_ARGUMENTS
 #include <sol/sol.hpp>
 
+#include "haikan/impl/reflect_default_fwd.hpp"
 #include "haikan/impl/traits.hpp"
 #include "haikan/reflection_context.hpp"
 
@@ -43,7 +44,6 @@ template <class T, class E = void> struct custom_reflect;
 // class ReflectionContextFactory;
 namespace impl {
 
-template <class T, class E = void> struct reflect_default;
 HAIKAN_DEFINE_REFLECT_METHOD_SFINAE(utype, (std::declval<::haikan::ReflectionContextFactory&>()))
 HAIKAN_DEFINE_REFLECT_METHOD_SFINAE(init, ())
 HAIKAN_DEFINE_REFLECT_METHOD_SFINAE(serialize, (std::declval<T const&>(), std::declval<sol::state_view>()))
