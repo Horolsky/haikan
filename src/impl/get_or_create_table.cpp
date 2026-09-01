@@ -22,5 +22,18 @@ sol::table get_or_create_table(sol::state_view L, sol::table parent, char const*
     return tbl;
 }
 
+sol::table get_or_create_table(sol::state_view L, sol::table parent, std::size_t const key)
+{
+    sol::object obj = parent[key];
+    if (obj.get_type() == sol::type::table)
+    {
+        return obj;
+    }
+    sol::table tbl = L.create_table();
+    parent[key] = tbl;
+    return tbl;
+}
+
+
 } // namespace impl
 } // namespace haikan

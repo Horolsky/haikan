@@ -19,6 +19,7 @@
 #include "haikan/impl/type_info.hpp"
 #include "haikan/impl/operator_handler.hpp"
 #include "haikan/keywords.hpp"
+#include "haikan/error.hpp"
 
 
 
@@ -67,13 +68,13 @@ OperatorHandler::OperatorHandler(boost::json::string_view annotation, sol::state
 }
 
 
-sol::object OperatorHandler::apply(Keyword const& keyword, LazyLuaObject lhs, LazyLuaObject rhs) const
+sol::object OperatorHandler::apply(Keyword const& keyword, ExpressionParameter lhs, ExpressionParameter rhs) const
 try
 {
     std::string cf = BOOST_CURRENT_FUNCTION;
     auto const negate = [&](sol::object val) -> sol::object
     {
-        if (val.is<ErrorObject>())
+        if (val.is<error>())
         {
             return val;
         }
@@ -86,11 +87,11 @@ try
 
     auto const conj = [&](sol::object lhs, sol::object rhs) -> sol::object
     {
-        if (lhs.is<ErrorObject>())
+        if (lhs.is<error>())
         {
             return lhs;
         }
-        if (rhs.is<ErrorObject>())
+        if (rhs.is<error>())
         {
             return rhs;
         }
@@ -158,7 +159,7 @@ catch(const std::exception& e)
 }
 
 /// Is subset of
-sol::object OperatorHandler::is_subset(LazyLuaObject llhs, LazyLuaObject lrhs) const
+sol::object OperatorHandler::is_subset(ExpressionParameter llhs, ExpressionParameter lrhs) const
 {
     sol::object const lhs = llhs.load(L);
     sol::object const rhs = lrhs.load(L);
@@ -228,7 +229,7 @@ sol::object OperatorHandler::is_subset(LazyLuaObject llhs, LazyLuaObject lrhs) c
 
 
 /// Is element of
-sol::object OperatorHandler::contains(LazyLuaObject lset, LazyLuaObject lelement) const
+sol::object OperatorHandler::contains(ExpressionParameter lset, ExpressionParameter lelement) const
 {
     static_cast<void>(lset);
     static_cast<void>(lelement);

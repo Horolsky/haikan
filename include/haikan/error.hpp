@@ -11,15 +11,14 @@
 
 
 namespace haikan {
-namespace impl {
 
-struct ErrorObject
+struct error
 {
     std::string what;
     std::string where;
 
-    ErrorObject() = default;
-    ErrorObject(std::string what,
+    error() = default;
+    error(std::string what,
         std::string where)
         : what{what}
         , where{where}
@@ -27,7 +26,6 @@ struct ErrorObject
     }
 };
 
-BOOST_DESCRIBE_STRUCT(ErrorObject, (), (what, where));
+BOOST_DESCRIBE_STRUCT(error, (), (what, where));
 
-} // namespace impl
 } // namespace haikan

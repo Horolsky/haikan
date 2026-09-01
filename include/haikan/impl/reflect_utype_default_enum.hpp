@@ -17,7 +17,7 @@
 #include "haikan/impl/user_data_enum.hpp"
 #include "haikan/reflection_context.hpp"
 #include "haikan/reflection_meta.hpp"
-#include "haikan/impl/error_object.hpp"
+#include "haikan/error.hpp"
 
 namespace haikan {
 namespace impl {
@@ -39,14 +39,14 @@ struct default_reflect_enum_impl<T, Seen, mp_if<mp_and<mp_not<mp_contains<Seen, 
 
         if (args.leftover_count() > 1)
         {
-            return sol::make_object(L, ErrorObject("invalid argument count", cf.data()));
+            return sol::make_object(L, error("invalid argument count", cf.data()));
         }
         if (args.leftover_count() == 0)
         {
             return reflect<T>::init()
                 .map([L](T const& v){ return sol::make_object(L, U{v}); })
                 .value_or_eval([L, cf](){
-                    return sol::make_object(L, ErrorObject("enum is not default constructible", cf.data()));
+                    return sol::make_object(L, error("enum is not default constructible", cf.data()));
                 });
         }
 
@@ -74,7 +74,7 @@ struct default_reflect_enum_impl<T, Seen, mp_if<mp_and<mp_not<mp_contains<Seen, 
                 return sol::make_object(L, U{value.value()});
             }
         }
-        return sol::make_object(L, ErrorObject("invalid argument", cf.data()));
+        return sol::make_object(L, error("invalid argument", cf.data()));
     }
 
 

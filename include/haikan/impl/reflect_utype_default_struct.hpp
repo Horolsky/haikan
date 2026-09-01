@@ -137,7 +137,7 @@ struct default_reflect_struct_impl<T, Seen, mp_if<mp_and<mp_not<mp_contains<Seen
         });
 
         return is_error
-            ? sol::make_object(L, ErrorObject("invalid ctor argument", BOOST_CURRENT_FUNCTION))
+            ? sol::make_object(L, error("invalid ctor argument", BOOST_CURRENT_FUNCTION))
             : sol::make_object(L, value);
     }
 

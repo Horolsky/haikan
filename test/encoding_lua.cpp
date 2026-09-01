@@ -20,7 +20,7 @@ BOOST_DESCRIBE_STRUCT(EncodingPayload, (), (value))
 
 using haikan::impl::EncodingLua;
 using haikan::impl::Keyword;
-using haikan::impl::LazyLuaObject;
+using haikan::impl::ExpressionParameter;
 
 namespace
 {
@@ -41,11 +41,11 @@ BOOST_FIXTURE_TEST_SUITE(EncodingLuaTests, EncodingLuaSuite)
 
 BOOST_AUTO_TEST_CASE(ClassifiesStringTokens)
 {
-    BOOST_CHECK(LazyLuaObject(sol::make_object(state, "$[value]")).is_preproc_token());
-    BOOST_CHECK(!LazyLuaObject(sol::make_object(state, "$value")).is_preproc_token());
-    BOOST_CHECK(LazyLuaObject(sol::make_object(state, "$value")).is_link_token());
-    BOOST_CHECK(!LazyLuaObject(sol::make_object(state, "$[value]")).is_link_token());
-    BOOST_CHECK(!LazyLuaObject(object(1)).is_link_token());
+    BOOST_CHECK(ExpressionParameter(sol::make_object(state, "$[value]")).is_preproc_token());
+    BOOST_CHECK(!ExpressionParameter(sol::make_object(state, "$value")).is_preproc_token());
+    BOOST_CHECK(ExpressionParameter(sol::make_object(state, "$value")).is_link_token());
+    BOOST_CHECK(!ExpressionParameter(sol::make_object(state, "$[value]")).is_link_token());
+    BOOST_CHECK(!ExpressionParameter(object(1)).is_link_token());
 }
 
 BOOST_AUTO_TEST_CASE(ConstructsLiteralAndTokens)

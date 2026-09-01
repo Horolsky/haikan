@@ -20,19 +20,19 @@
 #include <sol/sol.hpp>
 
 #include "haikan/impl/keyword.hpp"
-#include "haikan/impl/lazy_lua_object.hpp"
+#include "haikan/impl/expression_parameter.hpp"
 #include "haikan/impl/traits.hpp"
 #include "haikan/impl/type_tag.hpp"
 #include "haikan/impl/error_expr.hpp"
 #include "haikan/cast.hpp"
-#include "haikan/impl/error_object.hpp"
+#include "haikan/error.hpp"
 
 
 
 
 #define HAIKAN_OPERATOR_HANDLE_UNARY(OP, TRAIT)                 \
 template <class T>                                              \
-auto handle_##TRAIT(LazyLuaObject val) const noexcept           \
+auto handle_##TRAIT(ExpressionParameter val) const noexcept           \
 -> boost::mp11::mp_if<boost::has_##TRAIT<T>, sol::object>       \
 try {                                                           \
     return make_object(OP val.load(L).as<T>());                 \
@@ -42,7 +42,7 @@ catch(const std::exception& e)                                  \
     return make_error(e.what(), BOOST_CURRENT_FUNCTION);        \
 }                                                               \
 template <class T>                                              \
-auto handle_##TRAIT(LazyLuaObject) const noexcept               \
+auto handle_##TRAIT(ExpressionParameter) const noexcept               \
 -> boost::mp11::mp_if<                                          \
     boost::mp11::mp_not<boost::has_##TRAIT<T>>, sol::object>    \
 {                                                               \
@@ -51,7 +51,7 @@ auto handle_##TRAIT(LazyLuaObject) const noexcept               \
 
 #define HAIKAN_OPERATOR_HANDLE_BINARY(OP, TRAIT)                        \
 template <class T>                                                      \
-auto handle_##TRAIT(LazyLuaObject lhs, LazyLuaObject rhs) const noexcept\
+auto handle_##TRAIT(ExpressionParameter lhs, ExpressionParameter rhs) const noexcept\
 -> boost::mp11::mp_if<boost::has_##TRAIT<T>, sol::object>               \
 try {                                                                   \
     return make_object(lhs.load(L).as<T>() OP rhs.load(L).as<T>());     \
@@ -61,7 +61,7 @@ catch(const std::exception& e)                                          \
     return make_error(e.what(), BOOST_CURRENT_FUNCTION);                \
 }                                                                       \
 template <class T>                                                      \
-auto handle_##TRAIT(LazyLuaObject, LazyLuaObject) const noexcept        \
+auto handle_##TRAIT(ExpressionParameter, ExpressionParameter) const noexcept        \
 -> boost::mp11::mp_if<                                                  \
     boost::mp11::mp_not<boost::has_##TRAIT<T>>, sol::object>            \
 {                                                                       \
@@ -79,7 +79,7 @@ class OperatorHandler
 
     sol::object make_error(std::string what, std::string where) const
     {
-        return sol::make_object(L, ErrorObject(what, where));
+        return sol::make_object(L, error(what, where));
     }
 
     template <class T>
@@ -90,29 +90,29 @@ class OperatorHandler
 
   public:
 
-    sol::object generic_is_truth   (LazyLuaObject) const;
-    sol::object generic_decorate   (LazyLuaObject) const;
-    sol::object generic_negate     (LazyLuaObject) const;
-    sol::object generic_complement (LazyLuaObject) const;
-    sol::object generic_logical_not(LazyLuaObject) const;
-    sol::object generic_equal_to   (LazyLuaObject, LazyLuaObject) const;
-    sol::object generic_less       (LazyLuaObject, LazyLuaObject) const;
-    sol::object generic_less_equal (LazyLuaObject, LazyLuaObject) const;
-    sol::object generic_plus       (LazyLuaObject, LazyLuaObject) const;
-    sol::object generic_minus      (LazyLuaObject, LazyLuaObject) const;
-    sol::object generic_multiplies (LazyLuaObject, LazyLuaObject) const;
-    sol::object generic_divides    (LazyLuaObject, LazyLuaObject) const;
-    sol::object generic_modulus    (LazyLuaObject, LazyLuaObject) const;
-    sol::object generic_bit_and    (LazyLuaObject, LazyLuaObject) const;
-    sol::object generic_bit_or     (LazyLuaObject, LazyLuaObject) const;
-    sol::object generic_bit_xor    (LazyLuaObject, LazyLuaObject) const;
-    sol::object generic_left_shift (LazyLuaObject, LazyLuaObject) const;
-    sol::object generic_right_shift(LazyLuaObject, LazyLuaObject) const;
-    sol::object generic_logical_and(LazyLuaObject, LazyLuaObject) const;
-    sol::object generic_logical_or (LazyLuaObject, LazyLuaObject) const;
-    sol::object generic_pow        (LazyLuaObject, LazyLuaObject) const;
-    sol::object generic_log        (LazyLuaObject, LazyLuaObject) const;
-    sol::object generic_quot       (LazyLuaObject, LazyLuaObject) const;
+    sol::object generic_is_truth   (ExpressionParameter) const;
+    sol::object generic_decorate   (ExpressionParameter) const;
+    sol::object generic_negate     (ExpressionParameter) const;
+    sol::object generic_complement (ExpressionParameter) const;
+    sol::object generic_logical_not(ExpressionParameter) const;
+    sol::object generic_equal_to   (ExpressionParameter, ExpressionParameter) const;
+    sol::object generic_less       (ExpressionParameter, ExpressionParameter) const;
+    sol::object generic_less_equal (ExpressionParameter, ExpressionParameter) const;
+    sol::object generic_plus       (ExpressionParameter, ExpressionParameter) const;
+    sol::object generic_minus      (ExpressionParameter, ExpressionParameter) const;
+    sol::object generic_multiplies (ExpressionParameter, ExpressionParameter) const;
+    sol::object generic_divides    (ExpressionParameter, ExpressionParameter) const;
+    sol::object generic_modulus    (ExpressionParameter, ExpressionParameter) const;
+    sol::object generic_bit_and    (ExpressionParameter, ExpressionParameter) const;
+    sol::object generic_bit_or     (ExpressionParameter, ExpressionParameter) const;
+    sol::object generic_bit_xor    (ExpressionParameter, ExpressionParameter) const;
+    sol::object generic_left_shift (ExpressionParameter, ExpressionParameter) const;
+    sol::object generic_right_shift(ExpressionParameter, ExpressionParameter) const;
+    sol::object generic_logical_and(ExpressionParameter, ExpressionParameter) const;
+    sol::object generic_logical_or (ExpressionParameter, ExpressionParameter) const;
+    sol::object generic_pow        (ExpressionParameter, ExpressionParameter) const;
+    sol::object generic_log        (ExpressionParameter, ExpressionParameter) const;
+    sol::object generic_quot       (ExpressionParameter, ExpressionParameter) const;
 
     template <class T>
     static void register_utype_ops(sol::simple_usertype<T>& ut)
@@ -197,8 +197,8 @@ class OperatorHandler
 
   private:
 
-    using unary_transform = sol::object(OperatorHandler::*)(LazyLuaObject) const;
-    using binary_transform = sol::object(OperatorHandler::*)(LazyLuaObject, LazyLuaObject) const;
+    using unary_transform = sol::object(OperatorHandler::*)(ExpressionParameter) const;
+    using binary_transform = sol::object(OperatorHandler::*)(ExpressionParameter, ExpressionParameter) const;
 
     HAIKAN_OPERATOR_HANDLE_UNARY(-, negate)
     HAIKAN_OPERATOR_HANDLE_UNARY(~, complement)
@@ -224,7 +224,7 @@ class OperatorHandler
 
 
     template <class T>
-    auto handle_is_truth(LazyLuaObject val) const
+    auto handle_is_truth(ExpressionParameter val) const
         -> mp_if<std::is_convertible<T, bool>, sol::object>
     try
     {
@@ -236,7 +236,7 @@ class OperatorHandler
     }
 
     template <class T>
-    auto handle_is_truth(LazyLuaObject) const
+    auto handle_is_truth(ExpressionParameter) const
         -> mp_if<mp_not<std::is_convertible<T, bool>>, sol::object>
     {
         return make_error("invalid operand", BOOST_CURRENT_FUNCTION);
@@ -356,8 +356,8 @@ public:
 
 
     /// \brief Apply operands
-    sol::object apply(Keyword const& keyword, LazyLuaObject lhs, LazyLuaObject rhs) const;
-    sol::object apply(Keyword const& keyword, LazyLuaObject rhs) const
+    sol::object apply(Keyword const& keyword, ExpressionParameter lhs, ExpressionParameter rhs) const;
+    sol::object apply(Keyword const& keyword, ExpressionParameter rhs) const
     {
         return apply(keyword, {}, rhs);
     }
@@ -366,10 +366,10 @@ public:
 private:
 
     /// Is subset of
-    sol::object is_subset(LazyLuaObject llhs, LazyLuaObject lrhs) const;
+    sol::object is_subset(ExpressionParameter llhs, ExpressionParameter lrhs) const;
 
     /// Is element of
-    sol::object contains(LazyLuaObject set, LazyLuaObject element) const;
+    sol::object contains(ExpressionParameter set, ExpressionParameter element) const;
 
 };
 

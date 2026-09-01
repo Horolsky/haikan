@@ -16,7 +16,7 @@
 #include "haikan/impl/lua_json_conversion.hpp"
 #include "haikan/impl/encoding_lua.hpp"
 #include "haikan/impl/lua_state.hpp"
-#include "haikan/impl/lazy_lua_object.hpp"
+#include "haikan/impl/expression_parameter.hpp"
 #include "haikan/impl/eval_context.hpp"
 #include "haikan/logger.hpp"
 #include "haikan/impl/keyword_attributes.hpp"
@@ -54,7 +54,7 @@ public:
     {
     }
 
-    explicit ExpressionLua(impl::LazyLuaObject x)
+    explicit ExpressionLua(impl::ExpressionParameter x)
         : ExpressionLua(EncodingLua(x))
     {
     }
@@ -67,11 +67,11 @@ public:
     template <class T, class = typename std::enable_if<
         !std::is_base_of<ExpressionLua, typename std::decay<T>::type>::value &&
         !std::is_same<typename std::decay<T>::type, impl::EncodingLua>::value &&
-        !std::is_same<typename std::decay<T>::type, impl::LazyLuaObject>::value &&
+        !std::is_same<typename std::decay<T>::type, impl::ExpressionParameter>::value &&
         !std::is_same<typename std::decay<T>::type, sol::object>::value
     >::type>
     ExpressionLua(T&& x)
-        : ExpressionLua(impl::LazyLuaObject{std::forward<T>(x)})
+        : ExpressionLua(impl::ExpressionParameter{std::forward<T>(x)})
     {
 
     }

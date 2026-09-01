@@ -37,7 +37,7 @@ inline bool is_link_token(boost::string_view str)
 }
 
 
-class LazyLuaObject
+class ExpressionParameter
 {
     struct Meta
     {
@@ -96,11 +96,11 @@ class LazyLuaObject
     }
 
 public:
-    LazyLuaObject() : LazyLuaObject(sol::nil)
+    ExpressionParameter() : ExpressionParameter(sol::nil)
     {
     }
 
-    LazyLuaObject(std::function<sol::object(sol::state_view)> getter)
+    ExpressionParameter(std::function<sol::object(sol::state_view)> getter)
         : getter_{std::move(getter)}
         , meta_{}
         , cache_{}
@@ -110,7 +110,7 @@ public:
     }
 
 
-    LazyLuaObject(sol::object obj)
+    ExpressionParameter(sol::object obj)
         : getter_{[obj](sol::state_view sv) -> sol::object
             {
                 if (sv == nullptr || sv == obj.lua_state())
@@ -128,7 +128,7 @@ public:
     }
 
     template <class T>
-    LazyLuaObject(T v)
+    ExpressionParameter(T v)
         : getter_{[v](sol::state_view sv) -> sol::object
             {
                 return sol::make_object(sv.lua_state(), v);
@@ -140,12 +140,12 @@ public:
     {
     }
 
-    ~LazyLuaObject() = default;
+    ~ExpressionParameter() = default;
 
-    LazyLuaObject(LazyLuaObject const &) = default;
-    LazyLuaObject(LazyLuaObject &&) = default;
-    LazyLuaObject &operator=(LazyLuaObject const &) = default;
-    LazyLuaObject &operator=(LazyLuaObject &&) = default;
+    ExpressionParameter(ExpressionParameter const &) = default;
+    ExpressionParameter(ExpressionParameter &&) = default;
+    ExpressionParameter &operator=(ExpressionParameter const &) = default;
+    ExpressionParameter &operator=(ExpressionParameter &&) = default;
 
     // Load the lazy parameter into Lua state.
     // Return last valid state cached if null state given,
@@ -179,7 +179,7 @@ public:
         return source_state_;
     }
 
-    friend bool operator==(LazyLuaObject const &l, LazyLuaObject const &r)
+    friend bool operator==(ExpressionParameter const &l, ExpressionParameter const &r)
     {
         return l.cache_ && l.cache_->valid() && l.cache_ == r.cache_;
     }

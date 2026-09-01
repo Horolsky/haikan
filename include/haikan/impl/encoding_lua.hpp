@@ -17,7 +17,7 @@
 #include "haikan/impl/keyword.hpp"
 #include "haikan/impl/keyword_attributes.hpp"
 #include "haikan/impl/keyword_grammar.hpp"
-#include "haikan/impl/lazy_lua_object.hpp"
+#include "haikan/impl/expression_parameter.hpp"
 
 #define SOL_ALL_SAFETIES_ON
 #define SOL_CHECK_ARGUMENTS
@@ -30,14 +30,14 @@ struct EncodingLua
 {
     std::vector<Keyword> keywords;
     std::vector<std::size_t> depth;
-    std::vector<LazyLuaObject> data;
+    std::vector<ExpressionParameter> data;
 
     EncodingLua() = default;
 
     explicit EncodingLua(std::nullptr_t) = delete;
 
     explicit EncodingLua(sol::object value);
-    explicit EncodingLua(LazyLuaObject value);
+    explicit EncodingLua(ExpressionParameter value);
 
     std::size_t size() const;
 
@@ -45,7 +45,7 @@ struct EncodingLua
 
     bool operator!=(EncodingLua const& o) const;
 
-    void push_back(Keyword const& k, std::size_t const d, LazyLuaObject v);
+    void push_back(Keyword const& k, std::size_t const d, ExpressionParameter v);
 
     void append_to_root(EncodingLua tail);
 
