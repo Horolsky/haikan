@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(PrimitiveCtors)
     {
         ExpressionLua ex {haikan::as_enum(Foo::Lol)};
         BOOST_CHECK(ex.encoding_view().data[0].load(L).is<haikan::impl::user_data_enum<Foo>>());
-        auto obj = ex.encoding_view().to_object();
+        auto obj = ex.encoding_view().to_object(L);
         BOOST_CHECK(!obj.is<haikan::impl::user_data_enum<Foo>>());
 
         BOOST_REQUIRE(obj.valid());
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(PrimitiveCtors)
         BOOST_CHECK(ex.keyword() == haikan::impl::Keyword::_Literal);
         BOOST_CHECK(ex.encoding_view().data[0].load(L).as<Lol>() == Lol(Foo::Kek, 42));
 
-        auto const tbl = ex.encoding_view().to_object().as<sol::table>();
+        auto const tbl = ex.encoding_view().to_object(L).as<sol::table>();
         BOOST_CHECK(tbl["x"].get<int>() == 42);
         BOOST_CHECK(tbl["foo"].get<std::string>() == "Kek");
     }
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(FoldingExpressions)
     BOOST_CHECK_EQUAL(c.encoding_view().data[1].load(L).as<int>(), 42);
     BOOST_CHECK_EQUAL(c.encoding_view().data[2].load(L).as<int>(), 67);
 
-    auto o = c.encoding_view().to_object();
+    auto o = c.encoding_view().to_object(L);
     BOOST_CHECK(o.valid());
     BOOST_CHECK(!o.is<sol::nil_t>());
     BOOST_CHECK(o.get_type() == sol::type::table);

@@ -23,7 +23,6 @@ struct reflect
     // static sol::object serialize(T const& value, sol::state_view L);
     // static boost::optional<T> deserialize(sol::object const& value);
 
-    // serialization to plain Lua types
     // static void utype(ReflectionContextFactory& ctx)
 };
 

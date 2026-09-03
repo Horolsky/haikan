@@ -30,6 +30,9 @@ struct ReflectionMeta
     std::vector<std::string> members;
     sol::protected_function serialize;
     sol::protected_function deserialize;
+
+    // clone object to target state
+    std::function<sol::object(lua_State*, sol::object)> migrate;
 };
 
 namespace impl

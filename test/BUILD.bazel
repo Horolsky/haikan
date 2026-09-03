@@ -46,6 +46,8 @@ REFLECT_TESTS = [
     "reflect_basics.cpp",
     "reflect_containers.cpp",
     "reflect_reference.cpp",
+    "expression_lua.cpp",
+    "lua_migrate.cpp",
 ]
 
 make_unit_tests(

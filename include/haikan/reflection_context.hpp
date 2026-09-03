@@ -111,6 +111,14 @@ public:
         record.meta.type_index_hash = typeid(T).hash_code();
         record.meta.wrapper_type_index_hash = typeid(W).hash_code();
 
+        record.meta.migrate = [](lua_State* target_state, sol::object src) -> sol::object {
+            if (src.valid() and src.is<W>())
+            {
+                return sol::make_object(target_state, src.as<W>());
+            }
+            return sol::make_object(target_state, error{"invalid argument", "utype migrate"});
+        };
+
         record.on_init = [meta=std::ref(record.meta), actions=actions](sol::state_view L){
             sol::simple_usertype<W> ut = L.create_simple_usertype<W>();
             impl::OperatorHandler::register_utype_ops(ut);

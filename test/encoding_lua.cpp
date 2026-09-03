@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(ToObjectPreservesPlainPayload)
     EncodingLua encoding{};
     encoding.push_back(Keyword::Add, 0, object(17));
 
-    sol::table result = encoding.to_object();
+    sol::table result = encoding.to_object(state);
     sol::table data = result["data"];
 
     BOOST_CHECK_EQUAL(data.get<int>(1), 17);
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(ToObjectSolifiesRegisteredUserdata)
     EncodingLua encoding{};
     encoding.push_back(Keyword::Add, 0, payload);
 
-    sol::table result = encoding.to_object();
+    sol::table result = encoding.to_object(state);
     sol::table data = result["data"];
     sol::object serialized = data[1];
 

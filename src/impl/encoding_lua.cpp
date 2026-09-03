@@ -75,7 +75,7 @@ sol::object serialize_impl(sol::object value)
 } // namespace
 
 
-EncodingLua::EncodingLua(LazyLuaObject value)
+EncodingLua::EncodingLua(ExpressionParameter value)
 {
     auto k = Keyword::_Literal;
     // TODO: handle special string tokens
@@ -87,7 +87,7 @@ EncodingLua::EncodingLua(LazyLuaObject value)
     {
         k = Keyword::Link;
     }
-    push_back(k, 0, LazyLuaObject{std::move(value)});
+    push_back(k, 0, ExpressionParameter{std::move(value)});
 }
 EncodingLua::EncodingLua(sol::object value)
 {
@@ -101,7 +101,7 @@ EncodingLua::EncodingLua(sol::object value)
     {
         keywords = as_table.value()["keywords"].get<std::vector<Keyword>>();
         depth = as_table.value()["depth"].get<std::vector<std::size_t>>();
-        data = as_table.value()["data"].get<std::vector<LazyLuaObject>>();
+        data = as_table.value()["data"].get<std::vector<ExpressionParameter>>();
         preprocess();
     }
     else
@@ -119,7 +119,7 @@ EncodingLua::EncodingLua(sol::object value)
                 k = Keyword::Link;
             }
         }
-        push_back(k, 0, LazyLuaObject{std::move(value)});
+        push_back(k, 0, ExpressionParameter{std::move(value)});
     }
 }
 
@@ -143,7 +143,7 @@ bool EncodingLua::operator!=(EncodingLua const& o) const
 }
 
 
-void EncodingLua::push_back(Keyword const& k, std::size_t const d, LazyLuaObject v)
+void EncodingLua::push_back(Keyword const& k, std::size_t const d, ExpressionParameter v)
 {
     keywords.push_back(k);
     depth.push_back(d);
@@ -189,7 +189,7 @@ bool EncodingLua::preprocess()
 
     std::vector<Keyword> new_keywords;
     std::vector<std::size_t> new_depth;
-    std::vector<LazyLuaObject> new_data;
+    std::vector<ExpressionParameter> new_data;
 
     new_keywords.reserve(keywords.size());
     new_depth.reserve(depth.size());
@@ -244,15 +244,6 @@ bool EncodingLua::preprocess()
     data = std::move(new_data);
 
     return complete;
-}
-
-sol::object EncodingLua::to_object() const
-{
-    if (!data.empty() && data.front().source_state() != nullptr)
-    {
-        return to_object(sol::state_view(data.front().source_state()));
-    }
-    return to_object(ExpressionLua::lua_state());
 }
 
 sol::object EncodingLua::to_object(sol::state_view L) const
@@ -322,7 +313,8 @@ boost::json::value EncodingLua::to_json(sol::state_view sv) const
 
 boost::json::value EncodingLua::to_json() const
 {
-    return lua_to_json(to_object()).value_or(nullptr);
+    sol::state temp;
+    return lua_to_json(to_object(temp)).value_or(nullptr);
 }
 
 EncodingLua EncodingLua::slice(std::size_t start, std::size_t count) const noexcept

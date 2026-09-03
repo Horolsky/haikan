@@ -58,7 +58,6 @@ struct EncodingLua
 
 
     // Serialize data to plain Lua
-    sol::object to_object() const;
     sol::object to_object(sol::state_view sv) const;
 
 

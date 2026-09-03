@@ -11,7 +11,10 @@
 #define SOL_CHECK_ARGUMENTS
 #include <sol/sol.hpp>
 
+#include "haikan/error.hpp"
 #include "haikan/impl/traits.hpp"
+#include "haikan/impl/lua_migrate.hpp"
+
 
 namespace haikan
 {
@@ -104,30 +107,24 @@ public:
         : getter_{std::move(getter)}
         , meta_{}
         , cache_{}
-        , cache_state_{nullptr}
-        , source_state_{nullptr}
     {
     }
 
 
     ExpressionParameter(sol::object obj)
-        : getter_{[obj](sol::state_view sv) -> sol::object
-            {
-                if (sv == nullptr || sv == obj.lua_state())
-                {
-                    return obj;
-                }
-                // TODO: handle state exchange (maybe)
-                return obj;
-            }}
+        : getter_{[obj](sol::state_view sv) -> sol::object {
+            return migrate_to_state(sv, obj)
+                .value_or_eval([sv](){
+                    return sol::make_object(sv, error{"invalid parameter", "ExpressionParameter"});
+                });
+        }}
         , meta_{get_meta(obj)}
-        , cache_{obj}
-        , cache_state_{obj.lua_state()}
-        , source_state_{obj.lua_state()}
+        , cache_{}
     {
     }
 
     template <class T>
+    // todo: exclude T = sol::object
     ExpressionParameter(T v)
         : getter_{[v](sol::state_view sv) -> sol::object
             {
@@ -135,8 +132,6 @@ public:
             }}
         , meta_{get_meta(v)}
         , cache_{}
-        , cache_state_{nullptr}
-        , source_state_{nullptr}
     {
     }
 
@@ -150,33 +145,16 @@ public:
     // Load the lazy parameter into Lua state.
     // Return last valid state cached if null state given,
     // otherwise, update the cache.
-    sol::object load() const
-    {
-        evaluate_cache(sol::state_view{nullptr});
-        return cache_.value();
-    }
-
     sol::object load(sol::state_view sv) const
     {
         cache_ = getter_(sv);
-        cache_state_ = sv.lua_state();
         meta_ = get_meta(cache_.value());
         return cache_.value();
     }
 
     bool valid() const
     {
-        return cache_state_ != nullptr && cache_ && cache_->valid();
-    }
-
-    lua_State* cached_state() const
-    {
-        return cache_state_;
-    }
-
-    lua_State* source_state() const
-    {
-        return source_state_;
+        return cache_ && cache_->valid();
     }
 
     friend bool operator==(ExpressionParameter const &l, ExpressionParameter const &r)
@@ -213,7 +191,6 @@ private:
             return;
         }
         cache_ = getter_(sv);
-        cache_state_ = cache_.value().lua_state();
     }
 
     void evaluate_meta() const
@@ -229,7 +206,6 @@ private:
     std::function<sol::object(sol::state_view)> getter_;
     mutable boost::optional<Meta> meta_;
     mutable boost::optional<sol::object> cache_;
-    mutable lua_State* cache_state_;
     lua_State* source_state_;
 };
 
