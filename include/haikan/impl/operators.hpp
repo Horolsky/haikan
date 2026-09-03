@@ -7,7 +7,10 @@
 
 #pragma once
 
+#include <algorithm>
+#include <iterator>
 #include <type_traits>
+#include <utility>
 #include <boost/type_traits.hpp>
 
 
@@ -18,11 +21,103 @@
 #include "haikan/error.hpp"
 #include "haikan/impl/expression_parameter.hpp"
 #include "haikan/impl/type_info.hpp"
+#include "haikan/impl/traits.hpp"
 #include "haikan/impl/pp.hpp"
 
 
 
 namespace haikan {
+
+
+namespace impl {
+template <class T>
+using has_boolean = std::is_convertible<T, bool>;
+
+template <class Collection, class Item>
+using has_contains = std::integral_constant<bool,
+    has_find<Collection, Item>::value || has_linear_find<Collection, Item>::value>;
+
+template <class Item, class Collection>
+using has_is_in = has_contains<Collection, Item>;
+
+template <class Subset, class Superset, class = void>
+struct has_is_subset : std::false_type {};
+
+template <class Subset, class Superset>
+struct has_is_subset<Subset, Superset, void_t<
+    decltype(std::begin(std::declval<Subset const&>())),
+    decltype(std::end(std::declval<Subset const&>()))>>
+    : has_contains<Superset, std::remove_cv_t<std::remove_reference_t<
+          decltype(*std::begin(std::declval<Subset const&>()))>>> {};
+
+template <class Subset, class Superset>
+using has_is_proper_subset = std::integral_constant<bool,
+    has_is_subset<Subset, Superset>::value && has_is_subset<Superset, Subset>::value>;
+
+template <class Lhs, class Rhs>
+using has_set_equal = std::integral_constant<bool,
+    has_is_subset<Lhs, Rhs>::value && has_is_subset<Rhs, Lhs>::value>;
+
+template <class Superset, class Subset>
+using has_is_superset = has_is_subset<Subset, Superset>;
+
+template <class Superset, class Subset>
+using has_is_proper_superset = has_is_proper_subset<Subset, Superset>;
+
+template <class Collection, class Item>
+static bool collection_contains(std::true_type, Collection const& collection, Item const& item)
+{
+    return collection.find(item) != std::end(collection);
+}
+
+template <class Collection, class Item>
+static bool collection_contains(std::false_type, Collection const& collection, Item const& item)
+{
+    return std::find(std::begin(collection), std::end(collection), item) != std::end(collection);
+}
+
+template <class Collection, class Item>
+static bool collection_contains(Collection const& collection, Item const& item)
+{
+    return collection_contains(has_find<Collection, Item>{}, collection, item);
+}
+
+template <class Subset, class Superset>
+static bool subset_of(Subset const& subset, Superset const& superset)
+{
+    for (auto const& item : subset)
+    {
+        if (HAIKAN_UNLIKELY(!collection_contains(superset, item)))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+template <class Subset, class Superset>
+static bool proper_subset_of(Subset const& subset, Superset const& superset)
+{
+    if (!subset_of(subset, superset))
+    {
+        return false;
+    }
+    for (auto const& item : superset)
+    {
+        if (!collection_contains(subset, item))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+template <class Lhs, class Rhs>
+static bool set_equal(Lhs const& lhs, Rhs const& rhs)
+{
+    return subset_of(lhs, rhs) && subset_of(rhs, lhs);
+}
+}
 
 namespace op
 {
@@ -351,10 +446,7 @@ static sol::object evaluate(std::true_type, lua_State* L, T1&& x, T2&& y)
 };
 
 
-template <class T>
-using has_boolean = std::is_convertible<T, bool>;
-
-struct boolean : base<boolean, has_boolean>
+struct boolean : base<boolean, impl::has_boolean>
 {
 using base::evaluate;
 
@@ -366,5 +458,90 @@ static sol::object evaluate(std::true_type, lua_State* L, T1&& x)
 };
 
 
-} // namespace impl
+
+
+struct contains : base<contains, impl::has_contains>
+{
+using base::evaluate;
+
+template <class T1, class T2>
+static sol::object evaluate(std::true_type, lua_State* L, T1&& collection, T2&& item)
+{
+    return sol::make_object(L, impl::collection_contains(collection, item));
+}
+};
+
+
+struct is_in : base<is_in, impl::has_is_in>
+{
+using base::evaluate;
+
+template <class T1, class T2>
+static sol::object evaluate(std::true_type, lua_State* L, T1&& x, T2&& y)
+{
+    return sol::make_object(L, impl::collection_contains(y, x));
+}
+};
+
+
+struct is_subset : base<is_subset, impl::has_is_subset>
+{
+using base::evaluate;
+
+template <class T1, class T2>
+static sol::object evaluate(std::true_type, lua_State* L, T1&& subset, T2&& superset)
+{
+    return sol::make_object(L, impl::subset_of(subset, superset));
+}
+};
+
+
+struct set_equal : base<set_equal, impl::has_set_equal>
+{
+using base::evaluate;
+
+template <class T1, class T2>
+static sol::object evaluate(std::true_type, lua_State* L, T1&& lhs, T2&& rhs)
+{
+    return sol::make_object(L, impl::set_equal(lhs, rhs));
+}
+};
+
+
+struct is_proper_subset : base<is_proper_subset, impl::has_is_proper_subset>
+{
+using base::evaluate;
+
+template <class T1, class T2>
+static sol::object evaluate(std::true_type, lua_State* L, T1&& subset, T2&& superset)
+{
+    return sol::make_object(L, impl::proper_subset_of(subset, superset));
+}
+};
+
+
+struct is_superset : base<is_superset, impl::has_is_superset>
+{
+using base::evaluate;
+
+template <class T1, class T2>
+static sol::object evaluate(std::true_type, lua_State* L, T1&& superset, T2&& subset)
+{
+    return sol::make_object(L, impl::subset_of(subset, superset));
+}
+};
+
+
+struct is_proper_superset : base<is_proper_superset, impl::has_is_proper_superset>
+{
+using base::evaluate;
+
+template <class T1, class T2>
+static sol::object evaluate(std::true_type, lua_State* L, T1&& superset, T2&& subset)
+{
+    return sol::make_object(L, impl::proper_subset_of(subset, superset));
+}
+};
+
+} // namespace op
 } // namespace haikan

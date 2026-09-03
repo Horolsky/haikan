@@ -107,5 +107,25 @@ constexpr bool failing_on{false};
 template <class T>
 struct has_boost_string_view : std::is_convertible<T, boost::string_view> {};
 
+
+template <class Collection, class Item, class = void>
+struct has_find : std::false_type {};
+
+template <class Collection, class Item>
+struct has_find<Collection, Item, void_t<decltype(
+    std::declval<Collection const&>().find(std::declval<Item const&>()) !=
+    std::end(std::declval<Collection const&>()))>> : std::true_type {};
+
+template <class Collection, class Item, class = void>
+struct has_linear_find : std::false_type {};
+
+template <class Collection, class Item>
+struct has_linear_find<Collection, Item, void_t<
+    decltype(std::begin(std::declval<Collection const&>())),
+    decltype(std::end(std::declval<Collection const&>())),
+    decltype(*std::begin(std::declval<Collection const&>()) ==
+             std::declval<Item const&>())>> : std::true_type {};
+
+
 }  // namespace impl
 }  // namespace haikan

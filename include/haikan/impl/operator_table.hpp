@@ -71,6 +71,15 @@ class OperatorTable
             binary_transform and_{};
             binary_transform or_{};
         } logic;
+
+
+        struct Set {
+            binary_transform contains{};
+            binary_transform is_in{};
+            binary_transform is_subset{};
+            binary_transform is_proper_subset{};
+            binary_transform set_equal{};
+        } set;
     };
 
     template <class...> struct operands {};
@@ -107,6 +116,13 @@ class OperatorTable
         handle.logic.and_  = op::logical_and::cast_and_evaluate<T1, T2>;
         handle.logic.or_   = op::logical_or::cast_and_evaluate<T1, T2>;
 
+        handle.set.contains         = op::contains::cast_and_evaluate<T1, T2>;
+        handle.set.is_in            = op::is_in::cast_and_evaluate<T1, T2>;
+        handle.set.is_subset        = op::is_subset::cast_and_evaluate<T1, T2>;
+        handle.set.is_proper_subset = op::is_proper_subset::cast_and_evaluate<T1, T2>;
+        handle.set.set_equal        = op::set_equal::cast_and_evaluate<T1, T2>;
+
+
         return handle;
     }
 
@@ -124,9 +140,7 @@ class OperatorTable
     {
         return apply(keyword, lhs, sol::make_object(lhs.lua_state(), sol::nil));
     }
-    // sol::object apply(Keyword const& keyword, sol::object lhs, sol::object rhs) const;
 
-    // sol::object OperatorHandler::apply(Keyword const& keyword, ExpressionParameter lhs, ExpressionParameter rhs) const
     sol::object apply(Keyword const& keyword, sol::object lhs, sol::object rhs) const
     try
     {
@@ -139,10 +153,8 @@ class OperatorTable
             }
             else if (!val.is<bool>())
             {
-                // return make_error("invalid argument", cf);
                 return sol::make_object(val.lua_state(), error("invalid argument", handle_.annotation));
             }
-            // return make_object(not val.as<bool>());
             return sol::make_object(val.lua_state(), not val.as<bool>());
 
         };
@@ -159,11 +171,9 @@ class OperatorTable
             }
             if (not (lhs.is<bool>() && rhs.is<bool>()))
             {
-                // return make_error("invalid argument", cf);
                 return sol::make_object(lhs.lua_state(), error("invalid argument", handle_.annotation));
 
             }
-            // return make_object(lhs.as<bool>() && rhs.as<bool>());
             return sol::make_object(lhs.lua_state(), lhs.as<bool>() && rhs.as<bool>());
         };
 
@@ -199,23 +209,22 @@ class OperatorTable
         case Keyword::Lshift: return (handle_.shift.left)(lhs, rhs);
         case Keyword::Rshift: return (handle_.shift.right)(lhs, rhs);
 
-        // case Keyword::SetEq: return conj(is_subset(lhs, rhs), is_subset(rhs, lhs)); // TODO: optimize
-        // case Keyword::Subset: return is_subset(lhs, rhs);
-        // case Keyword::Superset: return is_subset(rhs, lhs);
-        // case Keyword::PSubset: return conj(is_subset(lhs, rhs), negate(is_subset(rhs, lhs))); // TODO: optimize
-        // case Keyword::PSuperset: return conj(is_subset(rhs, lhs), negate(is_subset(lhs, rhs))); // TODO: optimize
+        case Keyword::SetEq: return  handle_.set.set_equal(lhs, rhs);
+        case Keyword::Subset: return  handle_.set.is_subset(lhs, rhs);
+        case Keyword::Superset: return handle_.set.is_subset(rhs, lhs);
+        case Keyword::PSubset: return handle_.set.is_proper_subset(lhs, rhs);
+        case Keyword::PSuperset: return handle_.set.is_proper_subset(rhs, lhs);
 
-        // case Keyword::In: return contains(rhs, lhs);
-        // case Keyword::Ni: return contains(lhs, rhs);
-        // case Keyword::NotIn: return negate(contains(rhs, lhs));
-        // case Keyword::NotNi: return negate(contains(lhs, rhs));
+        case Keyword::In: return (handle_.set.is_in)(lhs, rhs);
+        case Keyword::NotIn: return negate((handle_.set.is_in)(lhs, rhs));
+        case Keyword::Ni: return (handle_.set.contains)(lhs, rhs);
+        case Keyword::NotNi: return negate((handle_.set.contains)(lhs, rhs));
 
         // case Keyword::Pow: return OperatorHandler::generic_pow(lhs, rhs);
         // case Keyword::Log: return OperatorHandler::generic_log(lhs, rhs);
         // case Keyword::Quot: return OperatorHandler::generic_quot(lhs, rhs);
 
         default:
-            // return make_error("unsupported operator", BOOST_CURRENT_FUNCTION);
             return sol::make_object(lhs.lua_state(), error("unsupported operator", handle_.annotation));
 
         }
@@ -223,7 +232,6 @@ class OperatorTable
     catch(const std::exception& e)
     {
         return sol::make_object(lhs.lua_state(), error(e.what(), handle_.annotation));
-        // return make_error(e.what(), annotation());
     }
 
 
@@ -256,7 +264,7 @@ class OperatorRegistry
 
 
     template <class LHS, class... RHS>
-    void register_operators(type_tag<LHS>, type_tag<RHS>...)
+    void insert(type_tag<LHS>, type_tag<RHS>...)
     {
         using auto_types = boost::mp11::mp_list<
             type_tag<LHS>,

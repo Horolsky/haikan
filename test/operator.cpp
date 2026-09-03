@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <sstream>
+#include <set>
 #include <string>
 
 #include <boost/json.hpp>
@@ -267,7 +268,7 @@ BOOST_AUTO_TEST_CASE(OpTable)
     using haikan::impl::OperatorRegistry;
     using haikan::impl::OperatorTable;
 
-    OperatorRegistry(state).register_operators(type<X>);
+    OperatorRegistry(state).insert(type<X>);
 
     state.open_libraries();
 
@@ -313,5 +314,63 @@ BOOST_AUTO_TEST_CASE(OpTable)
 }
 
 
-BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_CASE(SetOperators)
+{
+    std::set<int> x{1,2,3,4,5,6,7,8};
+    std::set<int> subset{1,3,7};
+    std::set<int> equal{x};
+    std::set<int> not_subset{1,9};
+    std::set<int> empty;
+    int y {7};
+    double z {42};
 
+    {
+        sol::object result = haikan::op::contains()(state.lua_state(), x, y);
+        BOOST_CHECK_EQUAL(result.as<bool>(), true);
+    }
+
+    {
+        sol::object result = haikan::op::contains()(state.lua_state(), x, z);
+        BOOST_CHECK_EQUAL(result.as<bool>(), false);
+    }
+
+
+    {
+        sol::object result = haikan::op::is_in()(state.lua_state(), y, x);
+        BOOST_CHECK_EQUAL(result.as<bool>(), true);
+    }
+
+    {
+        sol::object result = haikan::op::is_in()(state.lua_state(), z, x);
+        BOOST_CHECK_EQUAL(result.as<bool>(), false);
+    }
+
+    BOOST_CHECK(haikan::op::is_subset()(state.lua_state(), subset, x).as<bool>());
+    BOOST_CHECK(haikan::op::is_subset()(state.lua_state(), equal, x).as<bool>());
+    BOOST_CHECK(haikan::op::is_subset()(state.lua_state(), empty, x).as<bool>());
+    BOOST_CHECK(!haikan::op::is_subset()(state.lua_state(), x, subset).as<bool>());
+    BOOST_CHECK(!haikan::op::is_subset()(state.lua_state(), not_subset, x).as<bool>());
+
+    BOOST_CHECK(haikan::op::set_equal()(state.lua_state(), x, equal).as<bool>());
+    BOOST_CHECK(haikan::op::set_equal()(state.lua_state(), empty, empty).as<bool>());
+    BOOST_CHECK(!haikan::op::set_equal()(state.lua_state(), subset, x).as<bool>());
+    BOOST_CHECK(!haikan::op::set_equal()(state.lua_state(), not_subset, x).as<bool>());
+
+    BOOST_CHECK(haikan::op::is_proper_subset()(state.lua_state(), subset, x).as<bool>());
+    BOOST_CHECK(haikan::op::is_proper_subset()(state.lua_state(), empty, x).as<bool>());
+    BOOST_CHECK(!haikan::op::is_proper_subset()(state.lua_state(), equal, x).as<bool>());
+    BOOST_CHECK(!haikan::op::is_proper_subset()(state.lua_state(), empty, empty).as<bool>());
+    BOOST_CHECK(!haikan::op::is_proper_subset()(state.lua_state(), not_subset, x).as<bool>());
+
+    BOOST_CHECK(haikan::op::is_superset()(state.lua_state(), x, subset).as<bool>());
+    BOOST_CHECK(haikan::op::is_superset()(state.lua_state(), x, equal).as<bool>());
+    BOOST_CHECK(!haikan::op::is_superset()(state.lua_state(), subset, x).as<bool>());
+
+    BOOST_CHECK(haikan::op::is_proper_superset()(state.lua_state(), x, subset).as<bool>());
+    BOOST_CHECK(haikan::op::is_proper_superset()(state.lua_state(), x, empty).as<bool>());
+    BOOST_CHECK(!haikan::op::is_proper_superset()(state.lua_state(), x, equal).as<bool>());
+    BOOST_CHECK(!haikan::op::is_proper_superset()(state.lua_state(), empty, empty).as<bool>());
+
+}
+
+BOOST_AUTO_TEST_SUITE_END()
