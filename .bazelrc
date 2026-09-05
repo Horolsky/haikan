@@ -1,0 +1,9 @@
+common --enable_bzlmod=true --enable_platform_specific_config --stamp
+build --workspace_status_command=tools/workspace_status.sh
+
+build:linux --sandbox_add_mount_pair=/tmp
+
+build:macos --sandbox_add_mount_pair=/var/tmp
+build:windows --sandbox_add_mount_pair=C:\Temp
+
+test --test_arg --log_level=all

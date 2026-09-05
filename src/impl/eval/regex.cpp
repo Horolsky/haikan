@@ -1,0 +1,80 @@
+/**
+ * \file
+ * \copyright (c) Copyright 2024-2025 Zenseact AB
+ * \license SPDX-License-Identifier: Apache-2.0
+ */
+#include <cctype>
+#include <regex>
+#include <boost/math/constants/constants.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
+
+#include "haikan/impl/operator.hpp"
+#include "haikan/impl/expression.hpp"
+#include "haikan/keywords.hpp"
+#include "haikan/impl/eval_context.hpp"
+#include "haikan/impl/eval_impl.hpp"
+#include "haikan/impl/eval_impl_pp.hpp"
+
+namespace
+{
+using V = boost::json::value;
+using L = boost::json::array;
+using E = haikan::impl::Expression;
+using K = haikan::impl::Keyword;
+using O = haikan::impl::Operator;
+
+} // namespace
+
+
+namespace haikan {
+namespace impl {
+
+
+HAIKAN_DEFINE_EVALUATE_IMPL(Re)
+{
+    auto const& param = rhs().data();
+    auto const& x = lhs().data();
+
+    ASSERT(param.is_string(), "invalid parameter");
+    ASSERT(x.is_string(), "invalid argument");
+
+    auto const pattern = param.get_string().c_str();
+    auto const sample = x.get_string().c_str();
+    std::regex const re(pattern);
+    return std::regex_match(sample, re);
+}
+
+HAIKAN_DEFINE_EVALUATE_IMPL(Capitalize)
+{
+    auto const& x = lhs().data();
+    ASSERT(x.is_string(), "invalid argument");
+    auto sample = x.get_string();
+    if (!sample.empty())
+    {
+        sample.at(0) = std::toupper(sample.at(0));
+    }
+    return sample.c_str();
+}
+
+HAIKAN_DEFINE_EVALUATE_IMPL(LowerCase)
+{
+    auto const& x = lhs().data();
+    ASSERT(x.is_string(), "invalid argument");
+    auto sample = x.get_string();
+    boost::to_lower(sample);
+    return sample.c_str();
+
+}
+
+HAIKAN_DEFINE_EVALUATE_IMPL(UpperCase)
+{
+    auto const& x = lhs().data();
+    ASSERT(x.is_string(), "invalid argument");
+    auto sample = x.get_string();
+    boost::to_upper(sample);
+    return sample.c_str();
+}
+
+} // namespace impl
+} // namespace haikan
+
