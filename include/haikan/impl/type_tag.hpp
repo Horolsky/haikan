@@ -29,5 +29,34 @@ constexpr type_tag<T> const type{};
 template <class T>
 using is_type_tag = boost::mp11::mp_similar<std::decay_t<T>, type_tag<void>>;
 
+
+
+
+
+template <template <class...> class T>
+struct template_tag {
+    template <class... U>
+    using instance = T<U...>;
+};
+
+template <template <class...> class T>
+constexpr template_tag<T> const templ{};
+
+
+
+
+template <class... T>
+struct type_list_t {};
+
+template <class... T>
+constexpr type_list_t<T...> const type_list{};
+
+
+template <template <class...> class... T>
+struct template_list_t {};
+
+template <template <class...> class... T>
+constexpr template_list_t<T...> const template_list{};
+
 }  // namespace impl
 }  // namespace haikan

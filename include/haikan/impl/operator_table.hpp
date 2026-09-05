@@ -79,6 +79,10 @@ class OperatorTable
             binary_transform is_subset{};
             binary_transform is_proper_subset{};
             binary_transform set_equal{};
+            binary_transform intersect{};
+            binary_transform union_{};
+            binary_transform difference{};
+
         } set;
     };
 
@@ -122,6 +126,10 @@ class OperatorTable
         handle.set.is_proper_subset = op::is_proper_subset::cast_and_evaluate<T1, T2>;
         handle.set.set_equal        = op::set_equal::cast_and_evaluate<T1, T2>;
 
+        handle.set.intersect  = op::intersection::cast_and_evaluate<T1, T2>;
+        handle.set.union_     = op::set_union::cast_and_evaluate<T1, T2>;
+        handle.set.difference = op::difference::cast_and_evaluate<T1, T2>;
+        // handle.set.symmetric_difference = op::symmetric_difference::cast_and_evaluate<T1, T2>;
 
         return handle;
     }
@@ -144,7 +152,6 @@ class OperatorTable
     sol::object apply(Keyword const& keyword, sol::object lhs, sol::object rhs) const
     try
     {
-        // std::string cf = BOOST_CURRENT_FUNCTION;
         auto const negate = [&](sol::object val) -> sol::object
         {
             if (val.is<error>())
@@ -220,6 +227,10 @@ class OperatorTable
         case Keyword::Ni: return (handle_.set.contains)(lhs, rhs);
         case Keyword::NotNi: return negate((handle_.set.contains)(lhs, rhs));
 
+        case Keyword::Union: return (handle_.set.union_)(lhs, rhs);
+        case Keyword::Intersect: return (handle_.set.intersect)(lhs, rhs);
+        case Keyword::Diff: return (handle_.set.difference)(lhs, rhs);
+
         // case Keyword::Pow: return OperatorHandler::generic_pow(lhs, rhs);
         // case Keyword::Log: return OperatorHandler::generic_log(lhs, rhs);
         // case Keyword::Quot: return OperatorHandler::generic_quot(lhs, rhs);
@@ -263,45 +274,58 @@ class OperatorRegistry
     ~OperatorRegistry() = default;
 
 
-    template <class LHS, class... RHS>
-    void insert(type_tag<LHS>, type_tag<RHS>...)
+    template <class LHS, class... RHS, template <class...> class... Cont>
+    void insert(type_tag<LHS>, type_list_t<RHS...> = {}, template_list_t<Cont...> = {})
     {
-        using auto_types = boost::mp11::mp_list<
-            type_tag<LHS>,
-            type_tag<bool>,
-            type_tag<double>
-            >;
-        using rhs_types = boost::mp11::mp_unique<boost::mp11::mp_append<
-            boost::mp11::mp_list<type_tag<RHS>...>, auto_types>>;
+        using boost::mp11::mp_list;
+        using boost::mp11::mp_product;
+        using boost::mp11::mp_invoke_q;
+        using boost::mp11::mp_append;
+        using boost::mp11::mp_quote;
+        using boost::mp11::mp_transform;
+        using boost::mp11::mp_first;
+        using boost::mp11::mp_second;
 
+
+        using rhs_raw_types = mp_list<LHS, RHS...>;
+        using rhs_cont_types = mp_product<mp_invoke_q, mp_list<mp_quote<Cont>...>, rhs_raw_types>;
+        using rhs_types = mp_append<rhs_raw_types, rhs_cont_types>;
+        using lhs_raw_types = mp_list<LHS>;
+        using lhs_cont_types = mp_product<mp_invoke_q, mp_list<mp_quote<Cont>...>, lhs_raw_types>;
+        using lhs_types = mp_append<lhs_raw_types, lhs_cont_types>;
+        using raw_operand_pairs = mp_product<mp_list, lhs_types, rhs_types>;
+        using operand_pairs = mp_transform<type_tag, raw_operand_pairs>;
 
         sol::table root = get_or_create_table(state_view_, state_view_.globals(), "haikan");
         sol::table operators = get_or_create_table(state_view_, root, "operators");
         sol::table lhs2rhs = get_or_create_table(state_view_, operators, "lhs2rhs");
         sol::table rhs2lhs = get_or_create_table(state_view_, operators, "rhs2lhs");
 
-        auto const lhs_hash = typeid(LHS).hash_code();
-        sol::table lhs_entry = get_or_create_table(state_view_, lhs2rhs, lhs_hash);
+        boost::mp11::mp_for_each<operand_pairs>([&](auto x) {
+            using operand_pair = typename decltype(x)::type;
 
+            using lhs_type = mp_first<operand_pair>;
+            using rhs_type = mp_second<operand_pair>;
 
-        boost::mp11::mp_for_each<rhs_types>([&](auto rhs) {
-            using rhs_type = typename decltype(rhs)::type;
+            auto const lhs_hash = typeid(lhs_type).hash_code();
             auto const rhs_hash = typeid(rhs_type).hash_code();
+
             {
                 sol::table rhs_entry = get_or_create_table(state_view_, rhs2lhs, rhs_hash);
-                rhs_entry[lhs_hash] = lhs_entry[rhs_hash] = OperatorTable{type<LHS>, type<rhs_type>};
+                sol::table lhs_entry = get_or_create_table(state_view_, lhs2rhs, lhs_hash);
+                rhs_entry[lhs_hash] = lhs_entry[rhs_hash] = OperatorTable{type<lhs_type>, type<rhs_type>};
             }
 
-            // commute
             {
-                sol::table entry = get_or_create_table(state_view_, lhs2rhs, rhs_hash);
-                sol::table entry_r = get_or_create_table(state_view_, rhs2lhs, lhs_hash);
-                entry_r[rhs_hash] = entry[lhs_hash] = OperatorTable{type<rhs_type>, type<LHS>};
+                sol::table rhs_entry = get_or_create_table(state_view_, lhs2rhs, rhs_hash);
+                sol::table lhs_entry = get_or_create_table(state_view_, rhs2lhs, lhs_hash);
+                rhs_entry[lhs_hash] = lhs_entry[rhs_hash] = OperatorTable{type<rhs_type>, type<lhs_type>};
             }
-            // TODO: add OperatorTable impl
-
         });
     }
+
+    private:
+
 };
 
 } // namespace impl
