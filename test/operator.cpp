@@ -4,6 +4,8 @@
 #include <sstream>
 #include <set>
 #include <string>
+#include <unordered_set>
+#include <vector>
 
 #include <boost/json.hpp>
 #include <boost/test/unit_test.hpp>
@@ -55,6 +57,8 @@ using haikan::error;
 using haikan::impl::OperatorHandler;
 using haikan::impl::Keyword;
 using haikan::impl::type;
+using haikan::impl::type_list;
+using haikan::impl::template_list;
 
 BOOST_FIXTURE_TEST_SUITE(ExpressionLuaTests, OperatorHandlerSuite)
 
@@ -268,44 +272,37 @@ BOOST_AUTO_TEST_CASE(OpTable)
     using haikan::impl::OperatorRegistry;
     using haikan::impl::OperatorTable;
 
-    OperatorRegistry(state).insert(type<X>);
+    OperatorRegistry(state).insert(type<X>, type_list<double>);
 
     state.open_libraries();
-
-    sol::table lhs2rhs = state["haikan"]["operators"]["lhs2rhs"];
-    sol::table rhs2lhs = state["haikan"]["operators"]["rhs2lhs"];
-
-    OperatorTable x2d_l = lhs2rhs[typeid(X).hash_code()][typeid(double).hash_code()].get<OperatorTable>();
-    OperatorTable x2d_r = rhs2lhs[typeid(double).hash_code()][typeid(X).hash_code()].get<OperatorTable>();
-
-    OperatorTable d2x_l = lhs2rhs[typeid(double).hash_code()][typeid(X).hash_code()].get<OperatorTable>();
-    OperatorTable d2x_r = rhs2lhs[typeid(X).hash_code()][typeid(double).hash_code()].get<OperatorTable>();
+    OperatorTable x2d = OperatorRegistry::get(state, type<X>, type<double>).value();
+    OperatorTable d2x = OperatorRegistry::get(state, type<double>, type<X>).value();
 
     sol::object x = sol::make_object(state.lua_state(), X{42});
     sol::object y = sol::make_object(state.lua_state(), 11.0);
 
     {
-        sol::object result = x2d_l.apply(Keyword::Add, x, y);
+        sol::object result = x2d.apply(Keyword::Add, x, y);
         BOOST_CHECK_EQUAL(result.as<X>().val, 53);
     }
 
     {
-        sol::object result = x2d_r.apply(Keyword::Sub, x, y);
+        sol::object result = x2d.apply(Keyword::Sub, x, y);
         BOOST_CHECK_EQUAL(result.as<X>().val, 31);
     }
 
     {
-        sol::object result = d2x_l.apply(Keyword::Add, y, x);
+        sol::object result = d2x.apply(Keyword::Add, y, x);
         BOOST_CHECK_EQUAL(result.as<X>().val, 53);
     }
 
     {
-        sol::object result = d2x_r.apply(Keyword::Sub, y, x);
+        sol::object result = d2x.apply(Keyword::Sub, y, x);
         BOOST_CHECK_EQUAL(result.as<X>().val, -31);
     }
 
     {
-        sol::object result = x2d_l.apply(Keyword::BitNot, x);
+        sol::object result = x2d.apply(Keyword::BitNot, x);
         BOOST_REQUIRE(result.is<error>());
         BOOST_CHECK_EQUAL(result.as<error>().what, "operator not implemented");
         BOOST_CHECK_EQUAL(result.as<error>().where, "haikan::op::complement");
@@ -371,6 +368,127 @@ BOOST_AUTO_TEST_CASE(SetOperators)
     BOOST_CHECK(!haikan::op::is_proper_superset()(state.lua_state(), x, equal).as<bool>());
     BOOST_CHECK(!haikan::op::is_proper_superset()(state.lua_state(), empty, empty).as<bool>());
 
+    std::set<int> lhs{1, 2, 3, 4};
+    std::vector<short> rhs{3, 4, 5, 6};
+
+    {
+        auto const result = haikan::op::set_union()(state.lua_state(), lhs, rhs);
+        auto const actual = result.as<std::set<int>>();
+        BOOST_CHECK(actual == (std::set<int>{1, 2, 3, 4, 5, 6}));
+    }
+
+    {
+        auto const result = haikan::op::intersection()(state.lua_state(), lhs, rhs);
+        auto const actual = result.as<std::set<int>>();
+        BOOST_CHECK(actual == (std::set<int>{3, 4}));
+    }
+
+    {
+        auto const result = haikan::op::difference()(state.lua_state(), lhs, rhs);
+        auto const actual = result.as<std::set<int>>();
+        BOOST_CHECK(actual == (std::set<int>{1, 2}));
+    }
+
+    {
+        auto const result = haikan::op::symmetric_difference()(state.lua_state(), lhs, rhs);
+        auto const actual = result.as<std::set<int>>();
+        BOOST_CHECK(actual == (std::set<int>{1, 2, 5, 6}));
+    }
+
+    {
+        auto const result = haikan::op::set_union()(state.lua_state(), rhs, lhs);
+        auto const actual = result.as<std::vector<short>>();
+        BOOST_CHECK(actual == (std::vector<short>{3, 4, 5, 6, 1, 2}));
+    }
+
+    {
+        auto const result = haikan::op::intersection()(state.lua_state(), rhs, lhs);
+        auto const actual = result.as<std::vector<short>>();
+        BOOST_CHECK(actual == (std::vector<short>{3, 4}));
+    }
+
+    {
+        std::string a, b;
+        a = "aabbccddeeaa";
+        b = "bcdef";
+        auto const result = haikan::op::intersection()(state.lua_state(), a, b);
+        auto const actual = result.as<std::string>();
+        BOOST_CHECK_EQUAL(actual, "bbccddee");
+    }
+
+    {
+        std::string const input = "aabbccddee";
+        auto const result = haikan::op::uniques()(state.lua_state(), input);
+        BOOST_CHECK(result.is<std::string>());
+        BOOST_CHECK_EQUAL(result.as<std::string>(), "abcde");
+    }
+
+    {
+        std::vector<short> const input{3, 4, 3, 5, 4, 6};
+        auto const result = haikan::op::uniques()(state.lua_state(), input);
+        BOOST_CHECK(result.is<std::vector<short>>());
+        BOOST_CHECK(result.as<std::vector<short>>() == (std::vector<short>{3, 4, 5, 6}));
+    }
+
+    {
+        std::set<int> const input{1, 2, 3};
+        auto const result = haikan::op::uniques()(state.lua_state(), input);
+        BOOST_CHECK(result.is<std::set<int>>());
+        BOOST_CHECK(result.as<std::set<int>>() == input);
+    }
+
+    {
+        std::set<int> const a{1, 2, 3, 4};
+        std::set<int> const b{3, 4, 5, 6};
+        BOOST_CHECK(haikan::op::set_union()(state.lua_state(), a, b).as<std::set<int>>() ==
+                    (std::set<int>{1, 2, 3, 4, 5, 6}));
+        BOOST_CHECK(haikan::op::intersection()(state.lua_state(), a, b).as<std::set<int>>() ==
+                    (std::set<int>{3, 4}));
+        BOOST_CHECK(haikan::op::difference()(state.lua_state(), a, b).as<std::set<int>>() ==
+                    (std::set<int>{1, 2}));
+        BOOST_CHECK(haikan::op::symmetric_difference()(state.lua_state(), a, b).as<std::set<int>>() ==
+                    (std::set<int>{1, 2, 5, 6}));
+    }
+
+    {
+        std::unordered_set<int> const a{1, 2, 3, 4};
+        std::unordered_set<int> const b{3, 4, 5, 6};
+        BOOST_CHECK(haikan::op::set_union()(state.lua_state(), a, b).as<std::unordered_set<int>>() ==
+                    (std::unordered_set<int>{1, 2, 3, 4, 5, 6}));
+        BOOST_CHECK(haikan::op::intersection()(state.lua_state(), a, b).as<std::unordered_set<int>>() ==
+                    (std::unordered_set<int>{3, 4}));
+        BOOST_CHECK(haikan::op::difference()(state.lua_state(), a, b).as<std::unordered_set<int>>() ==
+                    (std::unordered_set<int>{1, 2}));
+        BOOST_CHECK(haikan::op::symmetric_difference()(state.lua_state(), a, b).as<std::unordered_set<int>>() ==
+                    (std::unordered_set<int>{1, 2, 5, 6}));
+        BOOST_CHECK(haikan::op::uniques()(state.lua_state(), a).as<std::unordered_set<int>>() == a);
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE(ContTemplates)
+{
+    std::vector<int> const a{1, 2, 3, 4};
+    std::vector<int> const b{3, 4, 5, 6};
+    // lexicographical comparison provided by std::vector::operator<
+    BOOST_CHECK(haikan::op::less()(state.lua_state(), a, b).as<bool>());
+    BOOST_CHECK(!haikan::op::greater()(state.lua_state(), a, b).as<bool>());
+
+
+    using haikan::impl::type_list;
+    using haikan::impl::template_list;
+    using haikan::impl::OperatorRegistry;
+    using haikan::impl::OperatorTable;
+
+    OperatorRegistry(state).insert(type<int>, type_list<double>, template_list<std::vector, std::set>);
+    OperatorTable optbl = OperatorRegistry::get(state, type<std::vector<int>>).value();
+
+    sol::object result = optbl.apply(Keyword::Lt,
+        sol::make_object(state, a),
+        sol::make_object(state, b)
+    );
+
+    BOOST_CHECK(result.as<bool>());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
