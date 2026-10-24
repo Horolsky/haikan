@@ -16,7 +16,6 @@
 namespace haikan {
 namespace impl {
 
-
 boost::optional<sol::object> migrate_to_state(sol::state_view target_state, sol::object object);
 
 } // namespace impl

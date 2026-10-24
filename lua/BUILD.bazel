@@ -1,0 +1,33 @@
+LAUSEKE_COPTS = [
+    "-std=c++14",
+    "-O2",
+    "-Werror",
+    "-Wall",
+    "-Wextra",
+    "-Wpedantic",
+]
+
+cc_library(
+    name = "cow",
+    visibility = ["//visibility:public"],
+    includes = ["."],
+    hdrs = [
+        "cow.hpp",
+    ],
+    srcs = [
+        "cow.cpp",
+    ],
+    deps = [
+        "@lua",
+        "@sol",
+    ],
+    copts = LAUSEKE_COPTS,
+)
+
+cc_binary(
+    name = "main",
+    srcs = ["main.cpp"],
+    deps = [
+        ":cow",
+    ]
+)

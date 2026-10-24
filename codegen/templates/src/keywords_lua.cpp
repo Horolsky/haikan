@@ -25,7 +25,6 @@
 #endif
 
 namespace haikan {
-namespace lua {
 
 @for keyword in data.ApiKeywords:
 impl::Lua@keyword.Class const HAIKAN_KEYWORD_INIT @keyword.Name = {};
@@ -34,5 +33,4 @@ impl::Lua@keyword.Class const HAIKAN_KEYWORD_INIT @alias.capitalize() = @keyword
 @end
 @end
 
-} // namespace lua
 } // namespace haikan

@@ -15,6 +15,7 @@ HAIKAN_COPTS = [
 
 BOOST_LIBS = [
     "@boost.algorithm//:boost.algorithm",
+    "@boost.any//:boost.any",
     "@boost.callable_traits//:boost.callable_traits",
     "@boost.container_hash//:boost.container_hash",
     "@boost.describe//:boost.describe",

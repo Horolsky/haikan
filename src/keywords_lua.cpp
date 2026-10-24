@@ -24,7 +24,6 @@
 #endif
 
 namespace haikan {
-namespace lua {
 
 impl::LuaSignatureConst<::haikan::impl::Keyword::Noop> const HAIKAN_KEYWORD_INIT Noop = {};
 impl::LuaSignatureConst<::haikan::impl::Keyword::Noop> const HAIKAN_KEYWORD_INIT _ = Noop;
@@ -203,5 +202,4 @@ impl::LuaSignatureBinary<::haikan::impl::Keyword::Assert> const HAIKAN_KEYWORD_I
 impl::LuaSignatureBinary<::haikan::impl::Keyword::Trace> const HAIKAN_KEYWORD_INIT Trace = {};
 impl::LuaSignatureBinary<::haikan::impl::Keyword::PreProc> const HAIKAN_KEYWORD_INIT PreProc = {};
 
-} // namespace lua
 } // namespace haikan

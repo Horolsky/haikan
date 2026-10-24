@@ -14,7 +14,7 @@
 
 #include <boost/json.hpp>
 
-#include "haikan/impl/type_tag.hpp"
+#include "haikan/type_tag.hpp"
 
 
 namespace haikan {
@@ -215,7 +215,7 @@ struct precise
 /// @brief precise<T> decorator
 /// @tparam T
 template <class T>
-constexpr ::haikan::impl::type_tag<precise<T>> Precise;
+constexpr ::haikan::type_tag<precise<T>> Precise;
 
 
 // Boost JSON conversion from precise<T>

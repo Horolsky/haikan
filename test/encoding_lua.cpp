@@ -20,7 +20,6 @@ BOOST_DESCRIBE_STRUCT(EncodingPayload, (), (value))
 
 using haikan::impl::EncodingLua;
 using haikan::impl::Keyword;
-using haikan::impl::ExpressionParameter;
 
 namespace
 {
@@ -41,11 +40,11 @@ BOOST_FIXTURE_TEST_SUITE(EncodingLuaTests, EncodingLuaSuite)
 
 BOOST_AUTO_TEST_CASE(ClassifiesStringTokens)
 {
-    BOOST_CHECK(ExpressionParameter(sol::make_object(state, "$[value]")).is_preproc_token());
-    BOOST_CHECK(!ExpressionParameter(sol::make_object(state, "$value")).is_preproc_token());
-    BOOST_CHECK(ExpressionParameter(sol::make_object(state, "$value")).is_link_token());
-    BOOST_CHECK(!ExpressionParameter(sol::make_object(state, "$[value]")).is_link_token());
-    BOOST_CHECK(!ExpressionParameter(object(1)).is_link_token());
+    BOOST_CHECK(is_preproc_token(sol::make_object(state, "$[value]")));
+    BOOST_CHECK(!is_preproc_token(sol::make_object(state, "$value")));
+    BOOST_CHECK(is_link_token(sol::make_object(state, "$value")));
+    BOOST_CHECK(!is_link_token(sol::make_object(state, "$[value]")));
+    BOOST_CHECK(!is_link_token(object(1)));
 }
 
 BOOST_AUTO_TEST_CASE(ConstructsLiteralAndTokens)
@@ -75,7 +74,7 @@ BOOST_AUTO_TEST_CASE(SlicesAndTraversesTrees)
     BOOST_CHECK_EQUAL(first.size(), 2U);
     BOOST_CHECK(first.head() == Keyword::Mul);
     BOOST_CHECK_EQUAL(last.size(), 1U);
-    BOOST_CHECK_EQUAL(last.data.front().load(state).as<int>(), 3);
+    BOOST_CHECK_EQUAL(last.data_.front().load(state).as<int>(), 3);
     BOOST_CHECK_EQUAL(tree.children().size(), 2U);
     BOOST_CHECK(tree.slice(4, 1).size() == 0U);
 }
@@ -90,8 +89,8 @@ BOOST_AUTO_TEST_CASE(AppendsAtRootDepth)
     root.append_to_root(std::move(tail));
 
     BOOST_CHECK_EQUAL(root.size(), 3U);
-    BOOST_CHECK_EQUAL(root.depth[1], 1U);
-    BOOST_CHECK_EQUAL(root.depth[2], 2U);
+    BOOST_CHECK_EQUAL(root.depths_[1], 1U);
+    BOOST_CHECK_EQUAL(root.depths_[2], 2U);
 }
 
 BOOST_AUTO_TEST_CASE(EmptyAndMissingChildrenAreSafe)
@@ -121,7 +120,7 @@ BOOST_AUTO_TEST_CASE(ToObjectSolifiesRegisteredUserdata)
     state["payload"] = payload;
 
     BOOST_CHECK_THROW(state.script("return payload.value == 42").get<bool>(), sol::error);
-    haikan::ReflectionRegistry::insert_auto(haikan::impl::type<EncodingPayload>);
+    haikan::ReflectionRegistry::insert_auto(haikan::type<EncodingPayload>);
     haikan::ReflectionRegistry::init(state);
     BOOST_REQUIRE(state.script("return payload.value == 42").get<bool>());
 

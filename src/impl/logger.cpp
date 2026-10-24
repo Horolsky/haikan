@@ -15,95 +15,40 @@
 #include <chrono>
 
 #include "haikan/logger.hpp"
+#include "haikan/reflect.hpp"
+#include "haikan/impl/lua_state.hpp"
+#include "haikan/impl/lua_stream.hpp"
+#include "haikan/impl/expression_lua.hpp"
+#include "haikan/impl/vm.hpp"
+
 
 namespace{
 using Level = haikan::Logger::Level;
 
-static Level g_max_log_level = Level::INFO;
-static bool g_notrim = false;
+static Level g_max_log_level = Level::TRACE;
+static bool g_notrim = true;
 static bool g_pretty_print = false;
 
 
-class AsyncJsonLogger {
-public:
-
-    static AsyncJsonLogger& instance()
+char const* level_to_str(Level const& l)
+{
+    switch(l)
     {
-        static AsyncJsonLogger logger;  // change file name as needed
-        return logger;
+        case Level::FATAL: return "FATAL";
+        case Level::ERROR: return "ERROR";
+        case Level::WARNING: return "WARNING";
+        case Level::INFO: return "INFO";
+        case Level::DEBUG: return "DEBUG";
+        case Level::TRACE: return "TRACE";
+        case Level::DEVMODE: return "DEVMODE";
+        default: return "UNKNOWN";
     }
-
-    explicit AsyncJsonLogger()
-        : queue_(1024)
-    {
-    }
-
-    /// Attach logger to file sink
-    void open(const std::string& filename)
-    {
-        if (!filename.empty()) {
-            out_stream_.open(filename);
-            out_stream_ << "[\n";
-            running_ = true;
-            worker_ = std::thread(&AsyncJsonLogger::async_write, this);
-        } else {
-            running_ = false;
-        }
-    }
-
-    ~AsyncJsonLogger() {
-        running_ = false;
-        if (worker_.joinable()) worker_.join();
-        out_stream_ << R"({"messages lost":)" << lost_message_count_ << "}\n]\n";
-        out_stream_.flush();
-        out_stream_.close();
-    }
-
-    void push(boost::json::object const& record) {
-
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (!queue_.push(record)) {
-            ++lost_message_count_;
-        }
-    }
-
-
-private:
-
-    std::mutex mutex_{};
-    std::size_t lost_message_count_{0};
-    std::atomic<bool> running_{false};
-    boost::json::serializer serializer_{};
-    std::ofstream out_stream_;
-    std::thread worker_;
-    boost::lockfree::spsc_queue<boost::json::object> queue_;
-
-    void async_write() {
-        boost::json::object record;
-        while (running_ || !queue_.empty()) {
-            while (queue_.pop(record)) {
-                serializer_.reset(&record);
-                while (!serializer_.done()) {
-                    char buf[4000];
-                    out_stream_ << serializer_.read(buf);
-                }
-                out_stream_ << ",\n";
-            }
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        }
-    }
-};
-
-
-
 }
+
+} // namespace
 
 namespace haikan {
 
-void Logger::open_json(const std::string& filename)
-{
-   AsyncJsonLogger::instance().open(filename);
-}
 
 void Logger::set_max_level(Level const max_level)
 {
@@ -141,72 +86,126 @@ Logger::Logger()
    reset_timestamp();
 }
 
-Logger& Logger::WithOutput(Logger::Output const output)
+Logger& Logger::WithOutput(Logger::Output const output) &
 {
     output_ = output;
     return *this;
 }
 
-Logger& Logger::WithLevel(Level const level)
+Logger&& Logger::WithOutput(Logger::Output const output) &&
+{
+    output_ = output;
+    return std::move(*this);
+}
+
+Logger& Logger::WithLevel(Level const level) &
 {
     level_ = level;
     return *this;
 }
 
-Logger& Logger::WithSrcLoc(boost::json::string_view const src_loc)
+Logger&& Logger::WithLevel(Level const level) &&
+{
+    level_ = level;
+    return std::move(*this);
+}
+
+Logger& Logger::WithSrcLoc(boost::string_view const src_loc) &
 {
     src_loc_ = src_loc;
     return *this;
 }
 
-
-Logger& Logger::operator<<(boost::json::value const& value)
+Logger&& Logger::WithSrcLoc(boost::string_view const src_loc) &&
 {
-    payload_cache_.emplace_back(value);
-    return *this;
+    src_loc_ = src_loc;
+    return std::move(*this);
 }
 
-Logger& Logger::operator<<(boost::json::value && value)
-{
-    payload_cache_.emplace_back(std::move(value));
-    return *this;
-}
+
+
 
 Logger::~Logger()
 {
     if (payload_cache_.empty()) return;
     if (level_ > g_max_log_level) return;
 
-    auto const level = boost::json::value_from(level_).as_string();
-    boost::json::string_view const timestamp{timestamp_};
+    auto const level = level_to_str(level_);
+    boost::string_view const timestamp{timestamp_};
 
-    if (JSON & output_)
-    {
-        boost::json::value const& payload = payload_cache_.size() == 1 ? payload_cache_.front() : payload_cache_;
-        AsyncJsonLogger::instance().push({
-            {"timestamp", timestamp },
-            {"level" , level  },
-            {"src_loc"  , src_loc_  },
-            {"payload"  , payload   },
-        });
-    }
-    if (STDERR & output_)
+    // if (JSON & output_)
+    // {
+    //     boost::json::value const& payload = payload_cache_.size() == 1 ? payload_cache_.front() : payload_cache_;
+    //     AsyncJsonLogger::instance().push({
+    //         {"timestamp", timestamp },
+    //         {"level" , level  },
+    //         {"src_loc"  , src_loc_  },
+    //         {"payload"  , payload   },
+    //     });
+    // }
+    // if (STDERR & output_)
     {
         std::stringstream ss;
         ss << timestamp
-        << ' ' << level.c_str()
+        << ' ' << level
         << ' ' << src_loc_
         << ' ';
         for (auto const& record: payload_cache_)
         {
-            if (auto const as_string =record.if_string())
+            if (not record.lua_state())
             {
-                ss << as_string->c_str();
+                ss << "NULL";
+            }
+            else if (record.is<impl::ExpressionLua>())
+            {
+                record.as<impl::ExpressionLua>().prettify_to(ss);
+            }
+            else if (record.is<error>())
+            {
+                ss << record.as<error const&>();
+            }
+            else if (record.is<impl::Args>())
+            {
+                // TODO: fix unescaped null characters terminating whole log message here
+                ss << "{";
+                impl::Args const& args = record.as<impl::Args const&>();
+                impl::lua_to_stream(ss, args.lhs, 0, false);
+                ss << ", ";
+                impl::lua_to_stream(ss, args.rhs, 0, false);
+                ss << "}";
+
+                // ss << "{" << args.lhs << args.rhs 
+            }
+            else if (record.get_type() == sol::type::userdata)
+            {
+                sol::object plain = to_plain_lua(record);
+                if (plain.is<error>())
+                {
+                    ss << plain.as<error const&>();
+                }
+                else
+                {
+                    // std::cerr << " -- " << ss.str() << '\n';
+                    impl::lua_to_stream(ss, plain, 0, false);
+                    // std::cerr << " ++ " << ss.str() << '\n';
+                }
+            }
+            else if (record.get_type() == sol::type::string)
+            {
+                ss << record.as<char const*>();
             }
             else
             {
-                ss << record;
+                impl::lua_to_stream(ss, record, 0, false);
             }
+            // if (auto const as_string =record.if_string())
+            // {
+            //     ss << as_string->c_str();
+            // }
+            // else
+            // {
+            //     ss << record;
+            // }
         }
         std::cerr << ss.str() << '\n';
     }

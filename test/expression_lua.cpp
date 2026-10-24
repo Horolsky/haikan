@@ -1,4 +1,4 @@
-#include "haikan/expression_lua.hpp"
+#include "haikan/impl/expression_lua.hpp"
 
 #include <cstdint>
 #include <sstream>
@@ -7,13 +7,16 @@
 #include <boost/json.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "haikan/impl/lua_stream.hpp"
 #include "haikan/impl/lua_json_conversion.hpp"
 #include "haikan/reflection_registry.hpp"
 #include "haikan/reflection_meta.hpp"
 
 #include "fixture/reflect_types.hpp"
 
+#include "haikan/keywords_lua.hpp"
 
+#include <boost/math/constants/constants.hpp>
 
 using haikan::impl::json_to_lua;
 using haikan::impl::lua_to_json;
@@ -25,18 +28,17 @@ namespace
 
 struct ExpressionLuaSuite
 {
-    using ExpressionLua = haikan::ExpressionLua;
+    using ExpressionLua = haikan::impl::ExpressionLua;
 
     ExpressionLuaSuite()
     {
-        haikan::ReflectionRegistry::insert_auto(haikan::impl::type<Foo>);
-        haikan::ReflectionRegistry::insert_auto(haikan::impl::type<Lol>);
-        haikan::ReflectionRegistry::init(ExpressionLua::lua_state());
+        haikan::ReflectionRegistry::insert_auto(haikan::type<Foo>);
+        haikan::ReflectionRegistry::insert_auto(haikan::type<Lol>);
+        haikan::impl::lua::reset_global_state();
     }
 
     ~ExpressionLuaSuite()
     {
-        ExpressionLua::lua_state().reset();
     }
 };
 
@@ -44,9 +46,13 @@ struct ExpressionLuaSuite
 
 BOOST_FIXTURE_TEST_SUITE(ExpressionLuaTests, ExpressionLuaSuite)
 
+BOOST_AUTO_TEST_CASE(SmokeTest)
+{
+        ExpressionLua ex {42};
+}
+
 BOOST_AUTO_TEST_CASE(PrimitiveCtors)
 {
-    sol::state_view L = ExpressionLua::lua_state();
     {
         ExpressionLua ex {42};
         BOOST_CHECK(ex.to_json() == 42);
@@ -57,8 +63,8 @@ BOOST_AUTO_TEST_CASE(PrimitiveCtors)
     }
     {
         ExpressionLua ex {haikan::as_enum(Foo::Lol)};
-        BOOST_CHECK(ex.encoding_view().data[0].load(L).is<haikan::impl::user_data_enum<Foo>>());
-        auto obj = ex.encoding_view().to_object(L);
+        BOOST_CHECK(ex.encoding_view().data_[0].is<haikan::impl::user_data_enum<Foo>>());
+        auto obj = ex.encoding_view().to_object();
         BOOST_CHECK(!obj.is<haikan::impl::user_data_enum<Foo>>());
 
         BOOST_REQUIRE(obj.valid());
@@ -70,9 +76,9 @@ BOOST_AUTO_TEST_CASE(PrimitiveCtors)
     {
         ExpressionLua ex {Lol{Foo::Kek, 42}};
         BOOST_CHECK(ex.keyword() == haikan::impl::Keyword::_Literal);
-        BOOST_CHECK(ex.encoding_view().data[0].load(L).as<Lol>() == Lol(Foo::Kek, 42));
+        BOOST_CHECK(ex.encoding_view().data_[0].as<Lol>() == Lol(Foo::Kek, 42));
 
-        auto const tbl = ex.encoding_view().to_object(L).as<sol::table>();
+        auto const tbl = ex.encoding_view().to_object().as<sol::table>();
         BOOST_CHECK(tbl["x"].get<int>() == 42);
         BOOST_CHECK(tbl["foo"].get<std::string>() == "Kek");
     }
@@ -88,7 +94,6 @@ BOOST_AUTO_TEST_CASE(CopyMove)
 
 BOOST_AUTO_TEST_CASE(FoldingExpressions)
 {
-    sol::state_view L = ExpressionLua::lua_state();
 
     using haikan::impl::Keyword;
     ExpressionLua a {42};
@@ -99,11 +104,11 @@ BOOST_AUTO_TEST_CASE(FoldingExpressions)
 
     BOOST_CHECK(c.is(haikan::impl::Keyword::Pipe));
     BOOST_CHECK(c.encoding_view().size() == 3);
-    BOOST_CHECK(c.encoding_view().keywords.size() == 3);
-    BOOST_CHECK_EQUAL(c.encoding_view().data[1].load(L).as<int>(), 42);
-    BOOST_CHECK_EQUAL(c.encoding_view().data[2].load(L).as<int>(), 67);
+    BOOST_CHECK(c.encoding_view().keywords_.size() == 3);
+    BOOST_CHECK_EQUAL(c.encoding_view().data_[1].as<int>(), 42);
+    BOOST_CHECK_EQUAL(c.encoding_view().data_[2].as<int>(), 67);
 
-    auto o = c.encoding_view().to_object(L);
+    auto o = c.encoding_view().to_object();
     BOOST_CHECK(o.valid());
     BOOST_CHECK(!o.is<sol::nil_t>());
     BOOST_CHECK(o.get_type() == sol::type::table);
@@ -132,11 +137,91 @@ BOOST_AUTO_TEST_CASE(SyntacticSugar)
     ExpressionLua b {"word"};
     ExpressionLua c {Lol(Foo::Kek, 11)};
 
-    ExpressionLua wtf = ~(a & b | c);
-    std::cerr << '\n';
-    wtf.prettify_to(std::cerr);
-    std::cerr << '\n';
+    ExpressionLua lol = ~(a & b | c);
 
+    auto const p = lol.prettify();
+
+    bool const match =
+            (p == R"(~((42 & "word") | {["x"]=11,["foo"]="Kek"}))")
+        ||  (p == R"(~((42 & "word") | {["foo"]="Kek",["x"]=11}))");
+
+    BOOST_CHECK_MESSAGE(match, "Prettify assertion failed for " << p);
+
+    std::cerr << '\n';
+    lol.prettify_to(std::cerr);
+    std::cerr << '\n';
 }
+
+
+BOOST_AUTO_TEST_CASE(ExprEval)
+{
+    using haikan::impl::EvalContextLua;
+
+    EvalContextLua ctx{};
+    ExpressionLua lit {42};
+    sol::object result = lit.eval(sol::nil, ctx).data();
+    BOOST_CHECK_EQUAL(result.as<int>(), 42);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(ApiConst)
+{
+    using namespace haikan;
+    using haikan::impl::EvalContextLua;
+
+
+    EvalContextLua ctx{};
+    sol::object result = Pi.eval({}, ctx).data();
+    BOOST_CHECK_EQUAL(result.as<double>(), boost::math::constants::pi<double>());
+}
+
+
+BOOST_AUTO_TEST_CASE(ApiFunc)
+{
+    using namespace haikan;
+    using namespace haikan::impl;
+
+    EvalContextLua ctx{};
+
+    {
+        sol::object result = Sqrt.eval(16, ctx).data();
+        BOOST_CHECK_EQUAL(result.as<int>(), 4);
+    }
+
+    {
+        sol::object result = Sqrt.eval(std::complex<int>{16, 0}, ctx).data();
+
+        BOOST_CHECK_EQUAL(result.as<int>(), 4);
+    }
+    {
+        sol::object result = Abs.eval(std::complex<double>{-16.1, 0}, ctx).data();
+        BOOST_CHECK_EQUAL(result.as<double>(), 16.1);
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE(ApiOp)
+{
+    using namespace haikan;
+    using haikan::impl::EvalContextLua;
+
+    {
+        EvalContextLua ctx{};
+        sol::object result = Div(11).eval(44, ctx).data();
+        BOOST_CHECK_EQUAL(result.as<int>(), 4);
+    }
+    {
+        EvalContextLua ctx{};
+        sol::object result = (Pi|Mul(2)).eval({}, ctx).data();
+        BOOST_CHECK_EQUAL(result.as<double>(), boost::math::constants::pi<double>()*2);
+    }
+    {
+        EvalContextLua ctx{};
+        sol::object result = Div(Pi).eval(Pi|Mul(2), ctx).data();
+        BOOST_CHECK_EQUAL(result.as<int>(), 2);
+    }
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()

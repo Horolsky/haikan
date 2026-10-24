@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "haikan/reflection_registry.hpp"
+#include "haikan/impl/lua_stream.hpp"
 #include "fixture/reflect_types.hpp"
 
 BOOST_AUTO_TEST_CASE(ReflectVector)
@@ -22,7 +23,9 @@ BOOST_AUTO_TEST_CASE(ReflectVector)
     test_kekvec.push_back(Kek(Foo::Lol, 42, 11));
 
     sol::state state{};
-    haikan::ReflectionRegistry::insert_auto(haikan::impl::type<std::vector<Kek>>);
+    haikan::ReflectionRegistry::insert_auto(haikan::type<Foo>);
+    haikan::ReflectionRegistry::insert_auto(haikan::type<Kek>);
+    haikan::ReflectionRegistry::insert_auto(haikan::type<std::vector<Kek>>);
     haikan::ReflectionRegistry::init(state);
 
     sol::object x = sol::make_object(state, test_kekvec);
@@ -39,6 +42,13 @@ BOOST_AUTO_TEST_CASE(ReflectVector)
         x[1].foo = 314
     )");
     BOOST_CHECK(t[1]["foo"] == haikan::as_enum(Foo(314)));
+
+    sol::object xx = haikan::to_plain_lua(x);
+    BOOST_REQUIRE(xx.is<sol::table>());
+    sol::table serialized = xx;
+    BOOST_CHECK_EQUAL(serialized.size(), test_kekvec.size());
+    BOOST_CHECK_EQUAL(serialized[1]["x"].get<int>(), test_kekvec[0].x);
+    BOOST_CHECK_EQUAL(serialized[1]["foo"].get<std::string>(), "314");
 }
 
 BOOST_AUTO_TEST_CASE(ReflectArrayLikeContainers)
@@ -120,7 +130,7 @@ BOOST_AUTO_TEST_CASE(ReflectContainerDeserializeRejectsInvalidObjects)
 BOOST_AUTO_TEST_CASE(ReflectSharedPtr)
 {
     sol::state state{};
-    haikan::ReflectionRegistry::insert_auto(haikan::impl::type<std::shared_ptr<Lol>>);
+    haikan::ReflectionRegistry::insert_auto(haikan::type<std::shared_ptr<Lol>>);
     haikan::ReflectionRegistry::init(state);
 
     auto const input = std::make_shared<Lol>(Foo::Kek, 67);
@@ -168,7 +178,7 @@ BOOST_AUTO_TEST_CASE(ReflectMap)
     test_kekmap["two"] = Kek(Foo::Lol, 42, 11);
 
     sol::state state{};
-    haikan::ReflectionRegistry::insert_auto(haikan::impl::type<std::map<std::string, Kek>>);
+    haikan::ReflectionRegistry::insert_auto(haikan::type<std::map<std::string, Kek>>);
     haikan::ReflectionRegistry::init(state);
 
     auto copy = test_kekmap;

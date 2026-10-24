@@ -8,13 +8,15 @@
 
 #include <cstddef>
 #include <initializer_list>
-#include <boost/json.hpp>
-#include <boost/format.hpp>
+
+#include "keyword.hpp"
+#include "expression_lua.hpp"
 
 #include "haikan/impl/keyword.hpp"
-#include "haikan/expression_lua.hpp"
-#include "haikan/impl/type_tag.hpp"
+#include "haikan/impl/expression_lua.hpp"
+#include "haikan/type_tag.hpp"
 #include "haikan/impl/type_info.hpp"
+#include "haikan/error.hpp"
 
 
 
@@ -81,14 +83,13 @@ struct LuaSignatureBinary : public LuaSignatureBase<K>
     }
 
     /// \brief Make parametrized expression with initializer list
-    /// \details Interpret {x} as single-element array instead of using default boost::json::value ctor
     ExpressionLua operator()(std::initializer_list<ExpressionLua> param) const
     {
-        auto& state = ExpressionLua::lua_state();
-        auto values = state.view().create_table(static_cast<int>(param.size()), 0);
+
+        auto values = lua::create_table(static_cast<int>(param.size()), 0);
         for (auto const& value : param)
         {
-            values.add(value.encoding_view().to_object(state));
+            values.add(value.encoding_view().to_object());
         }
         return ExpressionLua(ExpressionLua::encodeNested(K, {ExpressionLua(sol::object(values))}));
     }
@@ -100,15 +101,15 @@ struct LuaSignatureBinary<Keyword::PreProc> : public LuaSignatureBase<Keyword::P
     using LuaSignatureBase<Keyword::PreProc>::LuaSignatureBase;
 
     /// \brief Make parametrized expression
-    ExpressionLua operator()(boost::json::string_view const param) const
+    ExpressionLua operator()(std::string const param) const
     {
-        return ExpressionLua(ExpressionLua::encodePreProc((boost::format("$[%s]") % param).str().c_str()));
+        return ExpressionLua::encodePreProc(std::string("$[") + param + "]");
     }
 
     /// \brief Make parametrized expression
     ExpressionLua operator()(std::size_t const param) const
     {
-        return ExpressionLua(ExpressionLua::encodePreProc((boost::format("$[%s]") % param).str().c_str()));
+        return operator()(std::to_string(param));
     }
 };
 
@@ -155,12 +156,9 @@ struct LuaSignatureVariadic : public LuaSignatureBase<K>
     ExpressionLua operator()(E const& p0, E const& p1, E const& p2, E const& p3, E const& p4, E const& p5, E const& p6) const {
         return encodeVariadic({p0, p1, p2, p3, p4, p5, p6});
     }
-    ExpressionLua operator()(E const& p0, E const& p1, E const& p2, E const& p3, E const& p4, E const& p5, E const& p6, E const& p7) const {
-        return encodeVariadic({p0, p1, p2, p3, p4, p5, p6, p7});
-    }
     template <class... T>
     ExpressionLua operator()(E const& p0, E const& p1, E const& p2, E const& p3, E const& p4, E const& p5, E const& p6, E const& p7, T&&... rest) const {
-        return encodeVariadic({p0, p1, p2, p3, p4, p5, p6, p7, boost::json::value_from(rest)...});
+        return encodeVariadic({p0, p1, p2, p3, p4, p5, p6, p7, E(rest)...});
     }
 };
 
@@ -178,8 +176,9 @@ struct LuaSignatureOp : public LuaSignatureBase<Keyword::Op>
     template <class T>
     ExpressionLua operator()(type_tag<T> tag, ExpressionLua const& expr) const
     {
-        Operator const op{tag};
-        return ExpressionLua(ExpressionLua::encodeNested(Keyword::Op, {op.annotation(), expr}));
+        // Operator const op{tag};
+        // return ExpressionLua(ExpressionLua::encodeNested(Keyword::Op, {op.annotation(), expr}));
+        return ExpressionLua(ExpressionLua::encodeNested(Keyword::Op, {"", expr}));
     }
 };
 
@@ -193,8 +192,9 @@ struct LuaSignatureCast : public LuaSignatureBinary<Keyword::Cast>
     template <class T>
     ExpressionLua operator()(type_tag<T> tag) const
     {
-        Operator const op{tag};
-        return ExpressionLua(ExpressionLua::encodeNested(Keyword::Cast, {op.annotation()}));
+        // Operator const op{tag};
+        // return ExpressionLua(ExpressionLua::encodeNested(Keyword::Cast, {op.annotation()}));
+        return ExpressionLua(ExpressionLua::encodeNested(Keyword::Cast, {""}));
     }
 };
 
@@ -203,33 +203,28 @@ struct LuaSignatureErr : public LuaSignatureBase<Keyword::Err>
 {
     using LuaSignatureBase<Keyword::Err>::LuaSignatureBase;
 
-    ExpressionLua operator()(boost::json::object payload) const
-    {
-        return ExpressionLua(ExpressionLua::encodeNested(Keyword::Err, {payload}));
-    }
-
     /// \brief Error message and context
-    ExpressionLua operator()(boost::json::string_view msg, boost::json::string_view ctx = "") const
+    ExpressionLua operator()(std::string const msg, std::string const ctx = "") const
     {
-        return make_error("", msg, ctx);
+        return ExpressionLua(error(msg, ctx));
     }
 
 
-    /// \brief Error type, message, and context
-    template <class T>
-    ExpressionLua operator()(type_tag<T>, boost::json::string msg = "", boost::json::string ctx = "") const
-    {
-        static_assert(std::is_base_of<std::exception, T>::value, "Error type is not supported");
-        ExpressionLua e = make_error(type_name<T>(), msg, ctx);
-        make_throw_action(e.error_id(), [msg]{
-            throw T(msg.c_str());
-        });
-        return std::move(e);
-    }
+    // /// \brief Error type, message, and context
+    // // template <class T>
+    // ExpressionLua operator()(type_tag<T>, std::string const msg, std::string const ctx = "") const
+    // {
+    //     static_assert(std::is_base_of<std::exception, T>::value, "Error type is not supported");
+    //     ExpressionLua e = make_error(type_name<T>(), msg, ctx);
+    //     make_throw_action(e.error_id(), [msg]{
+    //         throw T(msg.c_str());
+    //     });
+    //     return std::move(e);
+    // }
 
-    private:
-        void make_throw_action(std::string const key, std::function<void()> f) const;
-        ExpressionLua make_error(boost::json::string_view type, boost::json::string_view msg, boost::json::string_view ctx) const;
+    // // private:
+    //     void make_throw_action(std::string const key, std::function<void()> f) const;
+    //     ExpressionLua make_error(boost::json::string_view type, boost::json::string_view msg, boost::json::string_view ctx) const;
 };
 
 

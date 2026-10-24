@@ -10,6 +10,7 @@
 #include <string>
 #include <utility>
 
+#include <boost/current_function.hpp>
 #include <boost/describe.hpp>
 #include <boost/optional.hpp>
 
@@ -110,7 +111,7 @@ struct default_reflect_enum_impl<T, Seen, mp_if<mp_and<mp_not<mp_contains<Seen, 
 
     static void utype(ReflectionContextFactory& ctx)
     {
-        auto tbl = ctx.make_registration_context(impl::type<T>, impl::type<U>);
+        auto tbl = ctx.make_registration_context(type<T>, type<U>);
         tbl.usertype_set(sol::meta_function::construct, sol::factories(&ThisType::construct_impl));
         tbl.usertype_set(sol::call_constructor, sol::factories(&ThisType::construct_impl));
         tbl.usertype_set("str", &U::to_string);

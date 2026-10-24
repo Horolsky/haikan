@@ -9,7 +9,7 @@
 BOOST_AUTO_TEST_CASE(LuaMigrateState)
 {
 
-    haikan::ReflectionRegistry::insert_auto(haikan::impl::type<Foo>);
+    haikan::ReflectionRegistry::insert_auto(haikan::type<Foo>);
 
     sol::state target_state;
     haikan::ReflectionRegistry::init(target_state);

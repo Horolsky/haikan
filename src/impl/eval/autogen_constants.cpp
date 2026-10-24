@@ -19,26 +19,54 @@
 #include <thread>
 #include <boost/math/constants/constants.hpp>
 
-#include "haikan/impl/operator.hpp"
-#include "haikan/impl/expression.hpp"
+#include "haikan/impl/expression_lua.hpp"
 #include "haikan/impl/eval_context.hpp"
-#include "haikan/impl/eval_impl.hpp"
-#include "haikan/impl/eval_impl_pp.hpp"
 
 
 namespace haikan {
 namespace impl {
 
-HAIKAN_DEFINE_EVALUATE_IMPL(Noop) { return true; }
-HAIKAN_DEFINE_EVALUATE_IMPL(Null) { return nullptr; }
-HAIKAN_DEFINE_EVALUATE_IMPL(True) { return true; }
-HAIKAN_DEFINE_EVALUATE_IMPL(False) { return false; }
-HAIKAN_DEFINE_EVALUATE_IMPL(Pi) { return boost::math::constants::pi<double>(); }
-HAIKAN_DEFINE_EVALUATE_IMPL(E) { return boost::math::constants::e<double>(); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Inf) { return std::numeric_limits<double>::infinity(); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Eps) { return std::numeric_limits<double>::epsilon(); }
-HAIKAN_DEFINE_EVALUATE_IMPL(NaN) { return std::numeric_limits<double>::quiet_NaN(); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Thread) { return (std::stringstream() << std::this_thread::get_id()).str(); }
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Noop>, ExpressionLua::Args const, EvalContextLua)
+{
+    return ExpressionLua(true);
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Null>, ExpressionLua::Args const, EvalContextLua)
+{
+    return ExpressionLua(nullptr);
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::True>, ExpressionLua::Args const, EvalContextLua)
+{
+    return ExpressionLua(true);
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::False>, ExpressionLua::Args const, EvalContextLua)
+{
+    return ExpressionLua(false);
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Pi>, ExpressionLua::Args const, EvalContextLua)
+{
+    return ExpressionLua(boost::math::constants::pi<double>());
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::E>, ExpressionLua::Args const, EvalContextLua)
+{
+    return ExpressionLua(boost::math::constants::e<double>());
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Inf>, ExpressionLua::Args const, EvalContextLua)
+{
+    return ExpressionLua(std::numeric_limits<double>::infinity());
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Eps>, ExpressionLua::Args const, EvalContextLua)
+{
+    return ExpressionLua(std::numeric_limits<double>::epsilon());
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::NaN>, ExpressionLua::Args const, EvalContextLua)
+{
+    return ExpressionLua(std::numeric_limits<double>::quiet_NaN());
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Thread>, ExpressionLua::Args const, EvalContextLua)
+{
+    return ExpressionLua((std::stringstream() << std::this_thread::get_id()).str());
+}
+
 
 } // namespace impl
 } // namespace haikan

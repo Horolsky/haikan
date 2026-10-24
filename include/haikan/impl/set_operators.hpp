@@ -26,6 +26,8 @@
 #include "haikan/impl/type_info.hpp"
 #include "haikan/impl/traits.hpp"
 #include "haikan/impl/pp.hpp"
+#include "haikan/impl/lua_json_conversion.hpp"
+#include "haikan/impl/operator_base.hpp"
 
 
 
@@ -35,9 +37,19 @@ namespace impl {
 template <class T>
 using has_boolean = std::is_convertible<T, bool>;
 
+template <class Collection, class Iterator, class = void>
+struct has_indirect_linear_find : std::false_type {};
+
+template <class Collection, class Iterator>
+struct has_indirect_linear_find<Collection, Iterator, void_t<decltype(*std::declval<Iterator const&>())>>
+    : has_linear_find<Collection, std::remove_cv_t<std::remove_reference_t<
+          decltype(*std::declval<Iterator const&>())>>> {};
+
 template <class Collection, class Item>
 using has_contains = std::integral_constant<bool,
-    has_find<Collection, Item>::value || has_linear_find<Collection, Item>::value>;
+    has_find<Collection, Item>::value ||
+    has_linear_find<Collection, Item>::value ||
+    has_indirect_linear_find<Collection, Item>::value>;
 
 template <class Item, class Collection>
 using has_is_in = has_contains<Collection, Item>;
@@ -87,6 +99,9 @@ struct has_set_operation<Lhs, Rhs, void_t<
         has_contains<Lhs, std::remove_cv_t<std::remove_reference_t<
             decltype(*std::begin(std::declval<Rhs const&>()))>>>::value &&
         has_contains<Rhs, typename Lhs::value_type>::value> {};
+
+template <>
+struct has_set_operation<sol::table, sol::table> : std::true_type {};
 
 template <class Collection>
 using has_uniques = has_set_operation<Collection, Collection>;
@@ -138,6 +153,10 @@ static bool proper_subset_of(Subset const& subset, Superset const& superset)
     }
     return false;
 }
+
+
+
+bool set_equal(sol::table const& lhs, sol::table const& rhs);
 
 template <class Lhs, class Rhs>
 static bool set_equal(Lhs const& lhs, Rhs const& rhs)
@@ -301,6 +320,14 @@ static Lhs set_union(Lhs const& lhs, Rhs const& rhs)
     }
     return result;
 }
+
+
+
+sol::table set_union(sol::table const& lhs, sol::table const& rhs);
+sol::table set_intersection(sol::table const& lhs, sol::table const& rhs);
+sol::table set_difference(sol::table const& lhs, sol::table const& rhs);
+sol::table set_symmetric_difference(sol::table const& lhs, sol::table const& rhs);
+
 
 template <class Lhs, class Rhs>
 static Lhs set_intersection(Lhs const& lhs, Rhs const& rhs)

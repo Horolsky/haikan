@@ -19,20 +19,74 @@
 #include <@library>
 @end
 
-#include "haikan/impl/operator.hpp"
-#include "haikan/impl/expression.hpp"
+#include "haikan/impl/expression_lua.hpp"
 #include "haikan/impl/eval_context.hpp"
-#include "haikan/impl/eval_impl.hpp"
-#include "haikan/impl/eval_impl_pp.hpp"
-#include "haikan/impl/tag_invoke_complex.hpp"
 
 namespace haikan {
 namespace impl {
+namespace {
+
+template <class T>
+std::complex<double> to_complex(std::complex<T> const& num)
+{
+    return {static_cast<double>(num.real()), static_cast<double>(num.imag())};
+}
+
+std::complex<double> to_complex(sol::object const& obj)
+{
+    if (obj.is<std::complex<double>>())
+    {
+        return obj.as<std::complex<double>>();
+    }
+    if (obj.is<std::complex<float>>())
+    {
+        return to_complex(obj.as<std::complex<float>>());
+    }
+    if (obj.is<std::complex<int>>())
+    {
+        return to_complex(obj.as<std::complex<int>>());
+    }
+    return {obj.as<double>()};
+}
+
+template <class T>
+sol::object from_complex(std::complex<T> num)
+{
+    HAIKAN_LOG(INFO) << "from_complex({" << num.real() <<", "<< num.imag() << "})";
+    return num.imag()
+        ? lua::make_object(num)
+        : lua::make_object(num.real());
+}
+
+typedef std::complex<double> (*complex_fn)(std::complex<double> const&);
+ExpressionLua eval_complex(complex_fn f, ExpressionLua const& lhs, ExpressionLua const& rhs, EvalContextLua ctx)
+{
+    (void)rhs;
+    return ExpressionLua(from_complex(f(to_complex(lhs.eval({}, ctx).data()))));
+}
+
+typedef double (*real_fn)(double);
+ExpressionLua eval_real(real_fn f, ExpressionLua const& lhs, ExpressionLua const& rhs, EvalContextLua ctx)
+{
+    (void)rhs;
+    return ExpressionLua(f(lhs.eval({}, ctx).data().as<double>()));
+}
+
+typedef double (*complex_to_real_fn)(std::complex<double> const&);
+ExpressionLua eval_complex_to_real(complex_to_real_fn f, ExpressionLua const& lhs, ExpressionLua const& rhs, EvalContextLua ctx)
+{
+    (void)rhs;
+    return ExpressionLua(f(to_complex(lhs.eval({}, ctx).data())));
+}
+} // namespace
 
 @for keyword in data.CodegenFns:
-HAIKAN_DEFINE_EVALUATE_IMPL(@keyword.Name) { return @keyword.CodegenValue; }
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::@keyword.Name>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    (void)ctx;
+    return ExpressionLua(@keyword.CodegenValue);
+}
 @end
-
 
 } // namespace impl
 } // namespace haikan

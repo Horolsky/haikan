@@ -16,7 +16,7 @@
 #include <sol/sol.hpp>
 
 #include "haikan/reflect.hpp"
-#include "haikan/impl/type_tag.hpp"
+#include "haikan/type_tag.hpp"
 #include "haikan/reflection_context.hpp"
 
 
@@ -34,13 +34,13 @@ private:
 public:
 
     template <class T>
-    static void insert(impl::type_tag<T>, void (*init_reflection_fn)(ReflectionContextFactory&))
+    static void insert(type_tag<T>, void (*init_reflection_fn)(ReflectionContextFactory&))
     {
         insert(typeid(T), init_reflection_fn);
     }
 
     template <class T>
-    static void insert_auto(impl::type_tag<T>)
+    static void insert_auto(type_tag<T>)
     {
         insert(typeid(T), &reflect<T>::utype);
     }

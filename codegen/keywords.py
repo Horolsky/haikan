@@ -92,45 +92,55 @@ class Keyword:
     @property
     def Attributes(self) -> str:
 
-        attrs = [
+        attrs = set()
+
+        attrs.add(
             (
                 'is_const',
                 'is_unary',
                 'is_binary',
                 'is_variadic'
             )[self.Arity]
-        ]
+        )
+
+        if 'is_const' in attrs:
+            attrs.add('is_no_eval')
 
         if self.Codomain == 'bool':
-            attrs.append('is_predicate')
+            attrs.add('is_predicate')
         if self.IsOperator:
-            attrs.append('is_operator')
+            attrs.add('is_operator')
         if self.IsHiOrd:
-            attrs.append('is_hiord')
+            attrs.add('is_hiord')
+            attrs.add('is_no_eval')
         if self.CodegenValue:
-            attrs.append('is_autogen')
+            attrs.add('is_autogen')
         if self.Name == 'Noop':
-            attrs.append('is_noop')
+            attrs.add('is_noop')
         if self.Name == '_Literal':
-            attrs.append('is_literal')
+            attrs.add('is_literal')
+            attrs.add('is_no_eval')
         if self.Name == 'PreProc':
-            attrs.append('is_preproc')
+            attrs.add('is_preproc')
+            attrs.add('is_no_eval')
         if self.Name == 'Err':
-            attrs.append('is_error')
+            attrs.add('is_error')
+            attrs.add('is_no_eval')
         if self.Name == 'Q':
-            attrs.append('is_quote')
+            attrs.add('is_quote')
+            attrs.add('is_no_eval')
         if self.Name == 'Pipe':
-            attrs.append('is_pipe')
+            attrs.add('is_pipe')
         if self.Name == 'Fork':
-            attrs.append('is_fork')
+            attrs.add('is_fork')
         if self.Name == 'Op':
-            attrs.append('is_overload')
+            attrs.add('is_overload')
         if self.Name in ('Rand', 'RandInt', 'EnvStore', 'EnvLoad'):
-            attrs.append('is_sideeffect')
+            attrs.add('is_sideeffect')
         if self.SingleForm:
-            attrs.append('is_single_form')
+            attrs.add('is_single_form')
 
-        return ' | '.join(attrs)
+        return ' | '.join(sorted(list(attrs)))
 
     @property
     def Imports(self) -> list[str]:

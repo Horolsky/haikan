@@ -19,19 +19,20 @@
 #include <@library>
 @end
 
-#include "haikan/impl/operator.hpp"
-#include "haikan/impl/expression.hpp"
+#include "haikan/impl/expression_lua.hpp"
 #include "haikan/impl/eval_context.hpp"
-#include "haikan/impl/eval_impl.hpp"
-#include "haikan/impl/eval_impl_pp.hpp"
 
 
 namespace haikan {
 namespace impl {
 
 @for keyword in data.Constants:
-HAIKAN_DEFINE_EVALUATE_IMPL(@keyword.Name) { return @keyword.CodegenValue; }
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::@keyword.Name>, ExpressionLua::Args const, EvalContextLua)
+{
+    return ExpressionLua(@keyword.CodegenValue);
+}
 @end
+
 
 } // namespace impl
 } // namespace haikan

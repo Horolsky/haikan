@@ -6,7 +6,7 @@
 
 
 #include "haikan/impl/signatures_lua.hpp"
-#include "haikan/keywords.hpp"
+#include "haikan/keywords_lua.hpp"
 
 
 // namespace
@@ -62,33 +62,33 @@ namespace impl {
 //     }
 // }
 
-void LuaSignatureErr::make_throw_action(std::string const key, std::function<void()> f) const
-{
-    static_cast<void>(key);
-    static_cast<void>(f);
-    // Environment().RegisterAction(key, f);
-}
+// void LuaSignatureErr::make_throw_action(std::string const key, std::function<void()> f) const
+// {
+//     static_cast<void>(key);
+//     static_cast<void>(f);
+//     // Environment().RegisterAction(key, f);
+// }
 
-ExpressionLua LuaSignatureErr::make_error(boost::json::string_view type, boost::json::string_view msg, boost::json::string_view ctx) const
-{
-    // boost::json::object err{};
-    // if (not type.empty())
-    // {
-    //     err["type"] = type;
-    // }
-    // if (not msg.empty())
-    // {
-    //     err["message"] = msg;
-    // }
-    // if (not ctx.empty())
-    // {
-    //     err["context"] = ctx;
-    // }
-    // TODO: add registered utype for error data
-    static_cast<void>(type);
-    static_cast<void>(ctx);
-    return ExpressionLua(ExpressionLua::encodeNested(Keyword::Err, {msg.data()}));
-}
+// ExpressionLua LuaSignatureErr::make_error(boost::json::string_view type, boost::json::string_view msg, boost::json::string_view ctx) const
+// {
+//     // boost::json::object err{};
+//     // if (not type.empty())
+//     // {
+//     //     err["type"] = type;
+//     // }
+//     // if (not msg.empty())
+//     // {
+//     //     err["message"] = msg;
+//     // }
+//     // if (not ctx.empty())
+//     // {
+//     //     err["context"] = ctx;
+//     // }
+//     // TODO: add registered utype for error data
+//     static_cast<void>(type);
+//     static_cast<void>(ctx);
+//     return ExpressionLua(ExpressionLua::encodeNested(Keyword::Err, {msg.data()}));
+// }
 
 } // namespace impl
 } // namespace haikan

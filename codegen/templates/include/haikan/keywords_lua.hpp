@@ -20,7 +20,6 @@
 #include "haikan/impl/signatures_lua.hpp"
 
 namespace haikan {
-namespace lua {
 
 @for keyword in data.ApiKeywords:
 
@@ -38,5 +37,4 @@ extern impl::Lua@keyword.Class const @alias.capitalize();
 @end
 @end
 
-} // namespace lua
 } // namespace haikan

@@ -9,7 +9,7 @@
 using namespace haikan;
 using namespace haikan::decorators;
 using haikan::impl::Keyword;
-using haikan::impl::type;
+using haikan::type;
 
 using J = boost::json::value;
 using L = boost::json::array;

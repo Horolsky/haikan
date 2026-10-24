@@ -17,7 +17,7 @@
 #define SOL_CHECK_ARGUMENTS
 #include <sol/sol.hpp>
 
-#include "haikan/impl/type_tag.hpp"
+#include "haikan/type_tag.hpp"
 
 namespace haikan
 {

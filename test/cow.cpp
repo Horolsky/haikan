@@ -2,6 +2,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
+#include <boost/utility/string_view.hpp>
 
 #include "haikan/impl/copy_on_write.hpp"
 
@@ -339,5 +340,16 @@ BOOST_AUTO_TEST_CASE(ArrayDeleteRemove)
     BOOST_CHECK_EQUAL(Cow(proxy).length(), 3);
 }
 
+
+
+BOOST_AUTO_TEST_CASE(TempTest)
+{
+    state["str"] = "lol-kek";
+    sol::object str = state["str"];
+    BOOST_CHECK_EQUAL(str.as<std::string>(), "lol-kek");
+    BOOST_CHECK_EQUAL(str.as<char const*>(), "lol-kek");
+    boost::string_view sv = str.as<char const*>();
+    BOOST_CHECK_EQUAL(sv, "lol-kek");
+}
 
 BOOST_AUTO_TEST_SUITE_END()

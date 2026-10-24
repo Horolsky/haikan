@@ -12,8 +12,11 @@
 #include <cstdlib>
 #include <cstring>
 #include <stdexcept>
+#include <sstream>
 
 #include "haikan/logger.hpp"
+#include "haikan/reflection_registry.hpp"
+
 
 
 namespace haikan {
@@ -97,7 +100,11 @@ struct LuaState::MemoryPool
         }
 
         char const* const message = lua_tostring(L, -1);
-        HAIKAN_LOG(ERROR) << "Lua panic: " << (message == nullptr ? "unknown error" : message);
+
+        std::stringstream ss;
+        ss << L;
+
+        HAIKAN_LOG(ERROR) << "Lua[" << ss.str() << "] panic: " << (message == nullptr ? "unknown error" : message);
         throw std::runtime_error(message == nullptr ? "lua panic" : message);
     }
 
@@ -298,6 +305,9 @@ LuaState::LuaState(std::size_t const initial_capacity, std::size_t const max_cap
                           << ", max_capacity=" << max_capacity;
         throw std::bad_alloc();
     }
+
+    std::stringstream ss;
+    ss << this;
     lua_atpanic(state_, &MemoryPool::panic);
 }
 
@@ -347,6 +357,10 @@ void LuaState::reset()
 
 LuaState::~LuaState()
 {
+    std::stringstream ss;
+    ss << this;
+    HAIKAN_LOG(DEBUG) << "LuaState::~LuaState()[" << ss.str() << "]";
+
     if (state_ != nullptr)
     {
         lua_close(state_);
@@ -363,5 +377,28 @@ std::size_t LuaState::used_memory() const noexcept
     return pool_ == nullptr ? 0 : pool_->allocated;
 }
 
+
+
+namespace lua
+{
+LuaState& global_state_handle()
+{
+    static LuaState instance{};
+    return instance;
+}
+
+sol::state_view global_state()
+{
+    return global_state_handle().view();
+}
+
+
+void reset_global_state()
+{
+    global_state_handle().reset();
+    haikan::ReflectionRegistry::init(global_state());
+}
+
+} // namespace lua
 }  // namespace impl
 }  // namespace haikan

@@ -11,8 +11,6 @@
 #include <boost/json.hpp>
 
 #include "haikan/impl/global_env.hpp"
-#include "haikan/impl/operator.hpp"
-#include "haikan/impl/error_expr.hpp"
 #include "haikan/impl/json_pretty_print.hpp"
 #include "haikan/logger.hpp"
 
@@ -40,10 +38,11 @@ class GlobalEnv::Impl
     {
         if (json_pointer.empty())
         {
-            return make_error_expr(
-                "Global environment root is not writeable (empty JSON Pointer)",
-                "EnvStore"
-            );
+            return {};
+            // return make_error_expr(
+            //     "Global environment root is not writeable (empty JSON Pointer)",
+            //     "EnvStore"
+            // );
         }
         else if(json_pointer.starts_with('/'))
         {
@@ -59,7 +58,7 @@ class GlobalEnv::Impl
     }
     catch(const std::exception& e)
     {
-        return make_error_expr(e.what(), "EnvStore");
+        return {};// make_error_expr(e.what(), "EnvStore");
     }
 
     boost::json::value Load(boost::json::string_view const json_pointer) const noexcept
@@ -87,7 +86,7 @@ class GlobalEnv::Impl
     }
     catch(const std::exception& e)
     {
-        return make_error_expr(e.what(), "EnvLoad");
+        return {}; //make_error_expr(e.what(), "EnvLoad");
     }
 
     void Reset()

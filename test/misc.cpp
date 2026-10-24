@@ -8,7 +8,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
 
-#include "haikan/keywords.hpp"
+#include "haikan/keywords_lua.hpp"
 
 namespace utf = boost::unit_test;
 using namespace haikan;

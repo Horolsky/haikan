@@ -5,35 +5,34 @@
  * @license SPDX-License-Identifier: Apache-2.0
  */
 
-#include "haikan/impl/expression.hpp"
+#include "haikan/impl/expression_lua.hpp"
 #include "haikan/impl/eval_context.hpp"
 
 
 namespace haikan {
 namespace impl {
 
-EvalContext EvalContext::make(Operator const& op)
+
+EvalContextLua EvalContextLua::make()
 {
-    EvalContext next{};
+    EvalContextLua next{};
     next.log = EvalLog::make();
-    next.op = op;
     next.traces = std::make_shared<boost::json::array>();
     return next;
 }
-EvalContext::EvalContext()
-    : op{}
-    , log{}
+EvalContextLua::EvalContextLua()
+    : log{}
     , traces{}
     , capture_links{std::make_shared<std::deque<boost::json::object>>()}
-    , expr_links{std::make_shared<std::map<boost::json::string, ExpressionView>>()}
+    , expr_links{std::make_shared<std::map<boost::json::string, ExpressionLua>>()}
     , depth{0}
 {
     capture_links->push_back({});
 }
 
-EvalContext EvalContext::operator++() const
+EvalContextLua EvalContextLua::operator++() const
 {
-    EvalContext next = *this;
+    EvalContextLua next = *this;
     next.depth++;
     return next;
 }

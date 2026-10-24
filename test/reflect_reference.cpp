@@ -14,7 +14,7 @@ BOOST_AUTO_TEST_CASE(ReflectReference)
     Kek test_kek(Foo::Kek, 67, 13);
 
     sol::state state{};
-    haikan::ReflectionRegistry::insert_auto(haikan::impl::type<std::reference_wrapper<Kek>>);
+    haikan::ReflectionRegistry::insert_auto(haikan::type<std::reference_wrapper<Kek>>);
     haikan::ReflectionRegistry::init(state);
 
     sol::object serialized = haikan::reflect<std::reference_wrapper<Kek>>::serialize(std::ref(test_kek), state);

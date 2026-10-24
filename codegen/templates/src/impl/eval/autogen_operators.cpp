@@ -16,43 +16,44 @@
  */
 
 
-#include "haikan/impl/operator.hpp"
+#include "haikan/error.hpp"
 #include "haikan/impl/keyword.hpp"
-#include "haikan/impl/expression.hpp"
+#include "haikan/impl/keyword_to_str.hpp"
+#include "haikan/impl/expression_lua.hpp"
+#include "haikan/impl/operator_table.hpp"
 #include "haikan/impl/eval_context.hpp"
-#include "haikan/impl/eval_impl.hpp"
-#include "haikan/impl/eval_impl_pp.hpp"
+#include "haikan/impl/lua_state.hpp"
 
-
-namespace
-{
-using Keyword = haikan::impl::Keyword;
-using Expression = haikan::impl::Expression;
-using EvalContext = haikan::impl::EvalContext;
-
-Expression apply_op(Keyword const k, Expression const& lhs, Expression const& rhs, EvalContext const& ctx)
-{
-    if (lhs.is_error())
-    {
-        return lhs;
-    }
-    else if(rhs.is_error())
-    {
-        return rhs;
-    }
-    else
-    {
-        return ctx.op.apply(k, {lhs, ctx}, {rhs, ctx});
-    }
-}
-
-}
 
 namespace haikan {
 namespace impl {
+namespace {
+ExpressionLua apply_operator(Keyword const k, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    HAIKAN_LOG(DEBUG) << args.lhs().prettify() << " [" << keyword_to_str(k) << "] " << args.rhs().prettify();
+    sol::object lhso = args.lhs().eval({}, ctx).data();
+    if (HAIKAN_UNLIKELY(lhso.is<error>()))
+    {
+        return ExpressionLua{lhso};
+    }
+    sol::object rhso = args.rhs().eval({}, ctx).data();
+    if (HAIKAN_UNLIKELY(rhso.is<error>()))
+    {
+        return ExpressionLua{rhso};
+    }
+    return OperatorRegistry::get(lhso, rhso)
+        .map([&](OperatorTable op){ return ExpressionLua(op.apply(k, lhso, rhso)); })
+        .value_or(ExpressionLua(error("invalid operands", keyword_to_str(k).data())));
+}
+}
 
 @for keyword in data.Operators:
-HAIKAN_DEFINE_EVALUATE_IMPL(@keyword.Name) { return apply_op(Keyword::@keyword.Name, lhs(), rhs(), curr_ctx()); }
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::@keyword.Name>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::@keyword.Name, args, ctx);
+}
+
 @end
 
 

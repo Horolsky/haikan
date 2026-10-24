@@ -13,8 +13,6 @@
 namespace utf = boost::unit_test;
 using namespace haikan;
 
-using namespace haikan::lua;
-
 BOOST_AUTO_TEST_CASE(PrettifyExpressionTostaticBuffer)
 {
     auto e = (Fold(Add) & Size) | Div | Eq(2.5E0) | Not;

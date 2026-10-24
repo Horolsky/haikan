@@ -16,7 +16,6 @@
 #include <boost/utility/string_view.hpp>
 
 #include "haikan/reflect.hpp"
-#include "haikan/expression_lua.hpp"
 #include "haikan/impl/encoding_lua.hpp"
 #include "haikan/impl/keyword.hpp"
 #include "haikan/impl/keyword_attributes.hpp"
@@ -25,116 +24,65 @@
 #include "haikan/impl/lua_json_conversion.hpp"
 #include "haikan/logger.hpp"
 #include "haikan/impl/keyword_to_str.hpp"
+#include "haikan/impl/lua_state.hpp"
 
 
 
 namespace haikan {
 namespace impl {
 
-namespace
-{
-sol::object serialize_impl(sol::object value)
-{
-    if (value.get_type() != sol::type::userdata)
-    {
-        return value;
-    }
-    sol::userdata userdata = value.as<sol::userdata>();
-    sol::protected_function const serialize_fn = userdata["serialize"];
-    if (serialize_fn)
-    {
-        sol::protected_function_result result = serialize_fn(value);
-        if (result.valid())
-        {
-            return result.get<sol::object>();
-        }
-    }
-    sol::object metadata = userdata["meta"];
-    if (metadata.is<ReflectionMeta>())
-    {
-        ReflectionMeta const& meta = metadata.as<ReflectionMeta const&>();
-        if (meta.serialize.valid())
-        {
-            sol::protected_function_result result = meta.serialize(value);
-            if (result.valid())
-            {
-                return result.get<sol::object>();
-            }
-            else
-            {
-                HAIKAN_LOG_CERR(ERROR) << "serialization failure";
-            }
-        }
-    }
-    else
-    {
-        HAIKAN_LOG_CERR(ERROR) << "bad metadata";
-    }
-    return sol::nil;
-}
-} // namespace
 
-
-EncodingLua::EncodingLua(ExpressionParameter value)
-{
-    auto k = Keyword::_Literal;
-    // TODO: handle special string tokens
-    if (value.is_preproc_token())
-    {
-        k = Keyword::PreProc;
-    }
-    else if (value.is_link_token())
-    {
-        k = Keyword::Link;
-    }
-    push_back(k, 0, ExpressionParameter{std::move(value)});
-}
 EncodingLua::EncodingLua(sol::object value)
 {
 
-    auto const as_table = value.as<sol::optional<sol::table>>();
-    if (as_table
-        && as_table.value()["keywords"] != sol::nil
-        && as_table.value()["depth"] != sol::nil
-        && as_table.value()["data"] != sol::nil
-    )
+    if(value.get_type() == sol::type::table)
     {
-        keywords = as_table.value()["keywords"].get<std::vector<Keyword>>();
-        depth = as_table.value()["depth"].get<std::vector<std::size_t>>();
-        data = as_table.value()["data"].get<std::vector<ExpressionParameter>>();
-        preprocess();
-    }
-    else
-    {
-        auto k = Keyword::_Literal;
-        if (value.get_type() == sol::type::string)
+        auto const as_table = value.as<sol::table>();
+        if (as_table["keywords"] != sol::nil
+            && as_table["depths"] != sol::nil
+            && as_table["data"] != sol::nil
+        )
         {
-            boost::string_view str = value.as<char const*>();
-            if (is_preproc_token(str))
-            {
-                k = Keyword::PreProc;
-            }
-            else if (is_link_token(str))
-            {
-                k = Keyword::Link;
-            }
+            keywords_ = as_table["keywords"].get<std::vector<Keyword>>();
+            depths_ = as_table["depths"].get<std::vector<std::size_t>>();
+            data_ = as_table["data"].get<std::vector<sol::object>>();
+            preprocess();
+            return;
         }
-        push_back(k, 0, ExpressionParameter{std::move(value)});
     }
+
+    auto k = Keyword::_Literal;
+    if (value.get_type() == sol::type::string)
+    {
+        boost::string_view str = value.as<char const*>();
+        if (is_preproc_token(str))
+        {
+            k = Keyword::PreProc;
+        }
+        else if (is_link_token(str))
+        {
+            k = Keyword::Link;
+        }
+    }
+    else if(value.is<error>())
+    {
+        k = Keyword::Err;
+    }
+    push_back(k, 0, value);
 }
 
 
 
 std::size_t EncodingLua::size() const
 {
-    return keywords.size();
+    return keywords_.size();
 }
 
 bool EncodingLua::operator==(EncodingLua const& o) const
 {
-    return (keywords == o.keywords)
-    && (depth == o.depth)
-    && (data == o.data);
+    return (keywords_ == o.keywords_)
+    && (depths_ == o.depths_)
+    && (data_ == o.data_);
 }
 
 bool EncodingLua::operator!=(EncodingLua const& o) const
@@ -143,11 +91,11 @@ bool EncodingLua::operator!=(EncodingLua const& o) const
 }
 
 
-void EncodingLua::push_back(Keyword const& k, std::size_t const d, ExpressionParameter v)
+void EncodingLua::push_back(Keyword const& k, std::size_t const d, sol::object v)
 {
-    keywords.push_back(k);
-    depth.push_back(d);
-    data.push_back(v);
+    keywords_.push_back(k);
+    depths_.push_back(d);
+    data_.push_back(v);
 }
 
 
@@ -160,18 +108,18 @@ void EncodingLua::append_to_root(EncodingLua tail)
         return;
     }
 
-    keywords.reserve(offset + tail_size);
-    keywords.insert(keywords.end(),
-        std::make_move_iterator(tail.keywords.begin()),
-        std::make_move_iterator(tail.keywords.end()));
+    keywords_.reserve(offset + tail_size);
+    keywords_.insert(keywords_.end(),
+        std::make_move_iterator(tail.keywords_.begin()),
+        std::make_move_iterator(tail.keywords_.end()));
 
-    data.reserve(offset + tail_size);
-    data.insert(data.end(),
-        std::make_move_iterator(tail.data.begin()),
-        std::make_move_iterator(tail.data.end()));
+    data_.reserve(offset + tail_size);
+    data_.insert(data_.end(),
+        std::make_move_iterator(tail.data_.begin()),
+        std::make_move_iterator(tail.data_.end()));
 
-    depth.resize(offset + tail_size);
-    std::transform(tail.depth.begin(), tail.depth.end(), depth.begin() + offset,
+    depths_.resize(offset + tail_size);
+    std::transform(tail.depths_.begin(), tail.depths_.end(), depths_.begin() + offset,
         [](std::size_t const value) { return value + 1; });
 }
 
@@ -182,28 +130,28 @@ bool EncodingLua::preprocess()
 {
     bool complete{true};
 
-    if (std::none_of(keywords.begin(), keywords.end(), [](Keyword k) { return k == Keyword::PreProc; }))
+    if (std::none_of(keywords_.begin(), keywords_.end(), [](Keyword k) { return k == Keyword::PreProc; }))
     {
         return true;
     }
 
     std::vector<Keyword> new_keywords;
     std::vector<std::size_t> new_depth;
-    std::vector<ExpressionParameter> new_data;
+    std::vector<sol::object> new_data;
 
-    new_keywords.reserve(keywords.size());
-    new_depth.reserve(depth.size());
-    new_data.reserve(data.size());
+    new_keywords.reserve(keywords_.size());
+    new_depth.reserve(depths_.size());
+    new_data.reserve(data_.size());
 
-    for (std::size_t i = 0; i < keywords.size(); ++i)
+    for (std::size_t i = 0; i < keywords_.size(); ++i)
     {
-        auto const kw = keywords[i];
-        auto const d = depth[i];
-        auto payload = data[i];
+        auto const kw = keywords_[i];
+        auto const d = depths_[i];
+        auto payload = data_[i];
 
         if (kw == Keyword::PreProc)
         {
-            if (payload.is_preproc_token())
+            if (is_preproc_token(payload))
             {
                 complete = false;
                 new_keywords.push_back(kw);
@@ -213,23 +161,23 @@ bool EncodingLua::preprocess()
             }
 
             auto subenc = EncodingLua(payload);
-            for (auto& sub_depth : subenc.depth)
+            for (auto& sub_depth : subenc.depths_)
             {
                 sub_depth += d;
             }
 
             new_keywords.insert(
                 new_keywords.end(),
-                std::make_move_iterator(subenc.keywords.begin()),
-                std::make_move_iterator(subenc.keywords.end()));
+                std::make_move_iterator(subenc.keywords_.begin()),
+                std::make_move_iterator(subenc.keywords_.end()));
             new_depth.insert(
                 new_depth.end(),
-                std::make_move_iterator(subenc.depth.begin()),
-                std::make_move_iterator(subenc.depth.end()));
+                std::make_move_iterator(subenc.depths_.begin()),
+                std::make_move_iterator(subenc.depths_.end()));
             new_data.insert(
                 new_data.end(),
-                std::make_move_iterator(subenc.data.begin()),
-                std::make_move_iterator(subenc.data.end()));
+                std::make_move_iterator(subenc.data_.begin()),
+                std::make_move_iterator(subenc.data_.end()));
         }
         else
         {
@@ -239,19 +187,19 @@ bool EncodingLua::preprocess()
         }
     }
 
-    keywords = std::move(new_keywords);
-    depth = std::move(new_depth);
-    data = std::move(new_data);
+    keywords_ = std::move(new_keywords);
+    depths_ = std::move(new_depth);
+    data_ = std::move(new_data);
 
     return complete;
 }
 
-sol::object EncodingLua::to_object(sol::state_view L) const
+sol::object EncodingLua::to_object() const
 {
 
     if (size() == 0)
     {
-        return sol::make_object(L.lua_state(), sol::nil);
+        return lua::make_object(sol::nil);
     }
 
     switch (head())
@@ -260,25 +208,26 @@ sol::object EncodingLua::to_object(sol::state_view L) const
     case Keyword::PreProc:
     case Keyword::Link:
     {
-        return serialize_impl(data[0].load(L));
+        // TODO: handle transfer error
+        return to_plain_lua(data_[0]);
     }
     default:
         break;
     }
 
-    auto keywords_out = L.create_table(static_cast<int>(keywords.size()), 0);
-    auto depth_out = L.create_table(static_cast<int>(depth.size()), 0);
-    auto data_out = L.create_table(static_cast<int>(data.size()), 0);
+    auto keywords_out = lua::create_table(static_cast<int>(keywords_.size()), 0);
+    auto depth_out = lua::create_table(static_cast<int>(depths_.size()), 0);
+    auto data_out = lua::create_table(static_cast<int>(data_.size()), 0);
 
-    for (std::size_t i = 0; i < keywords.size(); ++i)
+    for (std::size_t i = 0; i < keywords_.size(); ++i)
     {
         auto const lua_index = i + 1;
 
-        keywords_out.set(lua_index, sol::make_object(L,  keyword_to_str(keywords[i]).data()));
-        depth_out.set(lua_index, depth[i]);
+        keywords_out.set(lua_index, lua::make_object(keyword_to_str(keywords_[i]).data()));
+        depth_out.set(lua_index, depths_[i]);
 
-        auto value = data[i].load(L);
-        if (value.get_type() == sol::type::userdata)
+        auto const& value = data_[i];
+        if (value.valid() && value.get_type() == sol::type::userdata)
         {
             sol::userdata userdata = value.as<sol::userdata>();
             sol::object metadata = userdata["meta"];
@@ -299,22 +248,16 @@ sol::object EncodingLua::to_object(sol::state_view L) const
         data_out.set(lua_index, value);
     }
 
-    return L.create_table_with(
+    return lua::global_state().create_table_with(
         "keywords", keywords_out,
-        "depth", depth_out,
+        "depths", depth_out,
         "data", data_out
     );
 }
 
-boost::json::value EncodingLua::to_json(sol::state_view sv) const
-{
-    return lua_to_json(to_object(sv)).value_or(nullptr);
-}
-
 boost::json::value EncodingLua::to_json() const
 {
-    sol::state temp;
-    return lua_to_json(to_object(temp)).value_or(nullptr);
+    return lua_to_json(to_object()).value_or(nullptr);
 }
 
 EncodingLua EncodingLua::slice(std::size_t start, std::size_t count) const noexcept
@@ -322,9 +265,9 @@ EncodingLua EncodingLua::slice(std::size_t start, std::size_t count) const noexc
     EncodingLua enc{};
     if ((count != 0) && (start <= size()) && (count <= size() - start))
     {
-        enc.keywords.assign(keywords.begin() + start, keywords.begin() + start + count);
-        enc.depth.assign(depth.begin() + start, depth.begin() + start + count);
-        enc.data.assign(data.begin() + start, data.begin() + start + count);
+        enc.keywords_.assign(keywords_.begin() + start, keywords_.begin() + start + count);
+        enc.depths_.assign(depths_.begin() + start, depths_.begin() + start + count);
+        enc.data_.assign(data_.begin() + start, data_.begin() + start + count);
     }
     return enc;
 }
@@ -337,11 +280,11 @@ EncodingLua EncodingLua::subtree(std::size_t const node) const noexcept
 
 std::size_t EncodingLua::arity() const
 {
-    if (depth.empty())
+    if (depths_.empty())
     {
         return 0;
     }
-    return std::count(depth.begin(), depth.end(), depth.front() + 1);
+    return std::count(depths_.begin(), depths_.end(), depths_.front() + 1);
 }
 
 
@@ -364,7 +307,7 @@ std::vector<EncodingLua> EncodingLua::children() const
 
 Keyword EncodingLua::head() const noexcept
 {
-    return keywords.size() ? keywords[0] : Keyword::Undefined;
+    return keywords_.size() ? keywords_[0] : Keyword::Undefined;
 }
 
 EncodingLua EncodingLua::child(int ord) const noexcept
@@ -385,7 +328,7 @@ std::size_t EncodingLua::child_idx(int ord) const noexcept
     {
         for (std::int64_t i = N-1; i >=0; --i)
         {
-            if ((depth[static_cast<std::size_t>(i)] - depth[0]) == 1)
+            if ((depths_[static_cast<std::size_t>(i)] - depths_[0]) == 1)
             {
                 idx = i;
                 if (++ord >= 0) break;
@@ -396,7 +339,7 @@ std::size_t EncodingLua::child_idx(int ord) const noexcept
     {
         for (std::size_t i = 0; i < N; ++i)
         {
-            if ((depth[i] - depth[0]) == 1)
+            if ((depths_[i] - depths_[0]) == 1)
             {
                 idx = i;
                 if (--ord < 0) break;
@@ -416,7 +359,7 @@ bool EncodingLua::is_const() const
             // TODO: make it safe (maybe move to EncodingLua init)
             for (std::size_t i = 0; i < size(); i++)
             {
-                if (keyword_attributes(keywords[i]) & attr::is_sideeffect)
+                if (keyword_attributes(keywords_[i]) & attr::is_sideeffect)
                 {
                     return false;
                 }
@@ -465,7 +408,7 @@ bool EncodingLua::is_boolean() const
 
     if(a & attr::is_literal && size() > 1)
     {
-        return data[1].sol_type() == sol::type::boolean;
+        return data_[1].get_type() == sol::type::boolean;
     }
     else if (a & attr::is_predicate)
     {
@@ -491,9 +434,9 @@ EncodingLua EncodingLua::traverse_subtrees(std::size_t const node, std::size_t& 
         next = size();
         return {};
     }
-    auto keywords_it = keywords.begin() + node;
-    auto depth_it = depth.begin() + node;
-    auto data_it = data.begin() + node;
+    auto keywords_it = keywords_.begin() + node;
+    auto depth_it = depths_.begin() + node;
+    auto data_it = data_.begin() + node;
 
     next = size();
     std::size_t const node_depth = *depth_it;
@@ -501,7 +444,7 @@ EncodingLua EncodingLua::traverse_subtrees(std::size_t const node, std::size_t& 
     ++keywords_it;
     ++depth_it;
     ++data_it;
-    while (keywords_it < keywords.cend())
+    while (keywords_it < keywords_.cend())
     {
         if (*depth_it <= node_depth)
         {

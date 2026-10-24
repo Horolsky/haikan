@@ -40,14 +40,14 @@ struct operator_base
         }
         catch (std::exception const& e)
         {
-            return sol::make_object(L, error(e.what(), impl::type_name<Impl>()));
+            return sol::make_object(L, error(e.what(), type_name<Impl>()));
         }
     }
 
     template <class... T>
     static sol::object evaluate(std::false_type, lua_State* L, T&&...)
     {
-        return sol::make_object(L, error("operator not implemented", impl::type_name<Impl>()));
+        return sol::make_object(L, error("operator not implemented", type_name<Impl>()));
     }
 
     template <class T>
@@ -55,7 +55,7 @@ struct operator_base
     {
         if (HAIKAN_UNLIKELY(!x.is<T>()))
         {
-            return sol::make_object(x.lua_state(), error("invalid operand", impl::type_name<Impl>()));
+            return sol::make_object(x.lua_state(), error("invalid operand", type_name<Impl>()));
         }
         return operator()(x.lua_state(), x.as<T>());
     }
@@ -65,7 +65,7 @@ struct operator_base
     {
         if (HAIKAN_UNLIKELY(!x.is<T1>() || !y.is<T2>()))
         {
-            return sol::make_object(x.lua_state(), error("invalid operands", impl::type_name<Impl>()));
+            return sol::make_object(x.lua_state(), error("invalid operands", type_name<Impl>()));
         }
         return operator()(x.lua_state(), x.as<T1>(), y.as<T2>());
     }

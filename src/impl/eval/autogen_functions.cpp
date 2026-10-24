@@ -17,50 +17,208 @@
 #include <cmath>
 #include <complex>
 #include <boost/json.hpp>
-#include <haikan/impl/real_to_number.hpp>
 
-#include "haikan/impl/operator.hpp"
-#include "haikan/impl/expression.hpp"
+#include "haikan/impl/expression_lua.hpp"
 #include "haikan/impl/eval_context.hpp"
-#include "haikan/impl/eval_impl.hpp"
-#include "haikan/impl/eval_impl_pp.hpp"
-#include "haikan/impl/tag_invoke_complex.hpp"
 
 namespace haikan {
 namespace impl {
+namespace {
 
-HAIKAN_DEFINE_EVALUATE_IMPL(Sin) { return boost::json::value_from(std::sin(boost::json::value_to<std::complex<double>>( lhs().eval() ))); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Cos) { return boost::json::value_from(std::cos(boost::json::value_to<std::complex<double>>( lhs().eval() ))); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Tan) { return boost::json::value_from(std::tan(boost::json::value_to<std::complex<double>>( lhs().eval() ))); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Asin) { return boost::json::value_from(std::asin(boost::json::value_to<std::complex<double>>( lhs().eval() ))); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Acos) { return boost::json::value_from(std::acos(boost::json::value_to<std::complex<double>>( lhs().eval() ))); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Atan) { return boost::json::value_from(std::atan(boost::json::value_to<std::complex<double>>( lhs().eval() ))); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Sinh) { return boost::json::value_from(std::sinh(boost::json::value_to<std::complex<double>>( lhs().eval() ))); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Cosh) { return boost::json::value_from(std::cosh(boost::json::value_to<std::complex<double>>( lhs().eval() ))); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Tanh) { return boost::json::value_from(std::tanh(boost::json::value_to<std::complex<double>>( lhs().eval() ))); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Asinh) { return boost::json::value_from(std::asinh(boost::json::value_to<std::complex<double>>( lhs().eval() ))); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Acosh) { return boost::json::value_from(std::acosh(boost::json::value_to<std::complex<double>>( lhs().eval() ))); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Atanh) { return boost::json::value_from(std::atanh(boost::json::value_to<std::complex<double>>( lhs().eval() ))); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Exp) { return boost::json::value_from(std::exp(boost::json::value_to<std::complex<double>>( lhs().eval() ))); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Erf) { return real_to_number(std::erf(boost::json::value_to<double>( lhs().eval() ))); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Erfc) { return real_to_number(std::erfc(boost::json::value_to<double>( lhs().eval() ))); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Gamma) { return real_to_number(std::tgamma(boost::json::value_to<double>( lhs().eval() ))); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Abs) { return real_to_number(std::abs(boost::json::value_to<std::complex<double>>( lhs().eval() ))); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Ceil) { return real_to_number(std::ceil(boost::json::value_to<double>( lhs().eval() ))); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Floor) { return real_to_number(std::floor(boost::json::value_to<double>( lhs().eval() ))); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Round) { return real_to_number(std::round(boost::json::value_to<double>( lhs().eval() ))); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Sqrt) { return boost::json::value_from(std::sqrt(boost::json::value_to<std::complex<double>>( lhs().eval() ))); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Sign) { return boost::json::value_to<double>( lhs().eval() ) >= 0 ? 1 : -1; }
-HAIKAN_DEFINE_EVALUATE_IMPL(ToList) { return boost::json::array{ lhs().to_json() }; }
-HAIKAN_DEFINE_EVALUATE_IMPL(Parse) { return boost::json::parse( lhs().as_string()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Str) { return lhs().prettify().c_str(); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Id) { return lhs(); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Q) { return rhs(); }
-HAIKAN_DEFINE_EVALUATE_IMPL(D) { return (lhs().is_error() || lhs().is_void() || (lhs().is_literal() && lhs().is_null())) ? rhs().eval_e({}, curr_ctx()) : lhs(); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Err) { return self(); }
-HAIKAN_DEFINE_EVALUATE_IMPL(IsErr) { return lhs().is_error(); }
-HAIKAN_DEFINE_EVALUATE_IMPL(PreProc) { return self(); }
+template <class T>
+std::complex<double> to_complex(std::complex<T> const& num)
+{
+    return {static_cast<double>(num.real()), static_cast<double>(num.imag())};
+}
 
+std::complex<double> to_complex(sol::object const& obj)
+{
+    if (obj.is<std::complex<double>>())
+    {
+        return obj.as<std::complex<double>>();
+    }
+    if (obj.is<std::complex<float>>())
+    {
+        return to_complex(obj.as<std::complex<float>>());
+    }
+    if (obj.is<std::complex<int>>())
+    {
+        return to_complex(obj.as<std::complex<int>>());
+    }
+    return {obj.as<double>()};
+}
+
+template <class T>
+sol::object from_complex(std::complex<T> num)
+{
+    HAIKAN_LOG(INFO) << "from_complex({" << num.real() <<", "<< num.imag() << "})";
+    return num.imag()
+        ? lua::make_object(num)
+        : lua::make_object(num.real());
+}
+
+typedef std::complex<double> (*complex_fn)(std::complex<double> const&);
+ExpressionLua eval_complex(complex_fn f, ExpressionLua const& lhs, ExpressionLua const& rhs, EvalContextLua ctx)
+{
+    (void)rhs;
+    return ExpressionLua(from_complex(f(to_complex(lhs.eval({}, ctx).data()))));
+}
+
+typedef double (*real_fn)(double);
+ExpressionLua eval_real(real_fn f, ExpressionLua const& lhs, ExpressionLua const& rhs, EvalContextLua ctx)
+{
+    (void)rhs;
+    return ExpressionLua(f(lhs.eval({}, ctx).data().as<double>()));
+}
+
+typedef double (*complex_to_real_fn)(std::complex<double> const&);
+ExpressionLua eval_complex_to_real(complex_to_real_fn f, ExpressionLua const& lhs, ExpressionLua const& rhs, EvalContextLua ctx)
+{
+    (void)rhs;
+    return ExpressionLua(f(to_complex(lhs.eval({}, ctx).data())));
+}
+} // namespace
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Sin>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    (void)ctx;
+    return ExpressionLua(eval_complex(std::sin, args.lhs(), args.rhs(), ctx));
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Cos>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    (void)ctx;
+    return ExpressionLua(eval_complex(std::cos, args.lhs(), args.rhs(), ctx));
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Tan>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    (void)ctx;
+    return ExpressionLua(eval_complex(std::tan, args.lhs(), args.rhs(), ctx));
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Asin>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    (void)ctx;
+    return ExpressionLua(eval_complex(std::asin, args.lhs(), args.rhs(), ctx));
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Acos>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    (void)ctx;
+    return ExpressionLua(eval_complex(std::acos, args.lhs(), args.rhs(), ctx));
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Atan>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    (void)ctx;
+    return ExpressionLua(eval_complex(std::atan, args.lhs(), args.rhs(), ctx));
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Sinh>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    (void)ctx;
+    return ExpressionLua(eval_complex(std::sinh, args.lhs(), args.rhs(), ctx));
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Cosh>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    (void)ctx;
+    return ExpressionLua(eval_complex(std::cosh, args.lhs(), args.rhs(), ctx));
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Tanh>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    (void)ctx;
+    return ExpressionLua(eval_complex(std::tanh, args.lhs(), args.rhs(), ctx));
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Asinh>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    (void)ctx;
+    return ExpressionLua(eval_complex(std::asinh, args.lhs(), args.rhs(), ctx));
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Acosh>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    (void)ctx;
+    return ExpressionLua(eval_complex(std::acosh, args.lhs(), args.rhs(), ctx));
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Atanh>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    (void)ctx;
+    return ExpressionLua(eval_complex(std::atanh, args.lhs(), args.rhs(), ctx));
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Exp>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    (void)ctx;
+    return ExpressionLua(eval_complex(std::exp, args.lhs(), args.rhs(), ctx));
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Erf>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    (void)ctx;
+    return ExpressionLua(eval_real(std::erf, args.lhs(), args.rhs(), ctx));
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Erfc>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    (void)ctx;
+    return ExpressionLua(eval_real(std::erfc, args.lhs(), args.rhs(), ctx));
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Gamma>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    (void)ctx;
+    return ExpressionLua(eval_real(std::tgamma, args.lhs(), args.rhs(), ctx));
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Abs>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    (void)ctx;
+    return ExpressionLua(eval_complex_to_real(std::abs, args.lhs(), args.rhs(), ctx));
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Ceil>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    (void)ctx;
+    return ExpressionLua(eval_real(std::ceil, args.lhs(), args.rhs(), ctx));
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Floor>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    (void)ctx;
+    return ExpressionLua(eval_real(std::floor, args.lhs(), args.rhs(), ctx));
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Round>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    (void)ctx;
+    return ExpressionLua(eval_real(std::round, args.lhs(), args.rhs(), ctx));
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Sqrt>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    (void)ctx;
+    return ExpressionLua(eval_complex(std::sqrt, args.lhs(), args.rhs(), ctx));
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Sign>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    (void)ctx;
+    return ExpressionLua(args.lhs().eval({}, ctx).data().as<double>() >= 0 ? 1 : -1);
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Str>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    (void)ctx;
+    return ExpressionLua(args.lhs().prettify().c_str());
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Id>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    (void)ctx;
+    return ExpressionLua(args.lhs());
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Q>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    (void)ctx;
+    return ExpressionLua(args.rhs());
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Err>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    (void)ctx;
+    return ExpressionLua(args.rhs());
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::IsErr>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    (void)ctx;
+    return ExpressionLua(args.lhs().is_error());
+}
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::PreProc>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    (void)ctx;
+    return ExpressionLua(args.rhs());
+}
 
 } // namespace impl
 } // namespace haikan

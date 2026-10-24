@@ -7,6 +7,7 @@
 #pragma once
 
 #include <string>
+#include <ostream>
 #include <boost/describe.hpp>
 
 
@@ -23,6 +24,12 @@ struct error
         : what{what}
         , where{where}
     {
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, error const& e)
+    {
+        os << "haikan::error(\"" << e.what << "\", \"" << e.where << "\")";
+        return os;
     }
 };
 

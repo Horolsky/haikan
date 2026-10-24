@@ -62,9 +62,21 @@ struct reflect_utype_default<std::shared_ptr<T>, Seen>
 template <class T, class Seen>
 struct reflect_utype_default<T, Seen, mp_if<is_array_like_container<T>, void>>
 {
-    static void utype(ReflectionContextFactory& ctx)
+    using ThisType = reflect_utype_default<T, Seen, mp_if<is_array_like_container<T>, void>>;
+
+    static sol::object serialize_impl(T const& value, sol::this_state state)
     {
-        return reflect<remove_qualifiers_t<typename T::value_type>>::utype(ctx);
+        return reflect_serialize_default<T>::serialize(value, sol::state_view(state));
+    }
+
+    static void utype(ReflectionContextFactory& factory)
+    {
+        auto ctx = factory.make_registration_context(type<T>);
+        ReflectionMeta& meta = ctx.reflection_meta();
+
+        meta.serialize = ctx.make_function(&ThisType::serialize_impl);
+        // TODO: add deserialization
+        reflect<remove_qualifiers_t<typename T::value_type>>::utype(factory);
     }
 };
 

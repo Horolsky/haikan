@@ -9,7 +9,7 @@
 #include <boost/phoenix/phoenix.hpp>
 #include <boost/spirit/include/karma.hpp>
 
-#include "haikan/expression_lua.hpp"
+#include "haikan/impl/expression_lua.hpp"
 #include "haikan/impl/keyword_grammar.hpp"
 
 namespace haikan {
@@ -36,7 +36,7 @@ struct ExpressionLuaGrammar : boost::spirit::karma::grammar<OutputIterator, Expr
         auto const has_subexpr         = boost::phoenix::bind(&ExpressionLua::has_subexpr, _val);
         auto const serialize           = boost::phoenix::bind(&ExpressionLua::serialize, _val);
         auto const keyword_to_str      = boost::phoenix::bind(&ExpressionLua::keyword_to_str, _val);
-        auto const subexpressions_list = boost::phoenix::bind(&ExpressionLua::subexpressions_list, _val);
+        auto const subexpressions_vec = boost::phoenix::bind(&ExpressionLua::subexpressions_vec, _val);
         auto const link_parameters     = boost::phoenix::bind(&ExpressionLua::link_parameters, _val);
         auto const is_infix_pipe       = boost::phoenix::bind(&ExpressionLua::is_infix_pipe, _val);
         auto const is_infix_fork       = boost::phoenix::bind(&ExpressionLua::is_infix_fork, _val);
@@ -48,10 +48,10 @@ struct ExpressionLuaGrammar : boost::spirit::karma::grammar<OutputIterator, Expr
             | eps(is_preproc)      << karma::lazy(serialize)
             | eps(is_link)         << karma::lazy(serialize)
             | eps(is_valid_link)   << link[_1 = link_parameters]
-            | eps(is_infix_pipe)   << pipe[_1 = subexpressions_list]
-            | eps(is_infix_fork)   << fork[_1 = subexpressions_list]
-            | eps(is_infix_tuple)  << tuple[_1 = subexpressions_list]
-            | eps(is_complete_flip)<< flip[_1 = subexpressions_list]
+            | eps(is_infix_pipe)   << pipe[_1 = subexpressions_vec]
+            | eps(is_infix_fork)   << fork[_1 = subexpressions_vec]
+            | eps(is_infix_tuple)  << tuple[_1 = subexpressions_vec]
+            | eps(is_complete_flip)<< flip[_1 = subexpressions_vec]
             | keyword;
 
         subexpr
@@ -59,10 +59,10 @@ struct ExpressionLuaGrammar : boost::spirit::karma::grammar<OutputIterator, Expr
             | eps(is_preproc)       << karma::lazy(serialize)
             | eps(is_link)          << karma::lazy(serialize)
             | eps(is_valid_link)    << nested_link[_1 = link_parameters]
-            | eps(is_infix_pipe)    << nested_pipe[_1 = subexpressions_list]
-            | eps(is_infix_fork)    << nested_fork[_1 = subexpressions_list]
-            | eps(is_infix_tuple)   << tuple[_1 = subexpressions_list]
-            | eps(is_complete_flip) << flip[_1 = subexpressions_list]
+            | eps(is_infix_pipe)    << nested_pipe[_1 = subexpressions_vec]
+            | eps(is_infix_fork)    << nested_fork[_1 = subexpressions_vec]
+            | eps(is_infix_tuple)   << tuple[_1 = subexpressions_vec]
+            | eps(is_complete_flip) << flip[_1 = subexpressions_vec]
             | keyword;
 
         pipe    = subexpr % lit(" | ");
@@ -75,7 +75,7 @@ struct ExpressionLuaGrammar : boost::spirit::karma::grammar<OutputIterator, Expr
         nested_fork  = lit('(') << subexpr % lit(" & ") << ')';
         parameters   = lit('(') << -(start % lit(", "))  << ')';
 
-        keyword = string[_1 = keyword_to_str] << -(eps(has_subexpr)  << parameters[_1 = subexpressions_list]);
+        keyword = string[_1 = keyword_to_str] << -(eps(has_subexpr)  << parameters[_1 = subexpressions_vec]);
     }
 
     boost::spirit::karma::rule<OutputIterator, ExpressionLua()> start, subexpr, keyword;

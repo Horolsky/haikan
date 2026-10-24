@@ -26,6 +26,15 @@ inline bool is_preproc_token(boost::string_view str)
     return str.starts_with("$[") && str.ends_with("]");
 }
 
+inline bool is_preproc_token(sol::object obj)
+{
+    if (obj.get_type() == sol::type::string)
+    {
+        return is_preproc_token(obj.as<char const*>()); // TODO: check me
+    }
+    return false;
+}
+
 inline bool is_link_token(boost::string_view str)
 {
     if (str.size() <= 1 || !str.starts_with("$")) return false;
@@ -38,6 +47,46 @@ inline bool is_link_token(boost::string_view str)
         ||  (second == '(' && end == ')');
     return not is_bracketed && (second != '$');
 }
+
+inline bool is_link_token(sol::object obj)
+{
+    if (obj.get_type() == sol::type::string)
+    {
+        return is_link_token(obj.as<char const*>()); // TODO: check me
+    }
+    return false;
+}
+
+
+struct LazyP
+{
+    std::size_t type_index_hash_;
+    std::function<sol::object(sol::state_view)> getter_;
+
+    template <class T>
+    LazyP(T val)
+        : type_index_hash_(typeid(T).hash_code())
+        , getter_{[val](sol::state_view sv) -> sol::object
+            {
+                return sol::make_object(sv.lua_state(), val);
+            }}
+    {
+    }
+
+    sol::object operator()(sol::state_view sv) const
+    {
+        return getter_(sv);
+    }
+
+
+    // template <class T>
+    // T operator T() const
+    // {
+    //     return typeid(T).hash_code() == type_index_hash_
+    //         ? getter_().as<T>()
+    //         : T{};
+    // }
+};
 
 
 class ExpressionParameter
@@ -115,7 +164,9 @@ public:
         : getter_{[obj](sol::state_view sv) -> sol::object {
             return migrate_to_state(sv, obj)
                 .value_or_eval([sv](){
-                    return sol::make_object(sv, error{"invalid parameter", "ExpressionParameter"});
+                    return nullptr != sv
+                        ? sol::make_object(sv, error{"invalid parameter", "ExpressionParameter"})
+                        : sol::nil;
                 });
         }}
         , meta_{get_meta(obj)}
@@ -147,8 +198,11 @@ public:
     // otherwise, update the cache.
     sol::object load(sol::state_view sv) const
     {
-        cache_ = getter_(sv);
-        meta_ = get_meta(cache_.value());
+        if (sv != nullptr)
+        {
+            cache_ = getter_(sv);
+            meta_ = get_meta(cache_.value());
+        }
         return cache_.value();
     }
 

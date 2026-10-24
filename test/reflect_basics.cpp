@@ -6,6 +6,7 @@
 #include <string>
 
 #include "haikan/impl/traits.hpp"
+#include "haikan/impl/lua_stream.hpp"
 #include "haikan/reflection_registry.hpp"
 #include "haikan/reflection_meta.hpp"
 #include "fixture/reflect_types.hpp"
@@ -42,7 +43,7 @@ BOOST_AUTO_TEST_CASE(ReflectEnum)
     BOOST_CHECK(reflect_foo::init() == Foo::None);
 
     sol::state state{};
-    haikan::ReflectionRegistry::insert_auto(haikan::impl::type<Foo>);
+    haikan::ReflectionRegistry::insert_auto(haikan::type<Foo>);
     haikan::ReflectionRegistry::init(state);
 
     sol::object x = sol::make_object(state, Foo::Kek);
@@ -61,7 +62,7 @@ BOOST_AUTO_TEST_CASE(ReflectClass)
 
     auto test_lol = Lol(Foo::Kek, 67);
     sol::state state{};
-    haikan::ReflectionRegistry::insert_auto(haikan::impl::type<Lol>);
+    haikan::ReflectionRegistry::insert_auto(haikan::type<Lol>);
     haikan::ReflectionRegistry::init(state);
 
     sol::object x = sol::make_object(state, Lol(Foo::Kek, 67));
@@ -75,7 +76,7 @@ BOOST_AUTO_TEST_CASE(ReflectClass)
 BOOST_AUTO_TEST_CASE(ReflectDescribedStructMembersAreAccessibleInLua)
 {
     sol::state state{};
-    haikan::ReflectionRegistry::insert_auto(haikan::impl::type<Lol>);
+    haikan::ReflectionRegistry::insert_auto(haikan::type<Lol>);
     haikan::ReflectionRegistry::init(state);
 
     sol::object value = sol::make_object(state, Lol{Foo::Kek, 42});
@@ -102,7 +103,7 @@ BOOST_AUTO_TEST_CASE(ReflectSubclass)
     auto test_kek = reflect_kek::init().value();
     BOOST_CHECK(test_kek == Kek(Foo::Kek, 67, 13));
     sol::state state{};
-    haikan::ReflectionRegistry::insert_auto(haikan::impl::type<Kek>);
+    haikan::ReflectionRegistry::insert_auto(haikan::type<Kek>);
     haikan::ReflectionRegistry::init(state);
     sol::object x = sol::make_object(state, test_kek);
     BOOST_CHECK(x.as<Kek>() == test_kek);
@@ -111,6 +112,11 @@ BOOST_AUTO_TEST_CASE(ReflectSubclass)
     t["foo"] = haikan::as_enum(test_kek.foo = Foo::Lol);
     t["y"] = test_kek.y = 0.1f;
     BOOST_CHECK(x.as<Kek>() == test_kek);
+
+    // sol::object xx = haikan::to_plain_lua(x);
+    // std::stringstream ss;
+    // haikan::impl::lua_to_stream(ss, xx, 0, false);
+    // BOOST_CHECK_EQUAL(ss.str(), R"({["y"]=0.10000000149012,["x"]=67,["foo"]="Lol"})");
 }
 
 namespace haikan {
@@ -125,9 +131,9 @@ BOOST_AUTO_TEST_CASE(ReflectDescribedStructSerializationUsesUtypeMetadata)
     sol::state state{};
     // static_assert(boost::describe::has_describe_members<ReflectionMeta>::value, "");
 
-    // haikan::ReflectionRegistry::insert_auto(haikan::impl::type<ReflectionMeta>);
-    // haikan::ReflectionRegistry::insert_auto(haikan::impl::type<Foo>);
-    haikan::ReflectionRegistry::insert_auto(haikan::impl::type<Lol>);
+    // haikan::ReflectionRegistry::insert_auto(haikan::type<ReflectionMeta>);
+    // haikan::ReflectionRegistry::insert_auto(haikan::type<Foo>);
+    haikan::ReflectionRegistry::insert_auto(haikan::type<Lol>);
     haikan::ReflectionRegistry::init(state);
     sol::object haikan_table = state["haikan"];
     sol::object utypes_table = state["haikan"]["utypes"];

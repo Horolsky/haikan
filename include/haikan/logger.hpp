@@ -11,7 +11,15 @@
 #include <string>
 
 #include <boost/describe.hpp>
-#include <boost/json.hpp>
+#include <boost/utility/string_view.hpp>
+#include <boost/json/string_view.hpp>
+
+#define SOL_ALL_SAFETIES_ON
+#define SOL_CHECK_ARGUMENTS
+#include <sol/sol.hpp>
+
+
+#include "haikan/impl/lua_state.hpp"
 
 
 #define HAIKAN_STRINGIFY_IMPL(x) #x
@@ -30,16 +38,21 @@
 
 namespace haikan {
 
+
 #ifndef NDEBUG
 struct StubLogger
 {
-    StubLogger& operator<<(boost::json::value const&)
+    template <class T>
+    auto operator<<(T&&)
+    -> std::enable_if_t<not std::is_base_of<sol::object, std::decay_t<T>>::value, StubLogger&>
     {
         return *this;
     }
 };
 #endif
 
+
+// Logger is flushed on dtor, so no multiple instances are allowed
 class Logger {
   public:
 
@@ -61,8 +74,6 @@ class Logger {
         DEVMODE, // development troubleshooting and perf stats
     };
 
-    /// Attach logger to file sink ("" means stdout)
-    static void open_json(const std::string& filename = "");
 
     static void set_max_level(Level const max_level);
     static Level max_level();
@@ -76,17 +87,93 @@ class Logger {
 
     Logger();
 
-    Logger& WithLevel(Level const level);
-    Logger& WithOutput(Output const output);
-    Logger& WithSrcLoc(boost::json::string_view const src_loc);
+    Logger(Logger&&) noexcept = default;
+    Logger(Logger const&) = delete;
+    Logger& operator=(Logger&&) noexcept = default;
+    Logger& operator=(Logger const&) = delete;
 
-    Logger& operator<<(boost::json::value const& value);
-    Logger& operator<<(boost::json::value && value);
+    Logger& WithLevel(Level const level) &;
+    Logger&& WithLevel(Level const level) &&;
+    Logger& WithOutput(Output const output) &;
+    Logger&& WithOutput(Output const output) &&;
+    Logger& WithSrcLoc(boost::string_view const src_loc) &;
+    Logger&& WithSrcLoc(boost::string_view const src_loc) &&;
 
-    template <class T>
-    Logger& operator<<(T&& value)
+    Logger& operator<<(sol::object && value) &
     {
-        return this->operator<<(boost::json::value_from(std::forward<T>(value)));
+        payload_cache_.emplace_back(std::move(value));
+        return *this;
+    }
+    Logger&& operator<<(sol::object && value) &&
+    {
+        payload_cache_.emplace_back(std::move(value));
+        return std::move(*this);
+    }
+    Logger& operator<<(sol::object const& value) &
+    {
+        payload_cache_.emplace_back(value);
+        return *this;
+    }
+    Logger&& operator<<(sol::object const& value) &&
+    {
+        payload_cache_.emplace_back(value);
+        return std::move(*this);
+    }
+
+    Logger& operator<<(boost::string_view value) &
+    {
+        payload_cache_.emplace_back(impl::lua::make_object(value.data()));
+        return *this;
+    }
+    Logger&& operator<<(boost::string_view value) &&
+    {
+        payload_cache_.emplace_back(impl::lua::make_object(value.data()));
+        return std::move(*this);
+    }
+
+    Logger& operator<<(boost::json::string_view value) &
+    {
+        payload_cache_.emplace_back(impl::lua::make_object(value.data()));
+        return *this;
+    }
+    Logger&& operator<<(boost::json::string_view value) &&
+    {
+        payload_cache_.emplace_back(impl::lua::make_object(value.data()));
+        return std::move(*this);
+    }
+
+    Logger& operator<<(std::string const& value) &
+    {
+        payload_cache_.emplace_back(impl::lua::make_object(value));
+        return *this;
+    }
+    Logger&& operator<<(std::string const& value) &&
+    {
+        payload_cache_.emplace_back(impl::lua::make_object(value));
+        return std::move(*this);
+    }
+
+    // TODO: handle common lua 
+    template <class T>
+    auto operator<<(T&& value) &
+    -> std::enable_if_t<
+            not std::is_base_of<sol::object, std::decay_t<T>>::value
+        and not std::is_same<boost::string_view, T>::value
+        and not std::is_same<boost::json::string_view, T>::value
+    , Logger&>
+    {
+        return this->operator<<(impl::lua::make_object(std::forward<T>(value)));
+    }
+    template <class T>
+    auto operator<<(T&& value) &&
+    -> std::enable_if_t<
+            not std::is_base_of<sol::object, std::decay_t<T>>::value
+        and not std::is_same<boost::string_view, T>::value
+        and not std::is_same<boost::json::string_view, T>::value
+    , Logger&&>
+    {
+        this->operator<<(impl::lua::make_object(std::forward<T>(value)));
+        return std::move(*this);
     }
 
     ~Logger();
@@ -95,9 +182,9 @@ class Logger {
 
     Level level_{INFO};
     int output_{STDERR | JSON};
-    boost::json::string_view src_loc_{"unknown"};
+    boost::string_view src_loc_{"unknown"};
     char timestamp_[64];
-    boost::json::array payload_cache_;
+    std::vector<sol::object> payload_cache_;
 
     void reset_timestamp();
 

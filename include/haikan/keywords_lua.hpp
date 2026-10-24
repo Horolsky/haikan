@@ -19,7 +19,6 @@
 #include "haikan/impl/signatures_lua.hpp"
 
 namespace haikan {
-namespace lua {
 
 
 /// \brief No operation
@@ -845,5 +844,4 @@ extern impl::LuaSignatureBinary<::haikan::impl::Keyword::Trace> const Trace;
 /// on expression preprocessing.
 extern impl::LuaSignatureBinary<::haikan::impl::Keyword::PreProc> const PreProc;
 
-} // namespace lua
 } // namespace haikan

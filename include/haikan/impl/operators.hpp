@@ -113,6 +113,18 @@ static sol::object evaluate(std::true_type, lua_State* L, T1&& x, T2&& y)
 }
 };
 
+
+struct not_equal_to : impl::operator_base<not_equal_to, boost::has_not_equal_to>
+{
+using operator_base::evaluate;
+
+template <class T1, class T2>
+static sol::object evaluate(std::true_type, lua_State* L, T1&& x, T2&& y)
+{
+    return sol::make_object(L, x != y);
+}
+};
+
 struct less : impl::operator_base<less, boost::has_less>
 {
 using operator_base::evaluate;
@@ -160,7 +172,7 @@ static sol::object evaluate(std::true_type, lua_State* L, T1&& x, T2&& y)
 };
 
 
-struct multiplie : impl::operator_base<multiplie, boost::has_multiplies>
+struct multiply : impl::operator_base<multiply, boost::has_multiplies>
 {
 using operator_base::evaluate;
 

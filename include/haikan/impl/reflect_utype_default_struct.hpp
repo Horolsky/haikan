@@ -12,6 +12,7 @@
 #include <type_traits>
 #include <utility>
 
+#include <boost/current_function.hpp>
 #include <boost/describe.hpp>
 #include <boost/optional.hpp>
 
@@ -191,7 +192,7 @@ struct default_reflect_struct_impl<T, Seen, mp_if<mp_and<mp_not<mp_contains<Seen
         static_assert(not std::is_union<T>::value, "union types are not supported by default, provide a specialization");
         using Bases = boost::describe::describe_bases<T, boost::describe::mod_public>;
 
-        auto ctx = factory.make_registration_context(impl::type<T>);
+        auto ctx = factory.make_registration_context(type<T>);
         ReflectionMeta& meta = ctx.reflection_meta();
 
         ctx.usertype_set(sol::meta_function::construct, sol::factories(&ThisType::construct_impl));

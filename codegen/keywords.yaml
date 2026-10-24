@@ -112,101 +112,100 @@ keyword_groups:
         cxx:
           - cmath
           - complex
-          - haikan/impl/real_to_number.hpp
     keywords:
 
       - name: Sin
         brief: Sinus function
         codegen-value:
-          cxx: boost::json::value_from(std::sin(boost::json::value_to<std::complex<double>>( lhs().eval() )))
+          cxx: eval_complex(std::sin, args.lhs(), args.rhs(), ctx)
 
       - name: Cos
         brief: Cosinus function
         codegen-value:
-          cxx: boost::json::value_from(std::cos(boost::json::value_to<std::complex<double>>( lhs().eval() )))
+          cxx: eval_complex(std::cos, args.lhs(), args.rhs(), ctx)
 
       - name: Tan
         brief: Tangens function
         codegen-value:
-          cxx: boost::json::value_from(std::tan(boost::json::value_to<std::complex<double>>( lhs().eval() )))
+          cxx: eval_complex(std::tan, args.lhs(), args.rhs(), ctx)
 
       - name: Asin
         brief: Arcsin function
         codegen-value:
-          cxx: boost::json::value_from(std::asin(boost::json::value_to<std::complex<double>>( lhs().eval() )))
+          cxx: eval_complex(std::asin, args.lhs(), args.rhs(), ctx)
 
       - name: Acos
         brief: Arccos function
         codegen-value:
-          cxx: boost::json::value_from(std::acos(boost::json::value_to<std::complex<double>>( lhs().eval() )))
+          cxx: eval_complex(std::acos, args.lhs(), args.rhs(), ctx)
 
       - name: Atan
         brief: Arctan function
         codegen-value:
-          cxx: boost::json::value_from(std::atan(boost::json::value_to<std::complex<double>>( lhs().eval() )))
+          cxx: eval_complex(std::atan, args.lhs(), args.rhs(), ctx)
 
       - name: Sinh
         brief: Hyperbolic sin
         codegen-value:
-          cxx: boost::json::value_from(std::sinh(boost::json::value_to<std::complex<double>>( lhs().eval() )))
+          cxx: eval_complex(std::sinh, args.lhs(), args.rhs(), ctx)
 
       - name: Cosh
         brief: Hyperbolic cos
         codegen-value:
-          cxx: boost::json::value_from(std::cosh(boost::json::value_to<std::complex<double>>( lhs().eval() )))
+          cxx: eval_complex(std::cosh, args.lhs(), args.rhs(), ctx)
 
       - name: Tanh
         brief: Hyperbolic tan
         codegen-value:
-          cxx: boost::json::value_from(std::tanh(boost::json::value_to<std::complex<double>>( lhs().eval() )))
+          cxx: eval_complex(std::tanh, args.lhs(), args.rhs(), ctx)
 
       - name: Asinh
         brief: Hyperbolic arcsin
         codegen-value:
-          cxx: boost::json::value_from(std::asinh(boost::json::value_to<std::complex<double>>( lhs().eval() )))
+          cxx: eval_complex(std::asinh, args.lhs(), args.rhs(), ctx)
 
       - name: Acosh
         brief: Hyperbolic arccos
         codegen-value:
-          cxx: boost::json::value_from(std::acosh(boost::json::value_to<std::complex<double>>( lhs().eval() )))
+          cxx: eval_complex(std::acosh, args.lhs(), args.rhs(), ctx)
 
       - name: Atanh
         brief: Hyperbolic arctan
         codegen-value:
-          cxx: boost::json::value_from(std::atanh(boost::json::value_to<std::complex<double>>( lhs().eval() )))
+          cxx: eval_complex(std::atanh, args.lhs(), args.rhs(), ctx)
 
       - name: Exp
         brief: Exponential (e^x)
         codegen-value:
-          cxx: boost::json::value_from(std::exp(boost::json::value_to<std::complex<double>>( lhs().eval() )))
+          cxx: eval_complex(std::exp, args.lhs(), args.rhs(), ctx)
 
       - name: Erf
         brief: Error function
         codegen-value:
-          cxx: real_to_number(std::erf(boost::json::value_to<double>( lhs().eval() )))
+          cxx: eval_real(std::erf, args.lhs(), args.rhs(), ctx)
 
       - name: Erfc
         brief: Error function complement
         codegen-value:
-          cxx: real_to_number(std::erfc(boost::json::value_to<double>( lhs().eval() )))
+          cxx: eval_real(std::erfc, args.lhs(), args.rhs(), ctx)
 
       - name: Gamma
         brief: Gamma function
         codegen-value:
-          cxx: real_to_number(std::tgamma(boost::json::value_to<double>( lhs().eval() )))
+          cxx: eval_real(std::tgamma, args.lhs(), args.rhs(), ctx)
 
       - name: Abs
         brief: Absolute value
         codegen-value:
-          cxx: real_to_number(std::abs(boost::json::value_to<std::complex<double>>( lhs().eval() )))
+          cxx: eval_complex_to_real(std::abs, args.lhs(), args.rhs(), ctx)
 
       - name: Ceil
         codegen-value:
-          cxx: real_to_number(std::ceil(boost::json::value_to<double>( lhs().eval() )))
+          cxx: eval_real(std::ceil, args.lhs(), args.rhs(), ctx)
 
       - name: Floor
         codegen-value:
-          cxx: real_to_number(std::floor(boost::json::value_to<double>( lhs().eval() )))
+          cxx: eval_real(std::floor, args.lhs(), args.rhs(), ctx)
 
       - name: Round
         brief: Round to nearest integer
@@ -214,18 +213,18 @@ keyword_groups:
           Hint: To round to ndigits precision after the decimal point,
           use `Mul(ndigits) | Round | Div(ndigits)` combo.
         codegen-value:
-          cxx: real_to_number(std::round(boost::json::value_to<double>( lhs().eval() )))
+          cxx: eval_real(std::round, args.lhs(), args.rhs(), ctx)
 
       - name: Sqrt
         brief: Square root
         codegen-value:
-          cxx: boost::json::value_from(std::sqrt(boost::json::value_to<std::complex<double>>( lhs().eval() )))
+          cxx: eval_complex(std::sqrt, args.lhs(), args.rhs(), ctx)
 
       - name: Sign
         domain: real
         codomain: int
         codegen-value:
-          cxx: 'boost::json::value_to<double>( lhs().eval() ) >= 0 ? 1 : -1'
+          cxx: 'args.lhs().eval({}, ctx).data().as<double>() >= 0 ? 1 : -1'
 
   Arithmetic Operators:
     defaults:
@@ -822,8 +821,8 @@ keyword_groups:
         codomain: list
         examples: |-
           42 | ToList ↦ [42]
-        codegen-value:
-          cxx: boost::json::array{ lhs().to_json() }
+        # codegen-value:
+        #   cxx: boost::json::array{ args.lhs().to_json() }
 
       - name: First
         brief: First item of sequence
@@ -912,13 +911,15 @@ keyword_groups:
 
   String Transforms:
     keywords:
+    # TODO: replace Parse with Json (boost::json -> sol::object) and Lua (safe script return)
       - name: Parse
         brief: Parse string as JSON
         signature: Unary
         domain: str
         codomain: any
-        codegen-value:
-          cxx: boost::json::parse( lhs().as_string())
+        # codegen-value:
+          # TODO: implement parse(lhs) -> sol::object
+          # cxx: lhs
         imports:
           cxx:
             - boost/json.hpp
@@ -932,7 +933,7 @@ keyword_groups:
         domain: any
         codomain: str
         codegen-value:
-          cxx: lhs().prettify().c_str()
+          cxx: args.lhs().prettify().c_str()
         imports:
           cxx:
             - boost/json.hpp
@@ -1261,7 +1262,7 @@ keyword_groups:
         examples: |-
           42 | Id ↦ 42
         codegen-value:
-          cxx: lhs()
+          cxx: args.lhs()
 
       - name: Fold
         signature: Binary
@@ -1779,14 +1780,14 @@ keyword_groups:
         examples: |-
           null | C(42) ↦ 42
         codegen-value:
-          cxx: rhs()
+          cxx: args.rhs()
 
       - name: D
         aliases: [ Default ]
         brief: Return x if not null, else return default value
         domain: [any, any]
-        codegen-value:
-          cxx: '(lhs().is_error() || lhs().is_void() || (lhs().is_literal() && lhs().is_null())) ? rhs().eval_e({}, curr_ctx()) : lhs()'
+        # codegen-value:
+        #   cxx: '(args.lhs().is_error() || args.lhs().is_void() || (args.lhs().is_literal() && args.lhs().is_null())) ? rhs.eval({}, ctx) : lhs'
         examples: |-
           null | Default(42) ↦ 42
           13 | Default(42) ↦ 13
@@ -1798,7 +1799,7 @@ keyword_groups:
         details: |-
           Error object handling the message and context info
         codegen-value:
-          cxx: self()
+          cxx: args.rhs()
 
       - name: IsErr
         codomain: bool
@@ -1806,7 +1807,7 @@ keyword_groups:
         brief: Test the argument is Err expression
         signature: Unary
         codegen-value:
-          cxx: lhs().is_error()
+          cxx: args.lhs().is_error()
 
       - name: Assert
         brief: Return argument if it holds assertion or error otherwise.
@@ -1830,4 +1831,4 @@ keyword_groups:
         examples: |-
           null | C(42) ↦ 42
         codegen-value:
-          cxx: self()
+          cxx: args.rhs()

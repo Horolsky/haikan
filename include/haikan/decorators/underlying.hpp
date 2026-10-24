@@ -11,7 +11,7 @@
 #include <type_traits>
 #include <boost/json.hpp>
 
-#include "haikan/impl/type_tag.hpp"
+#include "haikan/type_tag.hpp"
 
 
 namespace haikan {
@@ -97,7 +97,7 @@ private:
 /// @brief underlying<T> decorator
 /// @tparam T
 template <class T>
-constexpr ::haikan::impl::type_tag<underlying<T>> Underlying;
+constexpr ::haikan::type_tag<underlying<T>> Underlying;
 
 // Boost JSON conversion from underlying<E>
 template <class E>

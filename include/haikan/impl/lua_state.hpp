@@ -25,11 +25,21 @@ namespace impl {
 class LuaState
 {
   public:
-    explicit LuaState(
-        std::size_t initial_capacity = HAIKAN_LUA_STATE_INITIAL_CAPACITY,
-        std::size_t max_capacity = 0);
+    LuaState(
+        std::size_t initial_capacity,
+        std::size_t max_capacity);
     LuaState(LuaState const&) = delete;
     LuaState(LuaState&& other) noexcept;
+
+    explicit LuaState(std::size_t initial_capacity)
+        : LuaState(initial_capacity, 0)
+    {
+    }
+
+    LuaState()
+        : LuaState(HAIKAN_LUA_STATE_INITIAL_CAPACITY, 0)
+    {
+    }
 
     LuaState& operator=(LuaState const&) = delete;
     LuaState& operator=(LuaState&& other) noexcept;
@@ -81,5 +91,43 @@ class LuaState
     lua_State* state_;
 };
 
+namespace lua
+{
+LuaState& global_state_handle();
+
+sol::state_view global_state();
+
+
+void reset_global_state();
+
+template <class T>
+sol::object make_object(T&& value)
+{
+    return sol::make_object(global_state(), value);
 }
+
+
+template <typename Name>
+sol::table create_table(Name&& name, int narr = 0, int nrec = 0) {
+    return global_state().create_table(std::forward<Name>(name), narr, nrec);
 }
+
+template <typename Name, typename Key, typename Value, typename... Args>
+sol::table create_table(Name&& name, int narr, int nrec, Key&& key, Value&& value, Args&&... args) {
+    return global_state().create_table(std::forward<Name>(name), narr, nrec, std::forward<Key>(key), std::forward<Value>(value), std::forward<Args>(args)...);
+}
+
+template <typename Name, typename... Args>
+sol::table create_named_table(Name&& name, Args&&... args) {
+    return global_state().create_table(name, std::forward<Args>(args)...);
+}
+
+inline sol::table create_table(int narr = 0, int nrec = 0)
+{
+    return global_state().create_table(narr, nrec);
+}
+
+
+} // namespace lua
+} // namespace impl
+} // namespace haikan

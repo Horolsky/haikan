@@ -21,8 +21,9 @@
 
 #include "haikan/reflection_meta.hpp"
 #include "haikan/impl/get_or_create_table.hpp"
-#include "haikan/impl/type_tag.hpp"
-#include "haikan/impl/operator_handler.hpp"
+#include "haikan/type_tag.hpp"
+#include "haikan/error.hpp"
+#include "haikan/impl/operator_table.hpp"
 
 
 namespace haikan {
@@ -30,6 +31,11 @@ namespace haikan {
 class ReflectionContextFactory
 {
 public:
+
+    sol::state_view state_view() const
+    {
+        return state;
+    }
 
     struct Record
     {
@@ -99,7 +105,7 @@ public:
 
     template <class T, class W = T>
     RegistrationContext<W> make_registration_context(
-        impl::type_tag<T>, impl::type_tag<W> = {}
+        type_tag<T>, type_tag<W> = {}
     )
     {
         using Action = typename RegistrationContext<W>::Action;
@@ -119,34 +125,92 @@ public:
             return sol::make_object(target_state, error{"invalid argument", "utype migrate"});
         };
 
-        record.on_init = [meta=std::ref(record.meta), actions=actions](sol::state_view L){
-            sol::simple_usertype<W> ut = L.create_simple_usertype<W>();
-            impl::OperatorHandler::register_utype_ops(ut);
-            for (auto& action: *actions)
-            {
-                action(ut);
-            }
-            ut.set("serialize", meta.get().serialize);
-            ut.set("deserialize", meta.get().deserialize);
-
-            sol::object lua_meta = sol::make_object(L.lua_state(), meta.get());
-
-            sol::table root = impl::get_or_create_table(L, L.globals(), "haikan");
-            sol::table utypes = impl::get_or_create_table(L, root, "utypes");
-            utypes[meta.get().type_index_hash] = lua_meta;
-            if (meta.get().wrapper_type_index_hash != meta.get().type_index_hash)
-            {
-                utypes[meta.get().wrapper_type_index_hash] = lua_meta;
-            }
-
-            ut.set("meta", lua_meta);
-            L.set_usertype(meta.get().type_name, ut);
+        record.on_init = [meta=std::ref(record.meta), actions=actions](sol::state_view L) {
+            initialize_registration<T, W>(
+                L,
+                meta.get(),
+                actions,
+                std::integral_constant<bool, sol::is_container<W>::value>{});
         };
 
         return RegistrationContext<W>{std::ref(record.meta), actions, state};
     }
 
 private:
+
+    static sol::object register_metadata(sol::state_view L, ReflectionMeta& meta)
+    {
+        sol::object lua_meta = sol::make_object(L.lua_state(), meta);
+        sol::table root = impl::get_or_create_table(L, L.globals(), "haikan");
+        sol::table utypes = impl::get_or_create_table(L, root, "utypes");
+        utypes[meta.type_index_hash] = lua_meta;
+        if (meta.wrapper_type_index_hash != meta.type_index_hash)
+        {
+            utypes[meta.wrapper_type_index_hash] = lua_meta;
+        }
+        return lua_meta;
+    }
+
+    template <class T, class W>
+    static void initialize_registration(
+        sol::state_view L,
+        ReflectionMeta& meta,
+        std::shared_ptr<std::vector<typename RegistrationContext<W>::Action>> const& actions,
+        std::false_type)
+    {
+        sol::simple_usertype<W> ut = L.create_simple_usertype<W>();
+        impl::OperatorRegistry::AddSignature(type<T>); // TODO: correct?
+
+        for (auto& action: *actions)
+        {
+            action(ut);
+        }
+        ut.set("serialize", meta.serialize);
+        ut.set("deserialize", meta.deserialize);
+        ut.set("meta", register_metadata(L, meta));
+
+        HAIKAN_LOG(DEBUG) << "reflection initializing for " << meta.type_name;
+        L.set_usertype(meta.type_name, ut);
+
+        std::stringstream ss;
+        ss << L.lua_state();
+        HAIKAN_LOG(DEBUG) << "reflection initialized for " << meta.type_name << " at state " << ss.str();
+    }
+
+    /// Container variant - extending the metatable introduced by Sol
+    /// Using sol::simple_usertype will overwrite it.
+    template <class T, class W>
+    static void initialize_registration(
+        sol::state_view L,
+        ReflectionMeta& meta,
+        std::shared_ptr<std::vector<typename RegistrationContext<W>::Action>> const&,
+        std::true_type)
+    {
+        sol::object container = sol::make_object(L.lua_state(), W{});
+        sol::object lua_meta = register_metadata(L, meta);
+
+        container.push();
+        if (lua_getmetatable(L.lua_state(), -1) != 0)
+        {
+            lua_pushliteral(L.lua_state(), "serialize");
+            sol::stack::push(L.lua_state(), meta.serialize);
+            lua_rawset(L.lua_state(), -3);
+            lua_pushliteral(L.lua_state(), "deserialize");
+            sol::stack::push(L.lua_state(), meta.deserialize);
+            lua_rawset(L.lua_state(), -3);
+            lua_pushliteral(L.lua_state(), "meta");
+            sol::stack::push(L.lua_state(), lua_meta);
+            lua_rawset(L.lua_state(), -3);
+            lua_pop(L.lua_state(), 1);
+        }
+        lua_pop(L.lua_state(), 1);
+
+        impl::OperatorRegistry::AddSignature(type<T>);
+
+        std::stringstream ss;
+        ss << L.lua_state();
+        HAIKAN_LOG(DEBUG) << "reflection initialized for " << meta.type_name << " at state " << ss.str();
+    }
 
     friend class ReflectionRegistry;
 

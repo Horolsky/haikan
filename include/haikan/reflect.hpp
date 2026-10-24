@@ -2,7 +2,13 @@
 
 #include <boost/optional.hpp>
 
+#define SOL_ALL_SAFETIES_ON
+#define SOL_CHECK_ARGUMENTS
+#include <sol/sol.hpp>
+
+
 #include "haikan/impl/select_reflect.hpp"
+
 
 namespace haikan {
 
@@ -32,5 +38,12 @@ inline decltype(auto) as_enum(T const e)
 {
     return haikan::impl::user_data_enum<T>(e);
 }
+
+
+/// @brief Serialize generic object (possibly userdata)
+/// @param value
+/// @return Plain Lua object or haikan::error
+sol::object to_plain_lua(sol::object value);
+
 
 } // namespace haikan

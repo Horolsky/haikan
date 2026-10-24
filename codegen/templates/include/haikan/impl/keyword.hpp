@@ -18,6 +18,7 @@
 #pragma once
 
 #include <cstdint>
+#include <type_traits>
 
 namespace haikan {
 namespace impl {
@@ -35,6 +36,13 @@ enum class Keyword : std::uint64_t
 
     _count
 };
+
+
+template <Keyword K>
+using keyword_tag_t = std::integral_constant<Keyword, K>;
+
+template <Keyword K>
+constexpr keyword_tag_t<K> keyword_tag{};
 
 
 } // namespace impl

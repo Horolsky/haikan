@@ -12,38 +12,41 @@
 #include <memory>
 #include <deque>
 
-#include <boost/json.hpp>
 
-#include "haikan/impl/operator.hpp"
+#include <boost/json.hpp>
+#define SOL_ALL_SAFETIES_ON
+#define SOL_CHECK_ARGUMENTS
+#include <sol/sol.hpp>
+
+
 #include "haikan/impl/eval_log.hpp"
+#include "haikan/impl/lua_state.hpp"
 
 
 
 namespace haikan {
 namespace impl {
 
-class ExpressionView;
-/// Expression evaluation context
-struct EvalContext
+struct EvalContextLua
 {
-    static EvalContext make(Operator const& op = {});
-    /// Operator
-    Operator op;
+    static EvalContextLua make();
+
     /// Evaluation log
     EvalLog log;
     /// reference -> value map
     std::shared_ptr<boost::json::array> traces;
     std::shared_ptr<std::deque<boost::json::object>> capture_links;
-    std::shared_ptr<std::map<boost::json::string, ExpressionView>> expr_links;
+    std::shared_ptr<std::map<boost::json::string, ExpressionLua>> expr_links;
     // boost::json::object captures;
     /// Evaluation stack depth
     std::uint64_t depth;
 
-    EvalContext();
+    EvalContextLua();
 
     /// Copy context with depth increment
-    EvalContext operator++() const;
+    EvalContextLua operator++() const;
 };
+
 
 }  // namespace impl
 }  // namespace haikan

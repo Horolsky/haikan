@@ -12,6 +12,7 @@
 #include <boost/iostreams/stream.hpp>
 
 namespace haikan {
+namespace impl {
 
 boost::json::string_view ExpressionLua::keyword_to_str() const
 {
@@ -19,6 +20,7 @@ boost::json::string_view ExpressionLua::keyword_to_str() const
 }
 
 std::string ExpressionLua::prettify() const
+try
 {
     std::string out;
     std::back_insert_iterator<std::string> sink(out);
@@ -28,7 +30,10 @@ std::string ExpressionLua::prettify() const
 
     return out;
 }
-
+catch (std::exception const& e)
+{
+    return std::string("Exception thrown on prettify: ") + e.what();
+}
 
 std::ostream& ExpressionLua::prettify_to(std::ostream& os) const
 {
@@ -70,4 +75,5 @@ std::ostream& operator<<(std::ostream& os, ExpressionLua const& expr)
 //     v = ev.to_json();
 // }
 
+} // namespace impl
 } // namespace haikan

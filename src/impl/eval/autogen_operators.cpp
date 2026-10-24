@@ -15,75 +15,241 @@
  */
 
 
-#include "haikan/impl/operator.hpp"
+#include "haikan/error.hpp"
 #include "haikan/impl/keyword.hpp"
-#include "haikan/impl/expression.hpp"
+#include "haikan/impl/keyword_to_str.hpp"
+#include "haikan/impl/expression_lua.hpp"
+#include "haikan/impl/operator_table.hpp"
 #include "haikan/impl/eval_context.hpp"
-#include "haikan/impl/eval_impl.hpp"
-#include "haikan/impl/eval_impl_pp.hpp"
+#include "haikan/impl/lua_state.hpp"
 
-
-namespace
-{
-using Keyword = haikan::impl::Keyword;
-using Expression = haikan::impl::Expression;
-using EvalContext = haikan::impl::EvalContext;
-
-Expression apply_op(Keyword const k, Expression const& lhs, Expression const& rhs, EvalContext const& ctx)
-{
-    if (lhs.is_error())
-    {
-        return lhs;
-    }
-    else if(rhs.is_error())
-    {
-        return rhs;
-    }
-    else
-    {
-        return ctx.op.apply(k, {lhs, ctx}, {rhs, ctx});
-    }
-}
-
-}
 
 namespace haikan {
 namespace impl {
+namespace {
+ExpressionLua apply_operator(Keyword const k, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    HAIKAN_LOG(DEBUG) << args.lhs().prettify() << " [" << keyword_to_str(k) << "] " << args.rhs().prettify();
+    sol::object lhso = args.lhs().eval({}, ctx).data();
+    if (HAIKAN_UNLIKELY(lhso.is<error>()))
+    {
+        return ExpressionLua{lhso};
+    }
+    sol::object rhso = args.rhs().eval({}, ctx).data();
+    if (HAIKAN_UNLIKELY(rhso.is<error>()))
+    {
+        return ExpressionLua{rhso};
+    }
+    return OperatorRegistry::get(lhso, rhso)
+        .map([&](OperatorTable op){ return ExpressionLua(op.apply(k, lhso, rhso)); })
+        .value_or(ExpressionLua(error("invalid operands", keyword_to_str(k).data())));
+}
+}
 
-HAIKAN_DEFINE_EVALUATE_IMPL(Neg) { return apply_op(Keyword::Neg, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Add) { return apply_op(Keyword::Add, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Sub) { return apply_op(Keyword::Sub, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Mul) { return apply_op(Keyword::Mul, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Div) { return apply_op(Keyword::Div, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Pow) { return apply_op(Keyword::Pow, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Log) { return apply_op(Keyword::Log, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Mod) { return apply_op(Keyword::Mod, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Quot) { return apply_op(Keyword::Quot, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(BitNot) { return apply_op(Keyword::BitNot, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(BitAnd) { return apply_op(Keyword::BitAnd, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(BitOr) { return apply_op(Keyword::BitOr, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(BitXor) { return apply_op(Keyword::BitXor, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Lshift) { return apply_op(Keyword::Lshift, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Rshift) { return apply_op(Keyword::Rshift, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Eq) { return apply_op(Keyword::Eq, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Ne) { return apply_op(Keyword::Ne, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Lt) { return apply_op(Keyword::Lt, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Le) { return apply_op(Keyword::Le, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Gt) { return apply_op(Keyword::Gt, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Ge) { return apply_op(Keyword::Ge, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(SetEq) { return apply_op(Keyword::SetEq, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Subset) { return apply_op(Keyword::Subset, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Superset) { return apply_op(Keyword::Superset, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(PSubset) { return apply_op(Keyword::PSubset, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(PSuperset) { return apply_op(Keyword::PSuperset, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(In) { return apply_op(Keyword::In, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(NotIn) { return apply_op(Keyword::NotIn, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Ni) { return apply_op(Keyword::Ni, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(NotNi) { return apply_op(Keyword::NotNi, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Bool) { return apply_op(Keyword::Bool, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Not) { return apply_op(Keyword::Not, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(And) { return apply_op(Keyword::And, lhs(), rhs(), curr_ctx()); }
-HAIKAN_DEFINE_EVALUATE_IMPL(Or) { return apply_op(Keyword::Or, lhs(), rhs(), curr_ctx()); }
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Neg>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::Neg, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Add>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::Add, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Sub>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::Sub, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Mul>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::Mul, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Div>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::Div, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Pow>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::Pow, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Log>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::Log, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Mod>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::Mod, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Quot>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::Quot, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::BitNot>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::BitNot, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::BitAnd>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::BitAnd, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::BitOr>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::BitOr, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::BitXor>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::BitXor, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Lshift>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::Lshift, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Rshift>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::Rshift, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Eq>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::Eq, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Ne>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::Ne, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Lt>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::Lt, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Le>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::Le, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Gt>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::Gt, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Ge>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::Ge, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::SetEq>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::SetEq, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Subset>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::Subset, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Superset>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::Superset, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::PSubset>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::PSubset, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::PSuperset>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::PSuperset, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::In>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::In, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::NotIn>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::NotIn, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Ni>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::Ni, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::NotNi>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::NotNi, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Bool>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::Bool, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Not>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::Not, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::And>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::And, args, ctx);
+}
+
+
+ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Or>, ExpressionLua::Args const args, EvalContextLua ctx)
+{
+    return apply_operator(Keyword::Or, args, ctx);
+}
+
 
 
 } // namespace impl

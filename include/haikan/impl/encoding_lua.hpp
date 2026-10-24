@@ -28,16 +28,15 @@ namespace impl {
 
 struct EncodingLua
 {
-    std::vector<Keyword> keywords;
-    std::vector<std::size_t> depth;
-    std::vector<ExpressionParameter> data;
+    std::vector<Keyword> keywords_;
+    std::vector<std::size_t> depths_;
+    std::vector<sol::object> data_;
 
     EncodingLua() = default;
 
     explicit EncodingLua(std::nullptr_t) = delete;
 
     explicit EncodingLua(sol::object value);
-    explicit EncodingLua(ExpressionParameter value);
 
     std::size_t size() const;
 
@@ -45,24 +44,21 @@ struct EncodingLua
 
     bool operator!=(EncodingLua const& o) const;
 
-    void push_back(Keyword const& k, std::size_t const d, ExpressionParameter v);
+    void push_back(Keyword const& k, std::size_t const d, sol::object v);
 
     void append_to_root(EncodingLua tail);
 
     /// Single-pass preprocessing, return true if no multipass tokens left
     bool preprocess();
 
-
     /// Deepcopy Lua data
     EncodingLua clone() const;
 
-
     // Serialize data to plain Lua
-    sol::object to_object(sol::state_view sv) const;
+    sol::object to_object() const;
 
-
+    // Serialize data to plain JSON
     boost::json::value to_json() const;
-    boost::json::value to_json(sol::state_view sv) const;
 
     /// Create a subview [start, start+count)
     EncodingLua slice(std::size_t start, std::size_t count) const noexcept;
@@ -95,11 +91,12 @@ struct EncodingLua
 
     bool empty() const
     {
-        return keywords.empty();
+        return keywords_.empty();
     }
 
     bool is_const() const;
     bool is_boolean() const;
+
 };
 
 
