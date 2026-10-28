@@ -136,4 +136,11 @@ class user_data_enum
 
 
 } // namespace impl
+
+template <class T>
+inline impl::user_data_enum<T> as_enum(T const value)
+{
+    return impl::user_data_enum<T>(value);
+}
+
 } // namespace haikan

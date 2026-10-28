@@ -19,6 +19,9 @@ namespace impl {
 boost::optional<boost::json::value> lua_to_json(sol::object const value);
 boost::optional<sol::object> json_to_lua(sol::state_view L, boost::json::value const& value);
 
+std::ostream& lua_to_json_stream(
+    std::ostream& os, sol::object const value, int const indent, bool const pretty_print = true);
+
 
 
 } // namespace impl

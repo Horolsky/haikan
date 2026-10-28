@@ -1,3 +1,4 @@
 exports_files([
+    "bazel_iwyu_unique_reports.patch",
     "toolchains_llvm_bootstrapped_helpers.bzl.patch",
 ])

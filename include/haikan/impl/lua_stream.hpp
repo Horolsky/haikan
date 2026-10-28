@@ -20,9 +20,6 @@ namespace impl {
 std::ostream& lua_to_stream(
     std::ostream& os, sol::object const value, int const indent, bool const pretty_print = true);
 
-std::ostream& lua_to_json_stream(
-    std::ostream& os, sol::object const value, int const indent, bool const pretty_print = true);
-
 
 } // namespace impl
 } // namespace haikan

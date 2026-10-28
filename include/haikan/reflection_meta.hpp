@@ -7,10 +7,15 @@
 #pragma once
 
 #include <cstddef>
+#include <functional>
 #include <string>
 #include <typeinfo>
 #include <vector>
 
+
+extern "C" {
+#include <lua.h>
+}
 #include <boost/optional.hpp>
 
 #define SOL_ALL_SAFETIES_ON

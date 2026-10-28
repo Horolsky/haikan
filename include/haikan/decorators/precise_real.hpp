@@ -2,19 +2,27 @@
  * @file
  * @copyright (c) Copyright 2022-2023 Volvo Car Corporation
  * @copyright (c) Copyright 2024-2025 Zenseact AB
+ * @copyright (c) Copyright 2026 Oleksandr Khorolskyi
  * @license SPDX-License-Identifier: Apache-2.0
  */
 
 #pragma once
 
-#include <cstdlib>
 #include <cmath>
-#include <exception>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <stdexcept>
+#include <string>
 #include <type_traits>
 
 #include <boost/json.hpp>
+#include <boost/throw_exception.hpp>
 
 #include "haikan/type_tag.hpp"
+
+// IWYU pragma: no_include <__math/traits.h>
+
 
 
 namespace haikan {

@@ -1,3 +1,9 @@
+/**
+ * @file
+ * @copyright (c) Copyright 2026 Oleksandr Khorolskyi
+ * @license SPDX-License-Identifier: Apache-2.0
+ */
+
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
 
@@ -7,7 +13,7 @@
 #include "haikan/keywords_lua.hpp"
 #include "haikan/impl/expression_lua.hpp"
 #include "haikan/impl/operator_table.hpp"
-#include "haikan/reflection_registry.hpp"
+#include "haikan/impl/type_registry.hpp"
 #include "haikan/impl/vm.hpp"
 
 namespace utf = boost::unit_test;
@@ -84,6 +90,7 @@ using Args = haikan::impl::Args;
 
 
 struct Evaluator {
+    haikan::Logger& log_;
     Stack stack_{};
     sol::object register_;
     void step();
@@ -95,8 +102,8 @@ struct Evaluator {
     void stepFold();
     void stepFork();
 
-    Evaluator(sol::object arg, ExpressionLua expr)
-        : register_{std::move(arg)}
+    Evaluator(haikan::Logger& l, sol::object arg, ExpressionLua expr)
+        : log_{l}, register_{std::move(arg)}
     {
         stack_.push_front(Frame{std::move(expr)});
     }
@@ -241,10 +248,14 @@ void Evaluator::step()
     }
     case State::Return:
     {
-        auto log = HAIKAN_LOG(INFO)
+        log_ << '\n'
             << frame.input_trace
             << " | " << expr << " -> " << register_
             ;
+        // auto log = HAIKAN_LOG(INFO)
+        //     << frame.input_trace
+        //     << " | " << expr << " -> " << register_
+        //     ;
 
         stack_.pop_front();
         break;
@@ -438,23 +449,43 @@ BOOST_AUTO_TEST_CASE(Demo)
 
     using namespace haikan;
 
-    ExpressionLua expr = Fold(Add) & Size | Div;
-    sol::object arg = lua::make_object(std::vector<double> {1,2,3,4.25E1});
-    Evaluator e {arg, expr};
-
     OperatorRegistry()
         .AddSignature(type<double>, template_list<std::vector, std::set>)
         .Connects(type<int>, template_list<std::vector, std::set>)
         ;
-    haikan::ReflectionRegistry::insert_auto(type<Args>);
-    haikan::ReflectionRegistry::insert_auto(type<std::vector<double>>);
-    haikan::ReflectionRegistry::init(lua::global_state());
+    impl::TypeRegistry tr{};
+        tr.Add(type<Args>);
+        tr.Add(type<std::vector<double>>);
+        tr.init(lua::global_state());
 
-    while (!e.stack_.empty())
+
+    ExpressionLua expr = Fold(Add) & Size | Div;
+    sol::object arg = lua::make_object(std::vector<double> {1,2,3,4.25E1});
+
+    std::stringstream ss;
     {
-        e.step();
+        Logger log;
+        Evaluator e {log, arg, expr};
+        while (!e.stack_.empty())
+        {
+            e.step();
+        }
+        log.drain(ss, true);
+        BOOST_ASSERT(e.register_.is<double>());
+        BOOST_CHECK_EQUAL(e.register_.as<double>(), 1.2125E1);
     }
+    auto expected = R"(
+{1.0, 2.0} | Add -> 3.0
+{3.0, 3.0} | Add -> 6.0
+{6.0, 42.5} | Add -> 48.5
+{1.0,2.0,3.0,42.5} | Fold(Add) -> 48.5
+{1.0,2.0,3.0,42.5} | Size -> 4
+{1.0,2.0,3.0,42.5} | Fold(Add) & Size -> {48.5,4}
+{48.5,4} | Div -> 12.125
+{1.0,2.0,3.0,42.5} | (Fold(Add) & Size) | Div -> 12.125
+)";
 
-    BOOST_ASSERT(e.register_.is<double>());
-    BOOST_CHECK_EQUAL(e.register_.as<double>(), 1.2125E1);
+    BOOST_CHECK_EQUAL(ss.str(), expected);
+
+
 }

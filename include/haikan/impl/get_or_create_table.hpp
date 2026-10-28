@@ -6,7 +6,7 @@
 
 #pragma once
 
-
+#include <cstddef>
 #include <sol/sol.hpp>
 
 

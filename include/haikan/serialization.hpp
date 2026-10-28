@@ -6,10 +6,12 @@
 
 #pragma once
 
+#define SOL_ALL_SAFETIES_ON
+#define SOL_CHECK_ARGUMENTS
+#include <sol/sol.hpp>
+
 namespace haikan {
-namespace impl {
 
-template <class T, class E = void> struct reflect_default;
+sol::object to_plain_lua(sol::object value);
 
-} // namespace impl
 } // namespace haikan

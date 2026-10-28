@@ -15,7 +15,8 @@
 #include <boost/optional.hpp>
 #include <boost/utility/string_view.hpp>
 
-#include "haikan/reflect.hpp"
+#include "haikan/serialization.hpp"
+#include "haikan/reflection_meta.hpp"
 #include "haikan/impl/encoding_lua.hpp"
 #include "haikan/impl/keyword.hpp"
 #include "haikan/impl/keyword_attributes.hpp"
@@ -223,7 +224,7 @@ sol::object EncodingLua::to_object() const
     {
         auto const lua_index = i + 1;
 
-        keywords_out.set(lua_index, lua::make_object(keyword_to_str(keywords_[i]).data()));
+        keywords_out.set(lua_index, lua::make_object(keyword_to_str(keywords_[i])));
         depth_out.set(lua_index, depths_[i]);
 
         auto const& value = data_[i];

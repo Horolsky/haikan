@@ -82,13 +82,13 @@ class sfinae_switch : public boost::optional<R>
     }
 
     template <class... T>
-    auto operator()(T&&... args) const& -> std::enable_if_t<not is_valid_domain<T...>, this_type>
+    auto operator()(T&&...) const& -> std::enable_if_t<not is_valid_domain<T...>, this_type>
     {
         return {*this};
     }
 
     template <class... T>
-    auto operator()(T&&... args) && -> std::enable_if_t<not is_valid_domain<T...>, this_type>
+    auto operator()(T&&...) && -> std::enable_if_t<not is_valid_domain<T...>, this_type>
     {
         return {std::move(*this)};
     }

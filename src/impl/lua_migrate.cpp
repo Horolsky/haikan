@@ -1,7 +1,25 @@
+/**
+ * @file
+ * @copyright (c) Copyright 2026 Oleksandr Khorolskyi
+ * @license SPDX-License-Identifier: Apache-2.0
+ */
+
 #include "haikan/impl/lua_migrate.hpp"
 #include "haikan/reflection_meta.hpp"
 
 #include <unordered_set>
+#include <functional>
+#include <string>
+#include <utility>
+
+extern "C"
+{
+#include <lua.h>
+}
+
+#include <boost/none.hpp>
+#include <boost/none_t.hpp>
+#include <boost/optional.hpp>
 
 
 namespace haikan {

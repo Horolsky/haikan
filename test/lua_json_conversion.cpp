@@ -1,3 +1,9 @@
+/**
+ * @file
+ * @copyright (c) Copyright 2026 Oleksandr Khorolskyi
+ * @license SPDX-License-Identifier: Apache-2.0
+ */
+
 #include <cstdint>
 #include <sstream>
 #include <string>
@@ -6,6 +12,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "haikan/impl/lua_json_conversion.hpp"
+#include "haikan/impl/lua_stream.hpp"
 
 using haikan::impl::json_to_lua;
 using haikan::impl::lua_to_json;

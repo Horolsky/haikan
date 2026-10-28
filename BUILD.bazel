@@ -1,4 +1,3 @@
-# (c) Copyright 2024-2025 Zenseact AB
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
 load("@rules_pkg//pkg:deb.bzl", "pkg_deb")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
@@ -11,6 +10,9 @@ HAIKAN_COPTS = [
     "-Wall",
     "-Wextra",
     "-Wpedantic",
+
+    "-Wno-pragma-once-outside-header",
+    "-Wno-variadic-macro-arguments-omitted",
 ]
 
 BOOST_LIBS = [

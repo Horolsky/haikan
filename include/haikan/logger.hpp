@@ -1,6 +1,7 @@
 /**
  * @file
  * @copyright (c) Copyright 2024-2025 Zenseact AB
+ * @copyright (c) Copyright 2026 Oleksandr Khorolskyi
  * @license SPDX-License-Identifier: Apache-2.0
  */
 
@@ -98,6 +99,8 @@ class Logger {
     Logger&& WithOutput(Output const output) &&;
     Logger& WithSrcLoc(boost::string_view const src_loc) &;
     Logger&& WithSrcLoc(boost::string_view const src_loc) &&;
+
+    void drain(std::ostream& sink, bool const skip_meta = false);
 
     Logger& operator<<(sol::object && value) &
     {

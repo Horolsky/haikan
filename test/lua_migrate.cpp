@@ -1,7 +1,13 @@
+/**
+ * @file
+ * @copyright (c) Copyright 2026 Oleksandr Khorolskyi
+ * @license SPDX-License-Identifier: Apache-2.0
+ */
+
 #include <boost/test/unit_test.hpp>
 
 #include "haikan/impl/lua_migrate.hpp"
-#include "haikan/reflection_registry.hpp"
+#include "haikan/impl/type_registry.hpp"
 #include "fixture/reflect_types.hpp"
 
 
@@ -9,15 +15,16 @@
 BOOST_AUTO_TEST_CASE(LuaMigrateState)
 {
 
-    haikan::ReflectionRegistry::insert_auto(haikan::type<Foo>);
+    haikan::impl::TypeRegistry registry;
+    registry.Add(haikan::type<Foo>);
 
     sol::state target_state;
-    haikan::ReflectionRegistry::init(target_state);
+    registry.init(target_state);
 
     sol::object target_obj;
     {
         sol::state source_state;
-        haikan::ReflectionRegistry::init(source_state);
+        registry.init(source_state);
 
         sol::object source_obj = source_state.create_table_with(
             "value", 14,

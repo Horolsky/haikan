@@ -1,28 +1,33 @@
+/**
+ * @file
+ * @copyright (c) Copyright 2026 Oleksandr Khorolskyi
+ * @license SPDX-License-Identifier: Apache-2.0
+ */
+
 #include <boost/test/unit_test.hpp>
 
 #include <functional>
 #include <string>
 
 #include "haikan/impl/traits.hpp"
-#include "haikan/reflection_registry.hpp"
+#include "haikan/impl/type_registry.hpp"
 #include "fixture/reflect_types.hpp"
 
 BOOST_AUTO_TEST_CASE(ReflectReference)
 {
-    static_assert(haikan::impl::has_default_reflect_init<std::reference_wrapper<Kek>>::value, "");
-
     Kek test_kek(Foo::Kek, 67, 13);
 
     sol::state state{};
-    haikan::ReflectionRegistry::insert_auto(haikan::type<std::reference_wrapper<Kek>>);
-    haikan::ReflectionRegistry::init(state);
+    haikan::impl::TypeRegistry registry;
+    registry.Add(haikan::type<std::reference_wrapper<Kek>>);
+    registry.init(state);
 
-    sol::object serialized = haikan::reflect<std::reference_wrapper<Kek>>::serialize(std::ref(test_kek), state);
+    sol::object serialized = haikan::impl::TypeRegistry::Serialize(std::ref(test_kek), state);
     BOOST_REQUIRE(serialized.is<sol::table>());
     sol::table serialized_table = serialized;
     BOOST_CHECK_EQUAL(serialized_table["x"].get<int>(), test_kek.x);
     BOOST_CHECK_EQUAL(serialized_table["y"].get<double>(), test_kek.y);
-    auto serialized_foo = haikan::reflect<Foo>::deserialize(serialized_table["foo"]);
+    auto serialized_foo = haikan::impl::TypeRegistry::Deserialize(serialized_table["foo"], haikan::type<Foo>);
     BOOST_REQUIRE(serialized_foo);
     BOOST_CHECK(*serialized_foo == test_kek.foo);
 

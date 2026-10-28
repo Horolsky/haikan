@@ -5,28 +5,19 @@
  * @copyright (c) Copyright 2026 Oleksandr Khorolskyi
  * @license SPDX-License-Identifier: Apache-2.0
  */
-#include <algorithm>
-#include <iterator>
-#include <list>
-#include <ostream>
-#include <utility>
-#include <vector>
 
-#include <boost/optional.hpp>
-#include <boost/utility/string_view.hpp>
 
-#include "haikan/reflect.hpp"
+#include <exception>
+#include <string>
 
-// #include "haikan/impl/encoding_lua.hpp"
-// #include "haikan/impl/keyword.hpp"
-// #include "haikan/impl/keyword_attributes.hpp"
-// #include "haikan/impl/keyword_tag_invoke.hpp"
-// #include "haikan/impl/keyword_grammar.hpp"
-// #include "haikan/impl/lua_json_conversion.hpp"
-// #include "haikan/logger.hpp"
-// #include "haikan/impl/keyword_to_str.hpp"
-// #include "haikan/impl/lua_state.hpp"
+extern "C" {
+#include <lauxlib.h>
+#include <lua.h>
+}
+#include <boost/current_function.hpp>
 
+#include "haikan/error.hpp"
+#include "haikan/serialization.hpp"
 
 
 namespace haikan {

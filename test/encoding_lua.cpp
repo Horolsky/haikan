@@ -1,9 +1,14 @@
+/**
+ * @file
+ * @copyright (c) Copyright 2026 Oleksandr Khorolskyi
+ * @license SPDX-License-Identifier: Apache-2.0
+ */
+
 #include <boost/test/unit_test.hpp>
 #include <boost/describe.hpp>
 
-#include "haikan/reflect.hpp"
 #include "haikan/impl/encoding_lua.hpp"
-#include "haikan/reflection_registry.hpp"
+#include "haikan/impl/type_registry.hpp"
 
 
 struct EncodingPayload
@@ -20,6 +25,8 @@ BOOST_DESCRIBE_STRUCT(EncodingPayload, (), (value))
 
 using haikan::impl::EncodingLua;
 using haikan::impl::Keyword;
+using haikan::impl::is_link_token;
+using haikan::impl::is_preproc_token;
 
 namespace
 {
@@ -74,7 +81,7 @@ BOOST_AUTO_TEST_CASE(SlicesAndTraversesTrees)
     BOOST_CHECK_EQUAL(first.size(), 2U);
     BOOST_CHECK(first.head() == Keyword::Mul);
     BOOST_CHECK_EQUAL(last.size(), 1U);
-    BOOST_CHECK_EQUAL(last.data_.front().load(state).as<int>(), 3);
+    BOOST_CHECK_EQUAL(last.data_.front().as<int>(), 3);
     BOOST_CHECK_EQUAL(tree.children().size(), 2U);
     BOOST_CHECK(tree.slice(4, 1).size() == 0U);
 }
@@ -107,7 +114,7 @@ BOOST_AUTO_TEST_CASE(ToObjectPreservesPlainPayload)
     EncodingLua encoding{};
     encoding.push_back(Keyword::Add, 0, object(17));
 
-    sol::table result = encoding.to_object(state);
+    sol::table result = encoding.to_object();
     sol::table data = result["data"];
 
     BOOST_CHECK_EQUAL(data.get<int>(1), 17);
@@ -120,14 +127,15 @@ BOOST_AUTO_TEST_CASE(ToObjectSolifiesRegisteredUserdata)
     state["payload"] = payload;
 
     BOOST_CHECK_THROW(state.script("return payload.value == 42").get<bool>(), sol::error);
-    haikan::ReflectionRegistry::insert_auto(haikan::type<EncodingPayload>);
-    haikan::ReflectionRegistry::init(state);
+    haikan::impl::TypeRegistry registry;
+    registry.Add(haikan::type<EncodingPayload>);
+    registry.init(state);
     BOOST_REQUIRE(state.script("return payload.value == 42").get<bool>());
 
     EncodingLua encoding{};
     encoding.push_back(Keyword::Add, 0, payload);
 
-    sol::table result = encoding.to_object(state);
+    sol::table result = encoding.to_object();
     sol::table data = result["data"];
     sol::object serialized = data[1];
 

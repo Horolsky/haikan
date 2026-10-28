@@ -1,11 +1,16 @@
 /**
  * @file
  * @copyright (c) Copyright 2025 Zenseact AB
+ * @copyright (c) Copyright 2026 Oleksandr Khorolskyi
  * @license SPDX-License-Identifier: Apache-2.0
  */
 
-#include "haikan/config.hpp"
+#include <atomic>
+#include <cstdint>
 #include <mutex>
+#include <random>
+
+#include "haikan/config.hpp"
 
 namespace
 {

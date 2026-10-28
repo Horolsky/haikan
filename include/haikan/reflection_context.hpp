@@ -28,6 +28,8 @@
 
 namespace haikan {
 
+namespace impl { class TypeRegistry; }
+
 class ReflectionContextFactory
 {
 public:
@@ -212,7 +214,7 @@ private:
         HAIKAN_LOG(DEBUG) << "reflection initialized for " << meta.type_name << " at state " << ss.str();
     }
 
-    friend class ReflectionRegistry;
+    friend class impl::TypeRegistry;
 
     ReflectionContextFactory(sol::state_view L)
     : state{L}

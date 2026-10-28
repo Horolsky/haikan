@@ -1,6 +1,7 @@
 /**
  * @file
  * @copyright (c) Copyright 2024-2025 Zenseact AB
+ * @copyright (c) Copyright 2026 Oleksandr Khorolskyi
  * @license SPDX-License-Identifier: Apache-2.0
  */
 
@@ -15,7 +16,7 @@
 #include <chrono>
 
 #include "haikan/logger.hpp"
-#include "haikan/reflect.hpp"
+#include "haikan/serialization.hpp"
 #include "haikan/impl/lua_state.hpp"
 #include "haikan/impl/lua_stream.hpp"
 #include "haikan/impl/expression_lua.hpp"
@@ -127,11 +128,15 @@ Logger&& Logger::WithSrcLoc(boost::string_view const src_loc) &&
 
 Logger::~Logger()
 {
+    drain(std::cerr);
+}
+
+void Logger::drain(std::ostream& sink, bool const skip_meta)
+{
     if (payload_cache_.empty()) return;
     if (level_ > g_max_log_level) return;
 
-    auto const level = level_to_str(level_);
-    boost::string_view const timestamp{timestamp_};
+    
 
     // if (JSON & output_)
     // {
@@ -146,10 +151,16 @@ Logger::~Logger()
     // if (STDERR & output_)
     {
         std::stringstream ss;
-        ss << timestamp
-        << ' ' << level
-        << ' ' << src_loc_
-        << ' ';
+        if (!skip_meta) {
+
+            auto const level = level_to_str(level_);
+            boost::string_view const timestamp{timestamp_};
+
+            ss << timestamp
+            << ' ' << level
+            << ' ' << src_loc_
+            << ' ';
+        }
         for (auto const& record: payload_cache_)
         {
             if (not record.lua_state())
@@ -207,7 +218,8 @@ Logger::~Logger()
             //     ss << record;
             // }
         }
-        std::cerr << ss.str() << '\n';
+        sink << ss.str() << '\n';
+        payload_cache_.clear();
     }
 }
 

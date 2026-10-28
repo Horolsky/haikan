@@ -15,7 +15,7 @@
 #include <sstream>
 
 #include "haikan/logger.hpp"
-#include "haikan/reflection_registry.hpp"
+#include "haikan/impl/type_registry.hpp"
 
 
 
@@ -396,7 +396,7 @@ sol::state_view global_state()
 void reset_global_state()
 {
     global_state_handle().reset();
-    haikan::ReflectionRegistry::init(global_state());
+    haikan::impl::TypeRegistry{}.init(global_state());
 }
 
 } // namespace lua

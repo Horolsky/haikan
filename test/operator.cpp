@@ -1,3 +1,9 @@
+/**
+ * @file
+ * @copyright (c) Copyright 2026 Oleksandr Khorolskyi
+ * @license SPDX-License-Identifier: Apache-2.0
+ */
+
 #include <cstdint>
 #include <sstream>
 #include <set>
@@ -11,7 +17,7 @@
 #include "haikan/impl/operator_table.hpp"
 #include "haikan/impl/generic_operand.hpp"
 #include "haikan/impl/operators.hpp"
-#include "haikan/reflection_registry.hpp"
+#include "haikan/impl/type_registry.hpp"
 #include "haikan/impl/lua_stream.hpp"
 
 
@@ -55,8 +61,9 @@ BOOST_DESCRIBE_STRUCT(X, (), (val));
 
 BOOST_AUTO_TEST_CASE(OperatorsReflected)
 {
-    haikan::ReflectionRegistry::insert_auto(type<X>);
-    haikan::ReflectionRegistry::init(state);
+    haikan::impl::TypeRegistry registry;
+    registry.Add(type<X>);
+    registry.init(state);
     haikan::impl::OperatorRegistry().AddSignature(type<X>).Connects(type<double>);
 
 
@@ -490,7 +497,7 @@ BOOST_AUTO_TEST_CASE(ContTemplates)
     OperatorRegistry()
         .AddSignature(type<int>, template_list<std::vector, std::set>)
         .Connects(type<double>, template_list<std::vector, std::set>);
-    haikan::ReflectionRegistry::init(state);
+    haikan::impl::TypeRegistry{}.init(state);
 
     auto x = sol::make_object(state, a);
     auto y = sol::make_object(state, b);

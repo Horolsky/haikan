@@ -1,7 +1,3 @@
-# (c) Copyright 2025 Zenseact AB
-# (c) Copyright 2025 Alexander Horolsky
-# SPDX-License-Identifier: Apache-2.0
-
 module(
     name = "com_github_horolsky_haikan",
     version = "0.0.0",
@@ -9,6 +5,15 @@ module(
 )
 
 bazel_dep(name = "toolchains_llvm_bootstrapped", version = "0.3.1")
+bazel_dep(name = "bazel_iwyu", version = "0.0.4", dev_dependency = True)
+single_version_override(
+    module_name = "bazel_iwyu",
+    patch_strip = 1,
+    patches = [
+        "//tools/patches:bazel_iwyu_unique_reports.patch",
+    ],
+    version = "0.0.4",
+)
 single_version_override(
     module_name = "toolchains_llvm_bootstrapped",
     patch_strip = 1,
@@ -52,7 +57,7 @@ bazel_dep(name = "boost.unordered", version = boost_cxx_version)
 bazel_dep(name = "boost.utility", version = boost_cxx_version)
 bazel_dep(name = "boost.variant2", version = boost_cxx_version)
 bazel_dep(name = "rules_pkg", version = "1.0.1")
-bazel_dep(name = "rules_cc", version = "0.2.14")
+bazel_dep(name = "rules_cc", version = "0.2.17")
 bazel_dep(name = "rules_license", version = "1.0.0")
 bazel_dep(name = "googletest")
 single_version_override(

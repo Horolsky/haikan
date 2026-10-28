@@ -8,6 +8,11 @@
 #include <string>
 #include <vector>
 
+extern "C" {
+#include <lauxlib.h>
+#include <lua.h>
+}
+
 #include "haikan/impl/default_next_fn.hpp"
 
 

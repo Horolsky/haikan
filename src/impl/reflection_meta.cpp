@@ -1,4 +1,18 @@
+/**
+ * @file
+ * @copyright (c) Copyright 2026 Oleksandr Khorolskyi
+ * @license SPDX-License-Identifier: Apache-2.0
+ */
+
 #include "include/haikan/reflection_meta.hpp"
+
+#include <boost/none.hpp>
+#include <boost/none_t.hpp>
+
+#define SOL_ALL_SAFETIES_ON
+#define SOL_CHECK_ARGUMENTS
+#include <sol/sol.hpp>
+
 
 namespace haikan {
 namespace impl {

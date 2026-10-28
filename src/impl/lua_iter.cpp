@@ -2,14 +2,22 @@
  * @file
  * @copyright (c) Copyright 2022-2023 Volvo Car Corporation
  * @copyright (c) Copyright 2024-2025 Zenseact AB
+ * @copyright (c) Copyright 2026 Oleksandr Khorolskyi
  * @license SPDX-License-Identifier: Apache-2.0
  */
 
 
 #include <algorithm>
+#include <cstddef>
 #include <stdexcept>
 #include <unordered_set>
 #include <utility>
+#include <vector>
+
+extern "C"
+{
+#include <lua.h>
+}
 
 #include "haikan/impl/lua_iter.hpp"
 

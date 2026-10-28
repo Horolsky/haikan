@@ -1,6 +1,7 @@
 /**
  * @file
  * @copyright (c) Copyright 2024-2025 Zenseact AB
+ * @copyright (c) Copyright 2026 Oleksandr Khorolskyi
  * @license SPDX-License-Identifier: Apache-2.0
  */
 
@@ -8,6 +9,8 @@
 
 
 #include <vector>
+#include <utility>
+
 #include <boost/json.hpp>
 
 namespace haikan {

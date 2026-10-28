@@ -10,6 +10,7 @@
 #include <ostream>
 #include <boost/describe.hpp>
 
+// IWYU pragma: no_include <__ostream/basic_ostream.h>
 
 namespace haikan {
 

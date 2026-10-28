@@ -2,15 +2,16 @@
  * @file
  * @copyright (c) Copyright 2022-2023 Volvo Car Corporation
  * @copyright (c) Copyright 2024-2025 Zenseact AB
+ * @copyright (c) Copyright 2026 Oleksandr Khorolskyi
  * @license SPDX-License-Identifier: Apache-2.0
  */
 
 #pragma once
 
 
+#include <string>
 #include <type_traits>
 #include <boost/type_index.hpp>
-
 
 
 namespace haikan {
