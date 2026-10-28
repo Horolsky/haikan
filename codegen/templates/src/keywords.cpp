@@ -16,7 +16,7 @@
  */
 
 
-#include "haikan/keywords_lua.hpp"
+#include "haikan/keywords.hpp"
 
 #if defined(__clang__) || defined(__GNUC__)
 #define HAIKAN_KEYWORD_INIT __attribute__((init_priority(101)))
@@ -27,9 +27,9 @@
 namespace haikan {
 
 @for keyword in data.ApiKeywords:
-impl::Lua@keyword.Class const HAIKAN_KEYWORD_INIT @keyword.Name = {};
+impl::@keyword.Class const HAIKAN_KEYWORD_INIT @keyword.Name = {};
 @for alias in keyword.Aliases:
-impl::Lua@keyword.Class const HAIKAN_KEYWORD_INIT @alias.capitalize() = @keyword.Name;
+impl::@keyword.Class const HAIKAN_KEYWORD_INIT @alias.capitalize() = @keyword.Name;
 @end
 @end
 

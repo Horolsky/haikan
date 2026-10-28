@@ -26,33 +26,33 @@
 namespace haikan {
 namespace impl {
 
-struct EncodingLua
+struct Encoding
 {
     std::vector<Keyword> keywords_;
     std::vector<std::size_t> depths_;
     std::vector<sol::object> data_;
 
-    EncodingLua() = default;
+    Encoding() = default;
 
-    explicit EncodingLua(std::nullptr_t) = delete;
+    explicit Encoding(std::nullptr_t) = delete;
 
-    explicit EncodingLua(sol::object value);
+    explicit Encoding(sol::object value);
 
     std::size_t size() const;
 
-    bool operator==(EncodingLua const& o) const;
+    bool operator==(Encoding const& o) const;
 
-    bool operator!=(EncodingLua const& o) const;
+    bool operator!=(Encoding const& o) const;
 
     void push_back(Keyword const& k, std::size_t const d, sol::object v);
 
-    void append_to_root(EncodingLua tail);
+    void append_to_root(Encoding tail);
 
     /// Single-pass preprocessing, return true if no multipass tokens left
     bool preprocess();
 
     /// Deepcopy Lua data
-    EncodingLua clone() const;
+    Encoding clone() const;
 
     // Serialize data to plain Lua
     sol::object to_object() const;
@@ -61,18 +61,18 @@ struct EncodingLua
     boost::json::value to_json() const;
 
     /// Create a subview [start, start+count)
-    EncodingLua slice(std::size_t start, std::size_t count) const noexcept;
+    Encoding slice(std::size_t start, std::size_t count) const noexcept;
 
     /// Get a subview at specified node
-    EncodingLua subtree(std::size_t const node) const noexcept;
+    Encoding subtree(std::size_t const node) const noexcept;
 
     /// Traverse subtrees from starting position.
     /// `next` arg points to the next subtree index at the same depth,
     /// or to size() if none.
-    EncodingLua traverse_subtrees(std::size_t const node, std::size_t& next) const noexcept;
+    Encoding traverse_subtrees(std::size_t const node, std::size_t& next) const noexcept;
 
     /// Children subviews
-    std::vector<EncodingLua> children() const;
+    std::vector<Encoding> children() const;
 
     /// Number of children
     std::size_t arity() const;
@@ -87,7 +87,7 @@ struct EncodingLua
 
     /// Get subview on child # ord
     /// If not found, returns empty view
-    EncodingLua child(int ord) const noexcept;
+    Encoding child(int ord) const noexcept;
 
     bool empty() const
     {

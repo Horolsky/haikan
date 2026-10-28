@@ -4,7 +4,7 @@
  * \license SPDX-License-Identifier: Apache-2.0
  */
 
-#include "haikan/impl/expression_lua_grammar.hpp"
+#include "haikan/impl/expression_grammar.hpp"
 #include "haikan/impl/keyword_grammar.hpp"
 #include "haikan/impl/keyword_to_str.hpp"
 
@@ -14,12 +14,12 @@
 namespace haikan {
 namespace impl {
 
-boost::json::string_view ExpressionLua::keyword_to_str() const
+boost::json::string_view Expression::keyword_to_str() const
 {
     return ::haikan::impl::keyword_to_str(keyword());
 }
 
-std::string ExpressionLua::prettify() const
+std::string Expression::prettify() const
 try
 {
     std::string out;
@@ -35,7 +35,7 @@ catch (std::exception const& e)
     return std::string("Exception thrown on prettify: ") + e.what();
 }
 
-std::ostream& ExpressionLua::prettify_to(std::ostream& os) const
+std::ostream& Expression::prettify_to(std::ostream& os) const
 {
     boost::spirit::ostream_iterator sink(os);
     impl::ExpressionLuaGrammar<boost::spirit::ostream_iterator> gen;
@@ -45,7 +45,7 @@ std::ostream& ExpressionLua::prettify_to(std::ostream& os) const
 }
 
 
-void ExpressionLua::prettify_to(char* buff, std::size_t n) const
+void Expression::prettify_to(char* buff, std::size_t n) const
 {
     boost::iostreams::stream<boost::iostreams::array_sink> stream(buff, n);
     boost::spirit::ostream_iterator sink(stream);
@@ -58,19 +58,19 @@ void ExpressionLua::prettify_to(char* buff, std::size_t n) const
     return;
 }
 
-std::ostream& operator<<(std::ostream& os, ExpressionLua const& expr)
+std::ostream& operator<<(std::ostream& os, Expression const& expr)
 {
     return expr.prettify_to(os);
 }
 
-// haikan::Logger& operator<<(haikan::Logger& logger, ExpressionLua const& expr)
+// haikan::Logger& operator<<(haikan::Logger& logger, Expression const& expr)
 // {
 //     logger << static_cast<boost::json::value>(expr.prettify());
 //     return logger;
 // }
 
-// Boost JSON conversion from ExpressionLua
-// void tag_invoke(boost::json::value_from_tag const&, boost::json::value& v, ExpressionLua const& ev)
+// Boost JSON conversion from Expression
+// void tag_invoke(boost::json::value_from_tag const&, boost::json::value& v, Expression const& ev)
 // {
 //     v = ev.to_json();
 // }

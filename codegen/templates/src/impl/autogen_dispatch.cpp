@@ -16,7 +16,7 @@
  */
 
 
-#include "haikan/impl/expression_lua.hpp"
+#include "haikan/impl/expression.hpp"
 #include "haikan/error.hpp"
 
 
@@ -24,21 +24,21 @@ namespace haikan {
 namespace impl {
 
 @for keyword in data.Keywords:
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::@keyword.Name>, ExpressionLua::Args const, EvalContextLua);
+Expression dispatch_eval(keyword_tag_t<Keyword::@keyword.Name>, Expression::Args const, EvalContextLua);
 @end
 
-ExpressionLua ExpressionLua::eval(ExpressionLua const& lhs_arg, EvalContextLua context) const
+Expression Expression::eval(Expression const& lhs_arg, EvalContextLua context) const
 try
 {
-    boost::optional<ExpressionLua> result;
-    ExpressionLua::Args const args {*this, lhs_arg};
+    boost::optional<Expression> result;
+    Expression::Args const args {*this, lhs_arg};
 
 
     // if ((x.keyword() == Keyword::_Continue) || (x.keyword() == Keyword::_Resolve))
     // {
     //     if (keyword() != Keyword::Elif && keyword() != Keyword::Else)
     //     {
-    //         result = ExpressionLua(ExpressionLua::encodeNested(Keyword::Err, {error("Missing Else clause", keyword_to_str())}));
+    //         result = Expression(Expression::encodeNested(Keyword::Err, {error("Missing Else clause", keyword_to_str())}));
     //     }
     // }
     switch (keyword())
@@ -47,7 +47,7 @@ try
         case Keyword::@keyword.Name: result = dispatch_eval(keyword_tag<Keyword::@keyword.Name>, args, context); break;
 @end
         default:
-            result = ExpressionLua(ExpressionLua::encodeNested(Keyword::Err, {error("invalid keyword", keyword_to_str())})); break;
+            result = Expression(Expression::encodeNested(Keyword::Err, {error("invalid keyword", keyword_to_str())})); break;
     }
 
     // context.log.push(*this, x, result.value(), context.depth);
@@ -55,7 +55,7 @@ try
 }
 catch(const std::exception& e)
 {
-    return ExpressionLua(error(e.what(), keyword_to_str()));
+    return Expression(error(e.what(), keyword_to_str()));
 }
 
 } // namespace impl

@@ -20,7 +20,7 @@
 #include "haikan/error.hpp"
 #include "haikan/impl/keyword.hpp"
 #include "haikan/impl/keyword_to_str.hpp"
-#include "haikan/impl/expression_lua.hpp"
+#include "haikan/impl/expression.hpp"
 #include "haikan/impl/operator_table.hpp"
 #include "haikan/impl/eval_context.hpp"
 #include "haikan/impl/lua_state.hpp"
@@ -29,28 +29,28 @@
 namespace haikan {
 namespace impl {
 namespace {
-ExpressionLua apply_operator(Keyword const k, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression apply_operator(Keyword const k, Expression::Args const args, EvalContextLua ctx)
 {
     HAIKAN_LOG(DEBUG) << args.lhs().prettify() << " [" << keyword_to_str(k) << "] " << args.rhs().prettify();
     sol::object lhso = args.lhs().eval({}, ctx).data();
     if (HAIKAN_UNLIKELY(lhso.is<error>()))
     {
-        return ExpressionLua{lhso};
+        return Expression{lhso};
     }
     sol::object rhso = args.rhs().eval({}, ctx).data();
     if (HAIKAN_UNLIKELY(rhso.is<error>()))
     {
-        return ExpressionLua{rhso};
+        return Expression{rhso};
     }
     return OperatorRegistry::get(lhso, rhso)
-        .map([&](OperatorTable op){ return ExpressionLua(op.apply(k, lhso, rhso)); })
-        .value_or(ExpressionLua(error("invalid operands", keyword_to_str(k).data())));
+        .map([&](OperatorTable op){ return Expression(op.apply(k, lhso, rhso)); })
+        .value_or(Expression(error("invalid operands", keyword_to_str(k))));
 }
 }
 
 @for keyword in data.Operators:
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::@keyword.Name>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::@keyword.Name>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::@keyword.Name, args, ctx);
 }

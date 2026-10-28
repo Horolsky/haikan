@@ -19,7 +19,7 @@
 #include <@library>
 @end
 
-#include "haikan/impl/expression_lua.hpp"
+#include "haikan/impl/expression.hpp"
 #include "haikan/impl/eval_context.hpp"
 
 
@@ -27,9 +27,9 @@ namespace haikan {
 namespace impl {
 
 @for keyword in data.Constants:
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::@keyword.Name>, ExpressionLua::Args const, EvalContextLua)
+Expression dispatch_eval(keyword_tag_t<Keyword::@keyword.Name>, Expression::Args const, EvalContextLua)
 {
-    return ExpressionLua(@keyword.CodegenValue);
+    return Expression(@keyword.CodegenValue);
 }
 @end
 

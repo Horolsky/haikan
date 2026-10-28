@@ -18,7 +18,7 @@
 #include <complex>
 #include <boost/json.hpp>
 
-#include "haikan/impl/expression_lua.hpp"
+#include "haikan/impl/expression.hpp"
 #include "haikan/impl/eval_context.hpp"
 
 namespace haikan {
@@ -58,166 +58,166 @@ sol::object from_complex(std::complex<T> num)
 }
 
 typedef std::complex<double> (*complex_fn)(std::complex<double> const&);
-ExpressionLua eval_complex(complex_fn f, ExpressionLua const& lhs, ExpressionLua const& rhs, EvalContextLua ctx)
+Expression eval_complex(complex_fn f, Expression const& lhs, Expression const& rhs, EvalContextLua ctx)
 {
     (void)rhs;
-    return ExpressionLua(from_complex(f(to_complex(lhs.eval({}, ctx).data()))));
+    return Expression(from_complex(f(to_complex(lhs.eval({}, ctx).data()))));
 }
 
 typedef double (*real_fn)(double);
-ExpressionLua eval_real(real_fn f, ExpressionLua const& lhs, ExpressionLua const& rhs, EvalContextLua ctx)
+Expression eval_real(real_fn f, Expression const& lhs, Expression const& rhs, EvalContextLua ctx)
 {
     (void)rhs;
-    return ExpressionLua(f(lhs.eval({}, ctx).data().as<double>()));
+    return Expression(f(lhs.eval({}, ctx).data().as<double>()));
 }
 
 typedef double (*complex_to_real_fn)(std::complex<double> const&);
-ExpressionLua eval_complex_to_real(complex_to_real_fn f, ExpressionLua const& lhs, ExpressionLua const& rhs, EvalContextLua ctx)
+Expression eval_complex_to_real(complex_to_real_fn f, Expression const& lhs, Expression const& rhs, EvalContextLua ctx)
 {
     (void)rhs;
-    return ExpressionLua(f(to_complex(lhs.eval({}, ctx).data())));
+    return Expression(f(to_complex(lhs.eval({}, ctx).data())));
 }
 } // namespace
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Sin>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Sin>, Expression::Args const args, EvalContextLua ctx)
 {
     (void)ctx;
-    return ExpressionLua(eval_complex(std::sin, args.lhs(), args.rhs(), ctx));
+    return Expression(eval_complex(std::sin, args.lhs(), args.rhs(), ctx));
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Cos>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Cos>, Expression::Args const args, EvalContextLua ctx)
 {
     (void)ctx;
-    return ExpressionLua(eval_complex(std::cos, args.lhs(), args.rhs(), ctx));
+    return Expression(eval_complex(std::cos, args.lhs(), args.rhs(), ctx));
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Tan>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Tan>, Expression::Args const args, EvalContextLua ctx)
 {
     (void)ctx;
-    return ExpressionLua(eval_complex(std::tan, args.lhs(), args.rhs(), ctx));
+    return Expression(eval_complex(std::tan, args.lhs(), args.rhs(), ctx));
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Asin>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Asin>, Expression::Args const args, EvalContextLua ctx)
 {
     (void)ctx;
-    return ExpressionLua(eval_complex(std::asin, args.lhs(), args.rhs(), ctx));
+    return Expression(eval_complex(std::asin, args.lhs(), args.rhs(), ctx));
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Acos>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Acos>, Expression::Args const args, EvalContextLua ctx)
 {
     (void)ctx;
-    return ExpressionLua(eval_complex(std::acos, args.lhs(), args.rhs(), ctx));
+    return Expression(eval_complex(std::acos, args.lhs(), args.rhs(), ctx));
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Atan>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Atan>, Expression::Args const args, EvalContextLua ctx)
 {
     (void)ctx;
-    return ExpressionLua(eval_complex(std::atan, args.lhs(), args.rhs(), ctx));
+    return Expression(eval_complex(std::atan, args.lhs(), args.rhs(), ctx));
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Sinh>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Sinh>, Expression::Args const args, EvalContextLua ctx)
 {
     (void)ctx;
-    return ExpressionLua(eval_complex(std::sinh, args.lhs(), args.rhs(), ctx));
+    return Expression(eval_complex(std::sinh, args.lhs(), args.rhs(), ctx));
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Cosh>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Cosh>, Expression::Args const args, EvalContextLua ctx)
 {
     (void)ctx;
-    return ExpressionLua(eval_complex(std::cosh, args.lhs(), args.rhs(), ctx));
+    return Expression(eval_complex(std::cosh, args.lhs(), args.rhs(), ctx));
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Tanh>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Tanh>, Expression::Args const args, EvalContextLua ctx)
 {
     (void)ctx;
-    return ExpressionLua(eval_complex(std::tanh, args.lhs(), args.rhs(), ctx));
+    return Expression(eval_complex(std::tanh, args.lhs(), args.rhs(), ctx));
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Asinh>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Asinh>, Expression::Args const args, EvalContextLua ctx)
 {
     (void)ctx;
-    return ExpressionLua(eval_complex(std::asinh, args.lhs(), args.rhs(), ctx));
+    return Expression(eval_complex(std::asinh, args.lhs(), args.rhs(), ctx));
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Acosh>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Acosh>, Expression::Args const args, EvalContextLua ctx)
 {
     (void)ctx;
-    return ExpressionLua(eval_complex(std::acosh, args.lhs(), args.rhs(), ctx));
+    return Expression(eval_complex(std::acosh, args.lhs(), args.rhs(), ctx));
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Atanh>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Atanh>, Expression::Args const args, EvalContextLua ctx)
 {
     (void)ctx;
-    return ExpressionLua(eval_complex(std::atanh, args.lhs(), args.rhs(), ctx));
+    return Expression(eval_complex(std::atanh, args.lhs(), args.rhs(), ctx));
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Exp>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Exp>, Expression::Args const args, EvalContextLua ctx)
 {
     (void)ctx;
-    return ExpressionLua(eval_complex(std::exp, args.lhs(), args.rhs(), ctx));
+    return Expression(eval_complex(std::exp, args.lhs(), args.rhs(), ctx));
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Erf>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Erf>, Expression::Args const args, EvalContextLua ctx)
 {
     (void)ctx;
-    return ExpressionLua(eval_real(std::erf, args.lhs(), args.rhs(), ctx));
+    return Expression(eval_real(std::erf, args.lhs(), args.rhs(), ctx));
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Erfc>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Erfc>, Expression::Args const args, EvalContextLua ctx)
 {
     (void)ctx;
-    return ExpressionLua(eval_real(std::erfc, args.lhs(), args.rhs(), ctx));
+    return Expression(eval_real(std::erfc, args.lhs(), args.rhs(), ctx));
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Gamma>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Gamma>, Expression::Args const args, EvalContextLua ctx)
 {
     (void)ctx;
-    return ExpressionLua(eval_real(std::tgamma, args.lhs(), args.rhs(), ctx));
+    return Expression(eval_real(std::tgamma, args.lhs(), args.rhs(), ctx));
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Abs>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Abs>, Expression::Args const args, EvalContextLua ctx)
 {
     (void)ctx;
-    return ExpressionLua(eval_complex_to_real(std::abs, args.lhs(), args.rhs(), ctx));
+    return Expression(eval_complex_to_real(std::abs, args.lhs(), args.rhs(), ctx));
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Ceil>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Ceil>, Expression::Args const args, EvalContextLua ctx)
 {
     (void)ctx;
-    return ExpressionLua(eval_real(std::ceil, args.lhs(), args.rhs(), ctx));
+    return Expression(eval_real(std::ceil, args.lhs(), args.rhs(), ctx));
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Floor>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Floor>, Expression::Args const args, EvalContextLua ctx)
 {
     (void)ctx;
-    return ExpressionLua(eval_real(std::floor, args.lhs(), args.rhs(), ctx));
+    return Expression(eval_real(std::floor, args.lhs(), args.rhs(), ctx));
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Round>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Round>, Expression::Args const args, EvalContextLua ctx)
 {
     (void)ctx;
-    return ExpressionLua(eval_real(std::round, args.lhs(), args.rhs(), ctx));
+    return Expression(eval_real(std::round, args.lhs(), args.rhs(), ctx));
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Sqrt>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Sqrt>, Expression::Args const args, EvalContextLua ctx)
 {
     (void)ctx;
-    return ExpressionLua(eval_complex(std::sqrt, args.lhs(), args.rhs(), ctx));
+    return Expression(eval_complex(std::sqrt, args.lhs(), args.rhs(), ctx));
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Sign>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Sign>, Expression::Args const args, EvalContextLua ctx)
 {
     (void)ctx;
-    return ExpressionLua(args.lhs().eval({}, ctx).data().as<double>() >= 0 ? 1 : -1);
+    return Expression(args.lhs().eval({}, ctx).data().as<double>() >= 0 ? 1 : -1);
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Str>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Str>, Expression::Args const args, EvalContextLua ctx)
 {
     (void)ctx;
-    return ExpressionLua(args.lhs().prettify().c_str());
+    return Expression(args.lhs().prettify().c_str());
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Id>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Id>, Expression::Args const args, EvalContextLua ctx)
 {
     (void)ctx;
-    return ExpressionLua(args.lhs());
+    return Expression(args.lhs());
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Q>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Q>, Expression::Args const args, EvalContextLua ctx)
 {
     (void)ctx;
-    return ExpressionLua(args.rhs());
+    return Expression(args.rhs());
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Err>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Err>, Expression::Args const args, EvalContextLua ctx)
 {
     (void)ctx;
-    return ExpressionLua(args.rhs());
+    return Expression(args.rhs());
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::IsErr>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::IsErr>, Expression::Args const args, EvalContextLua ctx)
 {
     (void)ctx;
-    return ExpressionLua(args.lhs().is_error());
+    return Expression(args.lhs().is_error());
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::PreProc>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::PreProc>, Expression::Args const args, EvalContextLua ctx)
 {
     (void)ctx;
-    return ExpressionLua(args.rhs());
+    return Expression(args.rhs());
 }
 
 } // namespace impl

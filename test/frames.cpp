@@ -10,8 +10,8 @@
 #include <boost/variant2.hpp>
 
 
-#include "haikan/keywords_lua.hpp"
-#include "haikan/impl/expression_lua.hpp"
+#include "haikan/keywords.hpp"
+#include "haikan/impl/expression.hpp"
 #include "haikan/impl/operator_table.hpp"
 #include "haikan/impl/type_registry.hpp"
 #include "haikan/impl/vm.hpp"
@@ -42,7 +42,7 @@ namespace
 
 struct Frame
 {
-    ExpressionLua expr;
+    Expression expr;
     sol::object value{lua::make_object(sol::nil)};
     sol::object input_trace{lua::make_object(sol::nil)};
 
@@ -58,22 +58,22 @@ struct Frame
     std::size_t index{0};
 
 
-    Frame(ExpressionLua e, sol::object v, State const s)
+    Frame(Expression e, sol::object v, State const s)
         : expr{e}
         , value{v}
         , state{s}
     {
     }
 
-    Frame() : Frame(ExpressionLua(), lua::make_object(sol::nil), State::Enter)
+    Frame() : Frame(Expression(), lua::make_object(sol::nil), State::Enter)
     {
     }
 
-    Frame(ExpressionLua e) : Frame(e, lua::make_object(sol::nil), State::Enter)
+    Frame(Expression e) : Frame(e, lua::make_object(sol::nil), State::Enter)
     {
     }
 
-    Frame(ExpressionLua e, State const s) : Frame(e, lua::make_object(sol::nil), s)
+    Frame(Expression e, State const s) : Frame(e, lua::make_object(sol::nil), s)
     {
     }
 
@@ -102,7 +102,7 @@ struct Evaluator {
     void stepFold();
     void stepFork();
 
-    Evaluator(haikan::Logger& l, sol::object arg, ExpressionLua expr)
+    Evaluator(haikan::Logger& l, sol::object arg, Expression expr)
         : log_{l}, register_{std::move(arg)}
     {
         stack_.push_front(Frame{std::move(expr)});
@@ -147,7 +147,7 @@ void Evaluator::step()
 {
     using State = Frame::State;
     auto& frame = stack_.front();
-    ExpressionLua const& expr = frame.expr;
+    Expression const& expr = frame.expr;
     auto const kattr = keyword_attributes(expr.keyword());
 
 
@@ -267,7 +267,7 @@ void Evaluator::step()
 void Evaluator::stepHigherOrder()
 {
     auto& frame = stack_.front();
-    ExpressionLua const& expr = frame.expr;
+    Expression const& expr = frame.expr;
 
     switch(expr.keyword())
     {
@@ -285,7 +285,7 @@ void Evaluator::stepFlip()
     using State = Frame::State;
 
     auto& frame = stack_.front();
-    ExpressionLua const child = frame.expr.subexpressions_vec().front();
+    Expression const child = frame.expr.subexpressions_vec().front();
 
     switch (frame.index)
     {
@@ -332,7 +332,7 @@ void Evaluator::stepFlip()
 void Evaluator::stepPipe()
 {
     auto& frame = stack_.front();
-    ExpressionLua const& expr = frame.expr;
+    Expression const& expr = frame.expr;
 
     auto const& subs = expr.subexpressions_vec();
 
@@ -353,7 +353,7 @@ void Evaluator::stepPipe()
 void Evaluator::stepFold()
 {
     auto& frame = stack_.front();
-    ExpressionLua const& expr = frame.expr;
+    Expression const& expr = frame.expr;
 
     // Initialize accumulator with first element.
     if (frame.index == 0)
@@ -387,7 +387,7 @@ void Evaluator::stepFold()
             });
 
             frame.state = Frame::State::ResumeFrame;
-            ExpressionLua function = expr.subexpressions_vec().front();
+            Expression function = expr.subexpressions_vec().front();
             stack_.push_front(Frame(function));
         }
         else
@@ -401,7 +401,7 @@ void Evaluator::stepFold()
 void Evaluator::stepFork()
 {
     auto& frame = stack_.front();
-    ExpressionLua const& expr = frame.expr;
+    Expression const& expr = frame.expr;
     auto const& subs = expr.subexpressions_vec();
 
     if (frame.index == 0)
@@ -459,7 +459,7 @@ BOOST_AUTO_TEST_CASE(Demo)
         tr.init(lua::global_state());
 
 
-    ExpressionLua expr = Fold(Add) & Size | Div;
+    Expression expr = Fold(Add) & Size | Div;
     sol::object arg = lua::make_object(std::vector<double> {1,2,3,4.25E1});
 
     std::stringstream ss;

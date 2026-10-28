@@ -17,7 +17,7 @@
 
 #include "haikan/impl/keyword.hpp"
 #include "haikan/impl/lua_stream.hpp"
-#include "haikan/impl/encoding_lua.hpp"
+#include "haikan/impl/encoding.hpp"
 #include "haikan/impl/lua_state.hpp"
 #include "haikan/impl/expression_parameter.hpp"
 #include "haikan/impl/eval_context.hpp"
@@ -31,61 +31,61 @@ namespace impl {
 
 /// Expression Language implementation class.
 /// \details \see <A HREF="/user-guide/expressions/">Expression Language documentation</A>.
-class ExpressionLua
+class Expression
 {
 
 public:
 
     using Keyword = impl::Keyword;
-    using EncodingLua = impl::EncodingLua;
+    using Encoding = impl::Encoding;
 
     //////////////////
     // CTORS
     //////////////////
 
 
-    ExpressionLua(ExpressionLua const&) = default;
-    ExpressionLua(ExpressionLua&&) = default;
-    ExpressionLua& operator=(ExpressionLua const&) = default;
-    ExpressionLua& operator=(ExpressionLua&&) = default;
+    Expression(Expression const&) = default;
+    Expression(Expression&&) = default;
+    Expression& operator=(Expression const&) = default;
+    Expression& operator=(Expression&&) = default;
 
-    explicit ExpressionLua(EncodingLua v)
+    explicit Expression(Encoding v)
         : encoding_{v}
     {
     }
 
 
-    explicit ExpressionLua(sol::object x)
-        : ExpressionLua(EncodingLua(x))
+    explicit Expression(sol::object x)
+        : Expression(Encoding(x))
     {
     }
 
     template <class T, class U  = typename std::decay<T>::type
         , class = typename std::enable_if<
-            !std::is_base_of<ExpressionLua, U>::value &&
-            !std::is_same<U, impl::EncodingLua>::value &&
+            !std::is_base_of<Expression, U>::value &&
+            !std::is_same<U, impl::Encoding>::value &&
             !std::is_same<U, sol::object>::value &&
             true
     >::type>
-    ExpressionLua(T&& x)
-        : ExpressionLua(lua::make_object(std::forward<T>(x)))
+    Expression(T&& x)
+        : Expression(lua::make_object(std::forward<T>(x)))
     {
 
     }
 
-    ExpressionLua()
-        : ExpressionLua(encodeNested(impl::Keyword::_Void, {sol::nil}))
+    Expression()
+        : Expression(encodeNested(impl::Keyword::_Void, {sol::nil}))
     {
     }
 
-    // explicit ExpressionLua(Keyword const keyword);
+    // explicit Expression(Keyword const keyword);
 
 
-    virtual ~ExpressionLua()
+    virtual ~Expression()
     {
     }
 
-    EncodingLua encoding_view() const
+    Encoding encoding_view() const
     {
         return encoding_;
     }
@@ -99,26 +99,26 @@ public:
 
 
     // // Deserialize JSON
-    // ExpressionLua(boost::json::value const& expr);
-    // ExpressionLua(boost::json::value && expr);
+    // Expression(boost::json::value const& expr);
+    // Expression(boost::json::value && expr);
 
     // // construct _Literal from JSON init list
-    // ExpressionLua(std::initializer_list<boost::json::value_ref> items);
+    // Expression(std::initializer_list<boost::json::value_ref> items);
 
     // template <class T>
-    // ExpressionLua(T&& sample, std::true_type)
-    //     : ExpressionLua(boost::json::value_from(std::forward<T>(sample)))
+    // Expression(T&& sample, std::true_type)
+    //     : Expression(boost::json::value_from(std::forward<T>(sample)))
     // {
     // }
 
     // template <class T>
-    // ExpressionLua(T&& sample, std::false_type)
+    // Expression(T&& sample, std::false_type)
     // {
     //     static_assert(!std::is_same<T, T>::value, "no conversion defined for T");
     // }
 
-    // template <class T, class = std::enable_if_t<!std::is_base_of<ExpressionLua, std::decay_t<T>>::value>>
-    // ExpressionLua(T&& sample) : ExpressionLua(
+    // template <class T, class = std::enable_if_t<!std::is_base_of<Expression, std::decay_t<T>>::value>>
+    // Expression(T&& sample) : Expression(
     //     std::forward<T>(sample),
     //     std::integral_constant<bool, boost::json::has_value_from<T>::value>()
     // )
@@ -131,12 +131,12 @@ public:
     //////////////
 
 
-    bool operator==(ExpressionLua const& o) const
+    bool operator==(Expression const& o) const
     {
         return (this == &o) || (encoding_view() == o.encoding_view());
     }
 
-    bool operator!=(ExpressionLua const& o) const
+    bool operator!=(Expression const& o) const
     {
         return !operator==(o);
     }
@@ -148,36 +148,36 @@ public:
     /// Pipe expressions left-to-right
     /// \details Pipe functional expressions in composition,
     /// s.t. `a | b` is equivalent to `Pipe(a, b)`. \see haikan::Pipe
-    friend ExpressionLua operator|(ExpressionLua lhs, ExpressionLua rhs)
+    friend Expression operator|(Expression lhs, Expression rhs)
     {
-        return ExpressionLua::unfold_left_assoc(Keyword::Pipe, std::move(lhs), std::move(rhs));
+        return Expression::unfold_left_assoc(Keyword::Pipe, std::move(lhs), std::move(rhs));
     }
 
     /// Pack expression into a tuple without evaluation \see haikan::Tuple.
-    friend ExpressionLua operator,(ExpressionLua lhs, ExpressionLua rhs)
+    friend Expression operator,(Expression lhs, Expression rhs)
     {
-        return ExpressionLua::unfold_left_assoc(Keyword::Tuple, std::move(lhs), std::move(rhs));
+        return Expression::unfold_left_assoc(Keyword::Tuple, std::move(lhs), std::move(rhs));
     }
 
     /// Pack expression results into an array. \see haikan::Fork.
-    friend ExpressionLua operator&(ExpressionLua lhs, ExpressionLua rhs)
+    friend Expression operator&(Expression lhs, Expression rhs)
     {
-        return ExpressionLua(encodeNested(impl::Keyword::Fork, {lhs, rhs}));
+        return Expression(encodeNested(impl::Keyword::Fork, {lhs, rhs}));
     }
 
     /// Inline named function, equivalent to Fn(link + expr)
-    friend ExpressionLua operator<<(ExpressionLua link, ExpressionLua expr);
+    friend Expression operator<<(Expression link, Expression expr);
 
     /// Flip design-time and eval-time parameters.
-    friend ExpressionLua operator~(ExpressionLua expr)
+    friend Expression operator~(Expression expr)
     {
-        return ExpressionLua(encodeNested(impl::Keyword::Flip, {expr}));
+        return Expression(encodeNested(impl::Keyword::Flip, {expr}));
     }
 
 
-    friend inline std::ostream& operator<<(std::ostream& os, ExpressionLua const& expr);
+    friend inline std::ostream& operator<<(std::ostream& os, Expression const& expr);
     // {
-    //     return operator<<(os, ExpressionLua(expr));
+    //     return operator<<(os, Expression(expr));
     // }
 
 
@@ -194,20 +194,20 @@ public:
     }
 
     /// Subexpressions
-    std::vector<ExpressionLua> subexpressions_vec() const
+    std::vector<Expression> subexpressions_vec() const
     {
         auto subtrees = encoding_view().children();
-        std::vector<ExpressionLua> result;
+        std::vector<Expression> result;
         result.reserve(subtrees.size());
         std::transform(subtrees.cbegin(), subtrees.cend(),
                 std::back_inserter(result),
-                [](EncodingLua const& v) { return ExpressionLua{v}; });
+                [](Encoding const& v) { return Expression{v}; });
         return result;
     }
 
-    std::vector<ExpressionLua> link_parameters() const
+    std::vector<Expression> link_parameters() const
     {
-        std::vector<ExpressionLua> result;
+        std::vector<Expression> result;
 
         auto tuple = encoding_view();
         if (tuple.head() != impl::Keyword::Fn) return result;
@@ -395,7 +395,7 @@ public:
 
     // void prettify_to(char* buff, std::size_t n) const;
 
-    // friend std::ostream& operator<<(std::ostream& os, ExpressionLua const& expr);
+    // friend std::ostream& operator<<(std::ostream& os, Expression const& expr);
 
 
 
@@ -415,32 +415,32 @@ public:
     /// @param x run-time argument
     /// @param ctx evaluation context
     /// @return
-    ExpressionLua eval(ExpressionLua const& x, EvalContextLua ctx) const;
+    Expression eval(Expression const& x, EvalContextLua ctx) const;
 
 
-    ExpressionLua param() const
+    Expression param() const
     {
         auto const child = encoding_view().child(0);
         if (!child.empty())
         {
-            return ExpressionLua(child);
+            return Expression(child);
         }
         else
         {
-            return ExpressionLua(encodeNested(Keyword::_Void, {}));
+            return Expression(encodeNested(Keyword::_Void, {}));
         }
     }
 
 
     /// Eval const expressions as Eq(expr), except for Noop,
     /// otherwise eval expr.
-    bool eval_as_predicate(ExpressionLua const& x, ExpressionLua& err_sts, EvalContextLua ctx) const;
+    bool eval_as_predicate(Expression const& x, Expression& err_sts, EvalContextLua ctx) const;
 
     /// Eval const expressions as Eq(expr), except for Noop,
     /// otherwise eval expr. Store result in arg reference and return error status.
-    bool eval_as_predicate(sol::object const& x, ExpressionLua& err_sts, EvalContextLua ctx) const;
+    bool eval_as_predicate(sol::object const& x, Expression& err_sts, EvalContextLua ctx) const;
 
-    ExpressionLua eval_maybe_predicate(ExpressionLua const& x, EvalContextLua ctx) const;
+    Expression eval_maybe_predicate(Expression const& x, EvalContextLua ctx) const;
 
     /// @brief Evaluate expression
     /// @param x run-time argument
@@ -453,87 +453,87 @@ public:
 
     // /// \brief Evaluate x to lhs expression.
     // /// \details Equivalent to expr.eval(x).
-    // friend V operator*(ExpressionLua expr, ExpressionLua const& x);
+    // friend V operator*(Expression expr, Expression const& x);
 
     // /// \brief Evaluate expression.
     // /// \details Equivalent to expr.eval().
-    // friend V operator*(ExpressionLua expr);
+    // friend V operator*(Expression expr);
 
 
     // Terminal expression
-    // static EncodingLua encodeLiteral(boost::json::value const& params);
+    // static Encoding encodeLiteral(boost::json::value const& params);
     // Terminal expression
-    static ExpressionLua encodePreProc(std::string && params);
+    static Expression encodePreProc(std::string && params);
 
     // Non-terminal expression
-    static EncodingLua encodeNested(Keyword const& keyword, std::initializer_list<ExpressionLua> subexpressions);
-    static EncodingLua encodeNested(Keyword const& keyword, std::vector<ExpressionLua>&& subexpressions);
+    static Encoding encodeNested(Keyword const& keyword, std::initializer_list<Expression> subexpressions);
+    static Encoding encodeNested(Keyword const& keyword, std::vector<Expression>&& subexpressions);
 
-    static bool to_predicate_if_const(ExpressionLua& e);
+    static bool to_predicate_if_const(Expression& e);
 
     class Args;
 
   protected:
-    EncodingLua encoding_;
+    Encoding encoding_;
 
-    // mutable std::shared_ptr<ExpressionLua> const_predicate_cache_;
+    // mutable std::shared_ptr<Expression> const_predicate_cache_;
   private:
 
-    static ExpressionLua unfold_left_assoc(Keyword const keyword, ExpressionLua&& lhs, ExpressionLua&& rhs);
+    static Expression unfold_left_assoc(Keyword const keyword, Expression&& lhs, Expression&& rhs);
 
     template <class T>
-    static EncodingLua encodeNested(Keyword const& keyword, std::move_iterator<T> begin, std::move_iterator<T> const end);
+    static Encoding encodeNested(Keyword const& keyword, std::move_iterator<T> begin, std::move_iterator<T> const end);
 
 };
 
 
 
-// // Boost JSON conversion from ExpressionLua
-// void tag_invoke(boost::json::value_from_tag const&, boost::json::value& v, ExpressionLua const& ev);
+// // Boost JSON conversion from Expression
+// void tag_invoke(boost::json::value_from_tag const&, boost::json::value& v, Expression const& ev);
 
 
-// // Keep templates: without indirection of zmbt::reflection the tag_invoke ADL resolves to ExpressionLua template ctor for containers
+// // Keep templates: without indirection of zmbt::reflection the tag_invoke ADL resolves to Expression template ctor for containers
 
-// Boost JSON conversion from ExpressionLua
+// Boost JSON conversion from Expression
 template <class T>
 auto tag_invoke(boost::json::value_from_tag const&, boost::json::value& v, T const& expr)
--> std::enable_if_t<std::is_base_of<ExpressionLua, std::decay_t<T>>::value>
+-> std::enable_if_t<std::is_base_of<Expression, std::decay_t<T>>::value>
 {
     v = expr.to_json();
 }
 
-// Boost JSON conversion to ExpressionLua
+// Boost JSON conversion to Expression
 template <class T>
 auto tag_invoke(boost::json::value_to_tag<T> const&, boost::json::value const& v)
--> std::enable_if_t<std::is_base_of<ExpressionLua, std::decay_t<T>>::value, T>
+-> std::enable_if_t<std::is_base_of<Expression, std::decay_t<T>>::value, T>
 {
     return T(v);
 }
 
-class ExpressionLua::Args
+class Expression::Args
 {
-    std::reference_wrapper<ExpressionLua const> self_ref_;
-    std::reference_wrapper<ExpressionLua const> lhs_ref_;
+    std::reference_wrapper<Expression const> self_ref_;
+    std::reference_wrapper<Expression const> lhs_ref_;
 
   public:
-    Args(ExpressionLua const& self, ExpressionLua const& lhs)
+    Args(Expression const& self, Expression const& lhs)
         : self_ref_{self}
         , lhs_ref_{lhs}
     {
 
     }
 
-    ExpressionLua const& self() const
+    Expression const& self() const
     {
         return self_ref_.get();
     }
 
-    ExpressionLua const& lhs() const
+    Expression const& lhs() const
     {
         return lhs_ref_.get();
     }
 
-    ExpressionLua rhs() const
+    Expression rhs() const
     {
         return self().param();
     }

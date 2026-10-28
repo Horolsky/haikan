@@ -9,7 +9,7 @@
 #include <sstream>
 
 #include "haikan/impl/eval_log.hpp"
-#include "haikan/impl/expression_lua.hpp"
+#include "haikan/impl/expression.hpp"
 #include "haikan/logger.hpp"
 
 
@@ -56,7 +56,7 @@ void trim_line(std::ostream& os, boost::json::array const& rec)
         buf[n-3] = '.';
         return;
     };
-    using E = haikan::impl::ExpressionLua;
+    using E = haikan::impl::Expression;
 
     E e_f(rec.at(1));
     E e_x(rec.at(2));
@@ -149,7 +149,7 @@ void EvalLog::format(std::ostream& os, boost::json::array const& log, int const 
 
         if (notrim)
         {
-            using E = haikan::impl::ExpressionLua;
+            using E = haikan::impl::Expression;
             E f(rec.at(1));
             E x(rec.at(2));
             E fx(rec.at(3));
@@ -191,7 +191,7 @@ std::ostream& operator<<(std::ostream& os, EvalLog const& log)
 }
 
 
-void EvalLog::push(ExpressionLua const& expr, ExpressionLua const& x, ExpressionLua const& result, std::uint64_t const depth) const
+void EvalLog::push(Expression const& expr, Expression const& x, Expression const& result, std::uint64_t const depth) const
 {
     if (!stack)
     {

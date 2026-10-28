@@ -10,16 +10,16 @@
 #include <sstream>
 
 #include "haikan/impl/keyword_attributes.hpp"
-#include "haikan/impl/expression_lua.hpp"
+#include "haikan/impl/expression.hpp"
 #include "haikan/impl/eval_context.hpp"
-#include "haikan/keywords_lua.hpp"
+#include "haikan/keywords.hpp"
 
 
 namespace
 {
 
 using V = boost::json::value;
-using E = haikan::impl::ExpressionLua;
+using E = haikan::impl::Expression;
 using Keyword = haikan::impl::Keyword;
 
 
@@ -29,24 +29,24 @@ using Keyword = haikan::impl::Keyword;
 namespace haikan {
 namespace impl {
 
-// EncodingLua ExpressionLua::encodeLiteral(boost::json::value const& params)
+// Encoding Expression::encodeLiteral(boost::json::value const& params)
 // {
-//     EncodingLua enc {};
+//     Encoding enc {};
 //     enc.push_back(Keyword::_Literal, 0, params);
 //     return enc;
 // }
 
-ExpressionLua ExpressionLua::encodePreProc(std::string && params)
+Expression Expression::encodePreProc(std::string && params)
 {
-    ExpressionLua r {EncodingLua{}};
+    Expression r {Encoding{}};
     r.encoding_.push_back(Keyword::PreProc, 0, lua::make_object(std::move(params)));
     return r;
 }
 
 template <class T>
-EncodingLua ExpressionLua::encodeNested(Keyword const& keyword, std::move_iterator<T> begin, std::move_iterator<T> const end)
+Encoding Expression::encodeNested(Keyword const& keyword, std::move_iterator<T> begin, std::move_iterator<T> const end)
 {
-    EncodingLua enc {};
+    Encoding enc {};
     enc.push_back(keyword, 0, nullptr);
 
     while(begin != end)
@@ -56,22 +56,22 @@ EncodingLua ExpressionLua::encodeNested(Keyword const& keyword, std::move_iterat
     return enc;
 }
 
-EncodingLua ExpressionLua::encodeNested(Keyword const& keyword, std::initializer_list<ExpressionLua> subexpressions)
+Encoding Expression::encodeNested(Keyword const& keyword, std::initializer_list<Expression> subexpressions)
 {
     return encodeNested(keyword, std::make_move_iterator(subexpressions.begin()), std::make_move_iterator(subexpressions.end()));
 }
 
-EncodingLua ExpressionLua::encodeNested(Keyword const& keyword, std::vector<ExpressionLua>&& subexpressions)
+Encoding Expression::encodeNested(Keyword const& keyword, std::vector<Expression>&& subexpressions)
 {
     return encodeNested(keyword, std::make_move_iterator(subexpressions.begin()), std::make_move_iterator(subexpressions.end()));
 }
 
 
-bool ExpressionLua::to_predicate_if_const(ExpressionLua& e)
+bool Expression::to_predicate_if_const(Expression& e)
 {
     if (!e.is_noop() && e.is_const())
     {
-        e = ExpressionLua(encodeNested(Keyword::Eq, {e}));
+        e = Expression(encodeNested(Keyword::Eq, {e}));
         return true;
     }
     return false;

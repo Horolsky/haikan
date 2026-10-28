@@ -14,7 +14,7 @@
 namespace haikan {
 namespace impl {
 
-class ExpressionLua;
+class Expression;
 
 /// Expression evaluation log
 struct EvalLog
@@ -28,7 +28,7 @@ struct EvalLog
     boost::json::string str(int const indent = 0) const;
 
     /// Push record to log stack
-    void push(ExpressionLua const& expr, ExpressionLua const& x, ExpressionLua const& result, std::uint64_t const depth) const;
+    void push(Expression const& expr, Expression const& x, Expression const& result, std::uint64_t const depth) const;
 
 
     static void format(std::ostream& os, boost::json::array const& log, int const indent = 0);

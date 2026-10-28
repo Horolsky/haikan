@@ -4,7 +4,7 @@
  * @license SPDX-License-Identifier: Apache-2.0
  */
 
-#include "haikan/impl/expression_lua.hpp"
+#include "haikan/impl/expression.hpp"
 
 #include <cstdint>
 #include <sstream>
@@ -20,7 +20,7 @@
 
 #include "fixture/reflect_types.hpp"
 
-#include "haikan/keywords_lua.hpp"
+#include "haikan/keywords.hpp"
 
 #include <boost/math/constants/constants.hpp>
 
@@ -34,7 +34,7 @@ namespace
 
 struct ExpressionLuaSuite
 {
-    using ExpressionLua = haikan::impl::ExpressionLua;
+    using Expression = haikan::impl::Expression;
 
     ExpressionLuaSuite()
     {
@@ -54,21 +54,21 @@ BOOST_FIXTURE_TEST_SUITE(ExpressionLuaTests, ExpressionLuaSuite)
 
 BOOST_AUTO_TEST_CASE(SmokeTest)
 {
-        ExpressionLua ex {42};
+        Expression ex {42};
 }
 
 BOOST_AUTO_TEST_CASE(PrimitiveCtors)
 {
     {
-        ExpressionLua ex {42};
+        Expression ex {42};
         BOOST_CHECK(ex.to_json() == 42);
     }
     {
-        ExpressionLua ex {"42"};
+        Expression ex {"42"};
         BOOST_CHECK(ex.to_json() == "42");
     }
     {
-        ExpressionLua ex {haikan::as_enum(Foo::Lol)};
+        Expression ex {haikan::as_enum(Foo::Lol)};
         BOOST_CHECK(ex.encoding_view().data_[0].is<haikan::impl::user_data_enum<Foo>>());
         auto obj = ex.encoding_view().to_object();
         BOOST_CHECK(!obj.is<haikan::impl::user_data_enum<Foo>>());
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(PrimitiveCtors)
         BOOST_CHECK(ex.to_json() == "Lol");
     }
     {
-        ExpressionLua ex {Lol{Foo::Kek, 42}};
+        Expression ex {Lol{Foo::Kek, 42}};
         BOOST_CHECK(ex.keyword() == haikan::impl::Keyword::_Literal);
         BOOST_CHECK(ex.encoding_view().data_[0].as<Lol>() == Lol(Foo::Kek, 42));
 
@@ -93,18 +93,18 @@ BOOST_AUTO_TEST_CASE(PrimitiveCtors)
 
 BOOST_AUTO_TEST_CASE(CopyMove)
 {
-    ExpressionLua a {42};
-    ExpressionLua b = a;
-    ExpressionLua c = std::move(a);
+    Expression a {42};
+    Expression b = a;
+    Expression c = std::move(a);
 }
 
 BOOST_AUTO_TEST_CASE(FoldingExpressions)
 {
 
     using haikan::impl::Keyword;
-    ExpressionLua a {42};
-    ExpressionLua b {67};
-    ExpressionLua c = a | b;
+    Expression a {42};
+    Expression b {67};
+    Expression c = a | b;
 
 
 
@@ -139,11 +139,11 @@ BOOST_AUTO_TEST_CASE(FoldingExpressions)
 BOOST_AUTO_TEST_CASE(SyntacticSugar)
 {
     using haikan::impl::Keyword;
-    ExpressionLua a {42};
-    ExpressionLua b {"word"};
-    ExpressionLua c {Lol(Foo::Kek, 11)};
+    Expression a {42};
+    Expression b {"word"};
+    Expression c {Lol(Foo::Kek, 11)};
 
-    ExpressionLua lol = ~(a & b | c);
+    Expression lol = ~(a & b | c);
 
     auto const p = lol.prettify();
 
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(ExprEval)
     using haikan::impl::EvalContextLua;
 
     EvalContextLua ctx{};
-    ExpressionLua lit {42};
+    Expression lit {42};
     sol::object result = lit.eval(sol::nil, ctx).data();
     BOOST_CHECK_EQUAL(result.as<int>(), 42);
 }

@@ -7,7 +7,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/describe.hpp>
 
-#include "haikan/impl/encoding_lua.hpp"
+#include "haikan/impl/encoding.hpp"
 #include "haikan/impl/type_registry.hpp"
 
 
@@ -23,7 +23,7 @@ struct EncodingPayload
 
 BOOST_DESCRIBE_STRUCT(EncodingPayload, (), (value))
 
-using haikan::impl::EncodingLua;
+using haikan::impl::Encoding;
 using haikan::impl::Keyword;
 using haikan::impl::is_link_token;
 using haikan::impl::is_preproc_token;
@@ -56,9 +56,9 @@ BOOST_AUTO_TEST_CASE(ClassifiesStringTokens)
 
 BOOST_AUTO_TEST_CASE(ConstructsLiteralAndTokens)
 {
-    EncodingLua literal(object(7));
-    EncodingLua preproc(sol::make_object(state, "$[value]"));
-    EncodingLua link(sol::make_object(state, "$value"));
+    Encoding literal(object(7));
+    Encoding preproc(sol::make_object(state, "$[value]"));
+    Encoding link(sol::make_object(state, "$value"));
 
     BOOST_CHECK_EQUAL(literal.size(), 1U);
     BOOST_CHECK(literal.head() == Keyword::_Literal);
@@ -68,14 +68,14 @@ BOOST_AUTO_TEST_CASE(ConstructsLiteralAndTokens)
 
 BOOST_AUTO_TEST_CASE(SlicesAndTraversesTrees)
 {
-    EncodingLua tree{};
+    Encoding tree{};
     tree.push_back(Keyword::Add, 0, object(0));
     tree.push_back(Keyword::Mul, 1, object(1));
     tree.push_back(Keyword::_Literal, 2, object(2));
     tree.push_back(Keyword::_Literal, 1, object(3));
 
-    EncodingLua first = tree.child(0);
-    EncodingLua last = tree.child(-1);
+    Encoding first = tree.child(0);
+    Encoding last = tree.child(-1);
 
     BOOST_CHECK_EQUAL(tree.arity(), 2U);
     BOOST_CHECK_EQUAL(first.size(), 2U);
@@ -88,8 +88,8 @@ BOOST_AUTO_TEST_CASE(SlicesAndTraversesTrees)
 
 BOOST_AUTO_TEST_CASE(AppendsAtRootDepth)
 {
-    EncodingLua root(object(0));
-    EncodingLua tail{};
+    Encoding root(object(0));
+    Encoding tail{};
     tail.push_back(Keyword::Mul, 0, object(1));
     tail.push_back(Keyword::_Literal, 1, object(2));
 
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(AppendsAtRootDepth)
 
 BOOST_AUTO_TEST_CASE(EmptyAndMissingChildrenAreSafe)
 {
-    EncodingLua empty{};
+    Encoding empty{};
 
     BOOST_CHECK_EQUAL(empty.child_idx(0), 0U);
     BOOST_CHECK(empty.child(0).size() == 0U);
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(EmptyAndMissingChildrenAreSafe)
 
 BOOST_AUTO_TEST_CASE(ToObjectPreservesPlainPayload)
 {
-    EncodingLua encoding{};
+    Encoding encoding{};
     encoding.push_back(Keyword::Add, 0, object(17));
 
     sol::table result = encoding.to_object();
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(ToObjectSolifiesRegisteredUserdata)
     registry.init(state);
     BOOST_REQUIRE(state.script("return payload.value == 42").get<bool>());
 
-    EncodingLua encoding{};
+    Encoding encoding{};
     encoding.push_back(Keyword::Add, 0, payload);
 
     sol::table result = encoding.to_object();

@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "haikan/impl/signatures_lua.hpp"
+#include "haikan/impl/signatures.hpp"
 
 namespace haikan {
 
@@ -30,10 +30,10 @@ namespace haikan {
 /// @line
         @end
     @end
-extern impl::Lua@keyword.Class const @keyword.Name;
+extern impl::@keyword.Class const @keyword.Name;
 @for alias in keyword.Aliases:
 /// \brief Alias for @keyword.Name
-extern impl::Lua@keyword.Class const @alias.capitalize();
+extern impl::@keyword.Class const @alias.capitalize();
 @end
 @end
 

@@ -5,8 +5,8 @@
  */
 
 
-#include "haikan/impl/signatures_lua.hpp"
-#include "haikan/keywords_lua.hpp"
+#include "haikan/impl/signatures.hpp"
+#include "haikan/keywords.hpp"
 
 
 // namespace
@@ -34,7 +34,7 @@
 
 namespace haikan {
 namespace impl {
-// boost::json::value handle_list_init(std::initializer_list<ExpressionLua> set)
+// boost::json::value handle_list_init(std::initializer_list<Expression> set)
 // {
 //     // this cause a recursive call to Expression template ctor
 //     // auto const value_list = boost::json::value_from(set).as_array();
@@ -43,7 +43,7 @@ namespace impl {
 //     value_list.reserve(set.size());
 //     std::transform(set.begin(), set.end(),
 //                std::back_inserter(value_list),
-//                [](ExpressionLua const& v) { return v.to_json(); });
+//                [](Expression const& v) { return v.to_json(); });
 
 //     if (maybe_object(value_list))
 //     {
@@ -62,14 +62,14 @@ namespace impl {
 //     }
 // }
 
-// void LuaSignatureErr::make_throw_action(std::string const key, std::function<void()> f) const
+// void SignatureErr::make_throw_action(std::string const key, std::function<void()> f) const
 // {
 //     static_cast<void>(key);
 //     static_cast<void>(f);
 //     // Environment().RegisterAction(key, f);
 // }
 
-// ExpressionLua LuaSignatureErr::make_error(boost::json::string_view type, boost::json::string_view msg, boost::json::string_view ctx) const
+// Expression SignatureErr::make_error(boost::json::string_view type, boost::json::string_view msg, boost::json::string_view ctx) const
 // {
 //     // boost::json::object err{};
 //     // if (not type.empty())
@@ -87,7 +87,7 @@ namespace impl {
 //     // TODO: add registered utype for error data
 //     static_cast<void>(type);
 //     static_cast<void>(ctx);
-//     return ExpressionLua(ExpressionLua::encodeNested(Keyword::Err, {msg.data()}));
+//     return Expression(Expression::encodeNested(Keyword::Err, {msg.data()}));
 // }
 
 } // namespace impl

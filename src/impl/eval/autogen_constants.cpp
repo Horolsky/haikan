@@ -19,52 +19,52 @@
 #include <thread>
 #include <boost/math/constants/constants.hpp>
 
-#include "haikan/impl/expression_lua.hpp"
+#include "haikan/impl/expression.hpp"
 #include "haikan/impl/eval_context.hpp"
 
 
 namespace haikan {
 namespace impl {
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Noop>, ExpressionLua::Args const, EvalContextLua)
+Expression dispatch_eval(keyword_tag_t<Keyword::Noop>, Expression::Args const, EvalContextLua)
 {
-    return ExpressionLua(true);
+    return Expression(true);
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Null>, ExpressionLua::Args const, EvalContextLua)
+Expression dispatch_eval(keyword_tag_t<Keyword::Null>, Expression::Args const, EvalContextLua)
 {
-    return ExpressionLua(nullptr);
+    return Expression(nullptr);
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::True>, ExpressionLua::Args const, EvalContextLua)
+Expression dispatch_eval(keyword_tag_t<Keyword::True>, Expression::Args const, EvalContextLua)
 {
-    return ExpressionLua(true);
+    return Expression(true);
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::False>, ExpressionLua::Args const, EvalContextLua)
+Expression dispatch_eval(keyword_tag_t<Keyword::False>, Expression::Args const, EvalContextLua)
 {
-    return ExpressionLua(false);
+    return Expression(false);
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Pi>, ExpressionLua::Args const, EvalContextLua)
+Expression dispatch_eval(keyword_tag_t<Keyword::Pi>, Expression::Args const, EvalContextLua)
 {
-    return ExpressionLua(boost::math::constants::pi<double>());
+    return Expression(boost::math::constants::pi<double>());
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::E>, ExpressionLua::Args const, EvalContextLua)
+Expression dispatch_eval(keyword_tag_t<Keyword::E>, Expression::Args const, EvalContextLua)
 {
-    return ExpressionLua(boost::math::constants::e<double>());
+    return Expression(boost::math::constants::e<double>());
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Inf>, ExpressionLua::Args const, EvalContextLua)
+Expression dispatch_eval(keyword_tag_t<Keyword::Inf>, Expression::Args const, EvalContextLua)
 {
-    return ExpressionLua(std::numeric_limits<double>::infinity());
+    return Expression(std::numeric_limits<double>::infinity());
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Eps>, ExpressionLua::Args const, EvalContextLua)
+Expression dispatch_eval(keyword_tag_t<Keyword::Eps>, Expression::Args const, EvalContextLua)
 {
-    return ExpressionLua(std::numeric_limits<double>::epsilon());
+    return Expression(std::numeric_limits<double>::epsilon());
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::NaN>, ExpressionLua::Args const, EvalContextLua)
+Expression dispatch_eval(keyword_tag_t<Keyword::NaN>, Expression::Args const, EvalContextLua)
 {
-    return ExpressionLua(std::numeric_limits<double>::quiet_NaN());
+    return Expression(std::numeric_limits<double>::quiet_NaN());
 }
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Thread>, ExpressionLua::Args const, EvalContextLua)
+Expression dispatch_eval(keyword_tag_t<Keyword::Thread>, Expression::Args const, EvalContextLua)
 {
-    return ExpressionLua((std::stringstream() << std::this_thread::get_id()).str());
+    return Expression((std::stringstream() << std::this_thread::get_id()).str());
 }
 
 

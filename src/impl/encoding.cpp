@@ -17,7 +17,7 @@
 
 #include "haikan/serialization.hpp"
 #include "haikan/reflection_meta.hpp"
-#include "haikan/impl/encoding_lua.hpp"
+#include "haikan/impl/encoding.hpp"
 #include "haikan/impl/keyword.hpp"
 #include "haikan/impl/keyword_attributes.hpp"
 #include "haikan/impl/keyword_tag_invoke.hpp"
@@ -33,7 +33,7 @@ namespace haikan {
 namespace impl {
 
 
-EncodingLua::EncodingLua(sol::object value)
+Encoding::Encoding(sol::object value)
 {
 
     if(value.get_type() == sol::type::table)
@@ -74,25 +74,25 @@ EncodingLua::EncodingLua(sol::object value)
 
 
 
-std::size_t EncodingLua::size() const
+std::size_t Encoding::size() const
 {
     return keywords_.size();
 }
 
-bool EncodingLua::operator==(EncodingLua const& o) const
+bool Encoding::operator==(Encoding const& o) const
 {
     return (keywords_ == o.keywords_)
     && (depths_ == o.depths_)
     && (data_ == o.data_);
 }
 
-bool EncodingLua::operator!=(EncodingLua const& o) const
+bool Encoding::operator!=(Encoding const& o) const
 {
     return not operator==(o);
 }
 
 
-void EncodingLua::push_back(Keyword const& k, std::size_t const d, sol::object v)
+void Encoding::push_back(Keyword const& k, std::size_t const d, sol::object v)
 {
     keywords_.push_back(k);
     depths_.push_back(d);
@@ -100,7 +100,7 @@ void EncodingLua::push_back(Keyword const& k, std::size_t const d, sol::object v
 }
 
 
-void EncodingLua::append_to_root(EncodingLua tail)
+void Encoding::append_to_root(Encoding tail)
 {
     auto const offset = size();
     auto const tail_size = tail.size();
@@ -127,7 +127,7 @@ void EncodingLua::append_to_root(EncodingLua tail)
 
 
 /// Single-pass preprocessing, return true if no multipass tokens left
-bool EncodingLua::preprocess()
+bool Encoding::preprocess()
 {
     bool complete{true};
 
@@ -161,7 +161,7 @@ bool EncodingLua::preprocess()
                 continue;
             }
 
-            auto subenc = EncodingLua(payload);
+            auto subenc = Encoding(payload);
             for (auto& sub_depth : subenc.depths_)
             {
                 sub_depth += d;
@@ -195,7 +195,7 @@ bool EncodingLua::preprocess()
     return complete;
 }
 
-sol::object EncodingLua::to_object() const
+sol::object Encoding::to_object() const
 {
 
     if (size() == 0)
@@ -256,14 +256,14 @@ sol::object EncodingLua::to_object() const
     );
 }
 
-boost::json::value EncodingLua::to_json() const
+boost::json::value Encoding::to_json() const
 {
     return lua_to_json(to_object()).value_or(nullptr);
 }
 
-EncodingLua EncodingLua::slice(std::size_t start, std::size_t count) const noexcept
+Encoding Encoding::slice(std::size_t start, std::size_t count) const noexcept
 {
-    EncodingLua enc{};
+    Encoding enc{};
     if ((count != 0) && (start <= size()) && (count <= size() - start))
     {
         enc.keywords_.assign(keywords_.begin() + start, keywords_.begin() + start + count);
@@ -273,13 +273,13 @@ EncodingLua EncodingLua::slice(std::size_t start, std::size_t count) const noexc
     return enc;
 }
 
-EncodingLua EncodingLua::subtree(std::size_t const node) const noexcept
+Encoding Encoding::subtree(std::size_t const node) const noexcept
 {
     std::size_t ignored{};
     return traverse_subtrees(node, ignored);
 }
 
-std::size_t EncodingLua::arity() const
+std::size_t Encoding::arity() const
 {
     if (depths_.empty())
     {
@@ -289,9 +289,9 @@ std::size_t EncodingLua::arity() const
 }
 
 
-std::vector<EncodingLua> EncodingLua::children() const
+std::vector<Encoding> Encoding::children() const
 {
-    std::vector<EncodingLua> st;
+    std::vector<Encoding> st;
     if (size() < 2)
     {
         return st;
@@ -306,17 +306,17 @@ std::vector<EncodingLua> EncodingLua::children() const
 }
 
 
-Keyword EncodingLua::head() const noexcept
+Keyword Encoding::head() const noexcept
 {
     return keywords_.size() ? keywords_[0] : Keyword::Undefined;
 }
 
-EncodingLua EncodingLua::child(int ord) const noexcept
+Encoding Encoding::child(int ord) const noexcept
 {
     return subtree(child_idx(ord));
 }
 
-std::size_t EncodingLua::child_idx(int ord) const noexcept
+std::size_t Encoding::child_idx(int ord) const noexcept
 {
     auto const N = size();
     if (N == 0)
@@ -351,13 +351,13 @@ std::size_t EncodingLua::child_idx(int ord) const noexcept
 }
 
 
-bool EncodingLua::is_const() const
+bool Encoding::is_const() const
 {
     auto const a = keyword_attributes(head());
     if (a & attr::is_pipe && size() > 1)
     {
         {
-            // TODO: make it safe (maybe move to EncodingLua init)
+            // TODO: make it safe (maybe move to Encoding init)
             for (std::size_t i = 0; i < size(); i++)
             {
                 if (keyword_attributes(keywords_[i]) & attr::is_sideeffect)
@@ -403,7 +403,7 @@ bool EncodingLua::is_const() const
     }
 }
 
-bool EncodingLua::is_boolean() const
+bool Encoding::is_boolean() const
 {
     auto const a = keyword_attributes(head());
 
@@ -428,7 +428,7 @@ bool EncodingLua::is_boolean() const
 
 
 
-EncodingLua EncodingLua::traverse_subtrees(std::size_t const node, std::size_t& next) const noexcept
+Encoding Encoding::traverse_subtrees(std::size_t const node, std::size_t& next) const noexcept
 {
     if (node >= size())
     {

@@ -1,5 +1,5 @@
 #include <boost/current_function.hpp>
-#include "haikan/impl/expression_lua.hpp"
+#include "haikan/impl/expression.hpp"
 #include "haikan/logger.hpp"
 
 
@@ -7,9 +7,9 @@ namespace haikan {
 namespace impl {
 
 template <class T>
-impl::EncodingLua ExpressionLua::encodeNested(impl::Keyword const& keyword, std::move_iterator<T> begin, std::move_iterator<T> const end)
+impl::Encoding Expression::encodeNested(impl::Keyword const& keyword, std::move_iterator<T> begin, std::move_iterator<T> const end)
 {
-    impl::EncodingLua enc {};
+    impl::Encoding enc {};
     enc.push_back(keyword, 0, sol::nil);
 
     while(begin != end)
@@ -19,18 +19,18 @@ impl::EncodingLua ExpressionLua::encodeNested(impl::Keyword const& keyword, std:
     return enc;
 }
 
-impl::EncodingLua ExpressionLua::encodeNested(Keyword const& keyword, std::initializer_list<ExpressionLua> subexpressions)
+impl::Encoding Expression::encodeNested(Keyword const& keyword, std::initializer_list<Expression> subexpressions)
 {
     return encodeNested(keyword, std::make_move_iterator(subexpressions.begin()), std::make_move_iterator(subexpressions.end()));
 }
 
-impl::EncodingLua ExpressionLua::encodeNested(Keyword const& keyword, std::vector<ExpressionLua>&& subexpressions)
+impl::Encoding Expression::encodeNested(Keyword const& keyword, std::vector<Expression>&& subexpressions)
 {
     return encodeNested(keyword, std::make_move_iterator(subexpressions.begin()), std::make_move_iterator(subexpressions.end()));
 }
 
 
-ExpressionLua ExpressionLua::unfold_left_assoc(Keyword const keyword, ExpressionLua&& lhs, ExpressionLua&& rhs)
+Expression Expression::unfold_left_assoc(Keyword const keyword, Expression&& lhs, Expression&& rhs)
 {
 
     // TODO: add SIOF guard here (can be detected by empty encoding_)
@@ -43,12 +43,12 @@ ExpressionLua ExpressionLua::unfold_left_assoc(Keyword const keyword, Expression
     }
     else
     {
-        return ExpressionLua(ExpressionLua::encodeNested(keyword, {std::move(lhs), std::move(rhs)}));
+        return Expression(Expression::encodeNested(keyword, {std::move(lhs), std::move(rhs)}));
     }
 }
 
 
-ExpressionLua operator<<(ExpressionLua link, ExpressionLua referent)
+Expression operator<<(Expression link, Expression referent)
 {
     // TODO: binding
     // TODO: handle righ-assoc infix unfold
@@ -58,15 +58,15 @@ ExpressionLua operator<<(ExpressionLua link, ExpressionLua referent)
     auto const& link_value = link.encoding_.data_[0];
     if (link_value.get_type() != sol::type::string)
     {
-        return ExpressionLua(ExpressionLua::encodeNested(impl::Keyword::Err, {"Symbolic reference shall be a string", BOOST_CURRENT_FUNCTION}));
+        return Expression(Expression::encodeNested(impl::Keyword::Err, {"Symbolic reference shall be a string", BOOST_CURRENT_FUNCTION}));
         // return Err("Symbolic reference shall be a string", BOOST_CURRENT_FUNCTION);
     }
     else if(not is_link_token(link_value))
     {
-        return ExpressionLua(ExpressionLua::encodeNested(impl::Keyword::Err, {"Invalid symbolic reference format", BOOST_CURRENT_FUNCTION}));
+        return Expression(Expression::encodeNested(impl::Keyword::Err, {"Invalid symbolic reference format", BOOST_CURRENT_FUNCTION}));
         // return Err("Invalid symbolic reference format", BOOST_CURRENT_FUNCTION);
     }
-    return ExpressionLua(ExpressionLua::encodeNested(impl::Keyword::Fn,
+    return Expression(Expression::encodeNested(impl::Keyword::Fn,
         {std::move(link), std::move(referent)}
     ));
 }
@@ -74,23 +74,23 @@ ExpressionLua operator<<(ExpressionLua link, ExpressionLua referent)
 
 
 
-// ExpressionLua operator|(ExpressionLua lhs, ExpressionLua rhs)
+// Expression operator|(Expression lhs, Expression rhs)
 // {
-//     return ExpressionLua::unfold_left_assoc(Keyword::Pipe, std::move(lhs), std::move(rhs));
+//     return Expression::unfold_left_assoc(Keyword::Pipe, std::move(lhs), std::move(rhs));
 // }
 
-// ExpressionLua operator,(ExpressionLua lhs, ExpressionLua rhs)
+// Expression operator,(Expression lhs, Expression rhs)
 // {
-//     return ExpressionLua::unfold_left_assoc(Keyword::Tuple, std::move(lhs), std::move(rhs));
+//     return Expression::unfold_left_assoc(Keyword::Tuple, std::move(lhs), std::move(rhs));
 // }
 
-// ExpressionLua operator&(ExpressionLua lhs, ExpressionLua rhs)
+// Expression operator&(Expression lhs, Expression rhs)
 // {
-//     return ExpressionLua(ExpressionLua::encodeNested(Keyword::Fork, {lhs, rhs}));
+//     return Expression(Expression::encodeNested(Keyword::Fork, {lhs, rhs}));
 
 // }
 
-// ExpressionLua operator<<(ExpressionLua link, ExpressionLua referent)
+// Expression operator<<(Expression link, Expression referent)
 // {
 //     // TODO: binding
 //     // TODO: handle righ-assoc infix unfold
@@ -106,35 +106,35 @@ ExpressionLua operator<<(ExpressionLua link, ExpressionLua referent)
 //     {
 //         return Err("Invalid symbolic reference format", BOOST_CURRENT_FUNCTION);
 //     }
-//     return ExpressionLua(ExpressionLua::encodeNested(Keyword::Fn,
+//     return Expression(Expression::encodeNested(Keyword::Fn,
 //         {std::move(link), std::move(referent)}
 //     ));
 // }
 
-// ExpressionLua operator~(ExpressionLua expr)
+// Expression operator~(Expression expr)
 // {
 //     return Flip(expr);
 // }
 
 
 
-// bool ExpressionLua::eval_as_predicate(boost::json::value const& x, ExpressionLua& err_sts, EvalContext ctx) const
+// bool Expression::eval_as_predicate(boost::json::value const& x, Expression& err_sts, EvalContext ctx) const
 // {
 //     auto arg = make_literal_argument_view(x);
 //     return eval_as_predicate(arg, err_sts, std::move(ctx));
 // }
 
-// ExpressionLua ExpressionLua::eval_maybe_predicate(ExpressionLua const& x, EvalContext ctx) const
+// Expression Expression::eval_maybe_predicate(Expression const& x, EvalContext ctx) const
 // {
 //     if (!is_noop() && !is_quote() && is_const())
 //     {
 //         if (!const_predicate_cache_)
 //         {
-//             auto cached = ExpressionLua(ExpressionLua::encodeNested(
+//             auto cached = Expression(Expression::encodeNested(
 //                 Keyword::Eq,
-//                 {ExpressionLua(encoding_view().freeze())}
+//                 {Expression(encoding_view().freeze())}
 //             ));
-//             const_predicate_cache_ = std::make_shared<ExpressionLua>(std::move(cached));
+//             const_predicate_cache_ = std::make_shared<Expression>(std::move(cached));
 //         }
 //         return const_predicate_cache_->eval_e(x, std::move(ctx));
 //     }
@@ -142,19 +142,19 @@ ExpressionLua operator<<(ExpressionLua link, ExpressionLua referent)
 // }
 
 
-// bool ExpressionLua::match(boost::json::value const& x, Operator const& op) const
+// bool Expression::match(boost::json::value const& x, Operator const& op) const
 // {
 //     auto result = eval(x, EvalContext::make(op));
 //     auto const if_bool = result.if_bool();
 //     return if_bool ? *if_bool : false;
 // }
 
-// boost::json::value operator*(ExpressionLua lhs, ExpressionLua const& rhs)
+// boost::json::value operator*(Expression lhs, Expression const& rhs)
 // {
 //     return lhs.eval_e(rhs, {}).to_json();
 // }
 
-// boost::json::value operator*(ExpressionLua expr)
+// boost::json::value operator*(Expression expr)
 // {
 //     return expr.eval();
 // }

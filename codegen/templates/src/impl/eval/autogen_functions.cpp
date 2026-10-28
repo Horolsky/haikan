@@ -19,7 +19,7 @@
 #include <@library>
 @end
 
-#include "haikan/impl/expression_lua.hpp"
+#include "haikan/impl/expression.hpp"
 #include "haikan/impl/eval_context.hpp"
 
 namespace haikan {
@@ -59,32 +59,32 @@ sol::object from_complex(std::complex<T> num)
 }
 
 typedef std::complex<double> (*complex_fn)(std::complex<double> const&);
-ExpressionLua eval_complex(complex_fn f, ExpressionLua const& lhs, ExpressionLua const& rhs, EvalContextLua ctx)
+Expression eval_complex(complex_fn f, Expression const& lhs, Expression const& rhs, EvalContextLua ctx)
 {
     (void)rhs;
-    return ExpressionLua(from_complex(f(to_complex(lhs.eval({}, ctx).data()))));
+    return Expression(from_complex(f(to_complex(lhs.eval({}, ctx).data()))));
 }
 
 typedef double (*real_fn)(double);
-ExpressionLua eval_real(real_fn f, ExpressionLua const& lhs, ExpressionLua const& rhs, EvalContextLua ctx)
+Expression eval_real(real_fn f, Expression const& lhs, Expression const& rhs, EvalContextLua ctx)
 {
     (void)rhs;
-    return ExpressionLua(f(lhs.eval({}, ctx).data().as<double>()));
+    return Expression(f(lhs.eval({}, ctx).data().as<double>()));
 }
 
 typedef double (*complex_to_real_fn)(std::complex<double> const&);
-ExpressionLua eval_complex_to_real(complex_to_real_fn f, ExpressionLua const& lhs, ExpressionLua const& rhs, EvalContextLua ctx)
+Expression eval_complex_to_real(complex_to_real_fn f, Expression const& lhs, Expression const& rhs, EvalContextLua ctx)
 {
     (void)rhs;
-    return ExpressionLua(f(to_complex(lhs.eval({}, ctx).data())));
+    return Expression(f(to_complex(lhs.eval({}, ctx).data())));
 }
 } // namespace
 
 @for keyword in data.CodegenFns:
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::@keyword.Name>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::@keyword.Name>, Expression::Args const args, EvalContextLua ctx)
 {
     (void)ctx;
-    return ExpressionLua(@keyword.CodegenValue);
+    return Expression(@keyword.CodegenValue);
 }
 @end
 

@@ -36,7 +36,7 @@ struct EvalContextLua
     /// reference -> value map
     std::shared_ptr<boost::json::array> traces;
     std::shared_ptr<std::deque<boost::json::object>> capture_links;
-    std::shared_ptr<std::map<boost::json::string, ExpressionLua>> expr_links;
+    std::shared_ptr<std::map<boost::json::string, Expression>> expr_links;
     // boost::json::object captures;
     /// Evaluation stack depth
     std::uint64_t depth;

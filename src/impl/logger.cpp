@@ -19,7 +19,7 @@
 #include "haikan/serialization.hpp"
 #include "haikan/impl/lua_state.hpp"
 #include "haikan/impl/lua_stream.hpp"
-#include "haikan/impl/expression_lua.hpp"
+#include "haikan/impl/expression.hpp"
 #include "haikan/impl/vm.hpp"
 
 
@@ -167,9 +167,9 @@ void Logger::drain(std::ostream& sink, bool const skip_meta)
             {
                 ss << "NULL";
             }
-            else if (record.is<impl::ExpressionLua>())
+            else if (record.is<impl::Expression>())
             {
-                record.as<impl::ExpressionLua>().prettify_to(ss);
+                record.as<impl::Expression>().prettify_to(ss);
             }
             else if (record.is<error>())
             {

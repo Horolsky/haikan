@@ -19,7 +19,7 @@
 #include "haikan/error.hpp"
 #include "haikan/impl/keyword.hpp"
 #include "haikan/impl/keyword_to_str.hpp"
-#include "haikan/impl/expression_lua.hpp"
+#include "haikan/impl/expression.hpp"
 #include "haikan/impl/operator_table.hpp"
 #include "haikan/impl/eval_context.hpp"
 #include "haikan/impl/lua_state.hpp"
@@ -28,225 +28,225 @@
 namespace haikan {
 namespace impl {
 namespace {
-ExpressionLua apply_operator(Keyword const k, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression apply_operator(Keyword const k, Expression::Args const args, EvalContextLua ctx)
 {
     HAIKAN_LOG(DEBUG) << args.lhs().prettify() << " [" << keyword_to_str(k) << "] " << args.rhs().prettify();
     sol::object lhso = args.lhs().eval({}, ctx).data();
     if (HAIKAN_UNLIKELY(lhso.is<error>()))
     {
-        return ExpressionLua{lhso};
+        return Expression{lhso};
     }
     sol::object rhso = args.rhs().eval({}, ctx).data();
     if (HAIKAN_UNLIKELY(rhso.is<error>()))
     {
-        return ExpressionLua{rhso};
+        return Expression{rhso};
     }
     return OperatorRegistry::get(lhso, rhso)
-        .map([&](OperatorTable op){ return ExpressionLua(op.apply(k, lhso, rhso)); })
-        .value_or(ExpressionLua(error("invalid operands", keyword_to_str(k))));
+        .map([&](OperatorTable op){ return Expression(op.apply(k, lhso, rhso)); })
+        .value_or(Expression(error("invalid operands", keyword_to_str(k))));
 }
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Neg>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Neg>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::Neg, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Add>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Add>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::Add, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Sub>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Sub>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::Sub, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Mul>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Mul>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::Mul, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Div>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Div>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::Div, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Pow>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Pow>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::Pow, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Log>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Log>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::Log, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Mod>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Mod>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::Mod, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Quot>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Quot>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::Quot, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::BitNot>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::BitNot>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::BitNot, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::BitAnd>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::BitAnd>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::BitAnd, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::BitOr>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::BitOr>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::BitOr, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::BitXor>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::BitXor>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::BitXor, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Lshift>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Lshift>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::Lshift, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Rshift>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Rshift>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::Rshift, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Eq>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Eq>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::Eq, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Ne>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Ne>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::Ne, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Lt>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Lt>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::Lt, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Le>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Le>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::Le, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Gt>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Gt>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::Gt, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Ge>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Ge>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::Ge, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::SetEq>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::SetEq>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::SetEq, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Subset>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Subset>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::Subset, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Superset>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Superset>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::Superset, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::PSubset>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::PSubset>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::PSubset, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::PSuperset>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::PSuperset>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::PSuperset, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::In>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::In>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::In, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::NotIn>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::NotIn>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::NotIn, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Ni>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Ni>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::Ni, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::NotNi>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::NotNi>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::NotNi, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Bool>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Bool>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::Bool, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Not>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Not>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::Not, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::And>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::And>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::And, args, ctx);
 }
 
 
-ExpressionLua dispatch_eval(keyword_tag_t<Keyword::Or>, ExpressionLua::Args const args, EvalContextLua ctx)
+Expression dispatch_eval(keyword_tag_t<Keyword::Or>, Expression::Args const args, EvalContextLua ctx)
 {
     return apply_operator(Keyword::Or, args, ctx);
 }

@@ -5,7 +5,7 @@
  * @license SPDX-License-Identifier: Apache-2.0
  */
 
-#include "haikan/impl/expression_lua.hpp"
+#include "haikan/impl/expression.hpp"
 #include "haikan/impl/eval_context.hpp"
 
 
@@ -24,7 +24,7 @@ EvalContextLua::EvalContextLua()
     : log{}
     , traces{}
     , capture_links{std::make_shared<std::deque<boost::json::object>>()}
-    , expr_links{std::make_shared<std::map<boost::json::string, ExpressionLua>>()}
+    , expr_links{std::make_shared<std::map<boost::json::string, Expression>>()}
     , depth{0}
 {
     capture_links->push_back({});
