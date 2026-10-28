@@ -13,14 +13,14 @@ namespace haikan {
 namespace impl {
 
 
-EvalContextLua EvalContextLua::make()
+EvalContext EvalContext::make()
 {
-    EvalContextLua next{};
+    EvalContext next{};
     next.log = EvalLog::make();
     next.traces = std::make_shared<boost::json::array>();
     return next;
 }
-EvalContextLua::EvalContextLua()
+EvalContext::EvalContext()
     : log{}
     , traces{}
     , capture_links{std::make_shared<std::deque<boost::json::object>>()}
@@ -30,9 +30,9 @@ EvalContextLua::EvalContextLua()
     capture_links->push_back({});
 }
 
-EvalContextLua EvalContextLua::operator++() const
+EvalContext EvalContext::operator++() const
 {
-    EvalContextLua next = *this;
+    EvalContext next = *this;
     next.depth++;
     return next;
 }

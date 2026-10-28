@@ -111,9 +111,9 @@ constexpr std::uint32_t keyword_attributes(Keyword const& oc)
     case Keyword::Gt: return is_binary | is_operator | is_predicate;
     case Keyword::Ge: return is_binary | is_operator | is_predicate;
     case Keyword::Near: return is_binary | is_predicate;
-    case Keyword::Union: return is_binary;
-    case Keyword::Intersect: return is_binary;
-    case Keyword::Diff: return is_binary;
+    case Keyword::Union: return is_binary | is_operator;
+    case Keyword::Intersect: return is_binary | is_operator;
+    case Keyword::Diff: return is_binary | is_operator;
     case Keyword::SetEq: return is_binary | is_operator | is_predicate;
     case Keyword::Subset: return is_binary | is_operator | is_predicate;
     case Keyword::Superset: return is_binary | is_operator | is_predicate;
@@ -147,7 +147,7 @@ constexpr std::uint32_t keyword_attributes(Keyword const& oc)
     case Keyword::Sequence: return is_binary;
     case Keyword::Arange: return is_unary;
     case Keyword::Parse: return is_unary;
-    case Keyword::Str: return is_autogen | is_unary;
+    case Keyword::Str: return is_unary;
     case Keyword::Re: return is_binary | is_predicate;
     case Keyword::Fmt: return is_variadic;
     case Keyword::Capitalize: return is_unary;
@@ -169,7 +169,8 @@ constexpr std::uint32_t keyword_attributes(Keyword const& oc)
     case Keyword::Upd: return is_variadic;
     case Keyword::Lookup: return is_binary;
     case Keyword::Cast: return is_unary;
-    case Keyword::Id: return is_autogen | is_hiord | is_no_eval | is_unary;
+    case Keyword::Id: return is_hiord | is_no_eval | is_unary;
+    case Keyword::Q: return is_binary | is_hiord | is_no_eval | is_quote;
     case Keyword::Fold: return is_binary | is_hiord | is_no_eval;
     case Keyword::Map: return is_binary | is_hiord | is_no_eval;
     case Keyword::Filter: return is_binary | is_hiord | is_no_eval;
@@ -204,9 +205,8 @@ constexpr std::uint32_t keyword_attributes(Keyword const& oc)
     case Keyword::Try: return is_binary | is_hiord | is_no_eval;
     case Keyword::Kwrd: return is_hiord | is_no_eval | is_unary;
     case Keyword::Prms: return is_hiord | is_no_eval | is_unary;
-    case Keyword::Q: return is_autogen | is_binary | is_no_eval | is_quote;
+    case Keyword::Err: return is_error | is_hiord | is_no_eval | is_unary;
     case Keyword::D: return is_binary;
-    case Keyword::Err: return is_autogen | is_error | is_no_eval | is_unary;
     case Keyword::IsErr: return is_autogen | is_predicate | is_unary;
     case Keyword::Assert: return is_binary;
     case Keyword::Trace: return is_binary | is_single_form;

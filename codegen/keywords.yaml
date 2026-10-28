@@ -117,95 +117,95 @@ keyword_groups:
       - name: Sin
         brief: Sinus function
         codegen-value:
-          cxx: eval_complex(std::sin, args.lhs(), args.rhs(), ctx)
+          cxx: eval_complex(std::sin, lhs, rhs)
 
       - name: Cos
         brief: Cosinus function
         codegen-value:
-          cxx: eval_complex(std::cos, args.lhs(), args.rhs(), ctx)
+          cxx: eval_complex(std::cos, lhs, rhs)
 
       - name: Tan
         brief: Tangens function
         codegen-value:
-          cxx: eval_complex(std::tan, args.lhs(), args.rhs(), ctx)
+          cxx: eval_complex(std::tan, lhs, rhs)
 
       - name: Asin
         brief: Arcsin function
         codegen-value:
-          cxx: eval_complex(std::asin, args.lhs(), args.rhs(), ctx)
+          cxx: eval_complex(std::asin, lhs, rhs)
 
       - name: Acos
         brief: Arccos function
         codegen-value:
-          cxx: eval_complex(std::acos, args.lhs(), args.rhs(), ctx)
+          cxx: eval_complex(std::acos, lhs, rhs)
 
       - name: Atan
         brief: Arctan function
         codegen-value:
-          cxx: eval_complex(std::atan, args.lhs(), args.rhs(), ctx)
+          cxx: eval_complex(std::atan, lhs, rhs)
 
       - name: Sinh
         brief: Hyperbolic sin
         codegen-value:
-          cxx: eval_complex(std::sinh, args.lhs(), args.rhs(), ctx)
+          cxx: eval_complex(std::sinh, lhs, rhs)
 
       - name: Cosh
         brief: Hyperbolic cos
         codegen-value:
-          cxx: eval_complex(std::cosh, args.lhs(), args.rhs(), ctx)
+          cxx: eval_complex(std::cosh, lhs, rhs)
 
       - name: Tanh
         brief: Hyperbolic tan
         codegen-value:
-          cxx: eval_complex(std::tanh, args.lhs(), args.rhs(), ctx)
+          cxx: eval_complex(std::tanh, lhs, rhs)
 
       - name: Asinh
         brief: Hyperbolic arcsin
         codegen-value:
-          cxx: eval_complex(std::asinh, args.lhs(), args.rhs(), ctx)
+          cxx: eval_complex(std::asinh, lhs, rhs)
 
       - name: Acosh
         brief: Hyperbolic arccos
         codegen-value:
-          cxx: eval_complex(std::acosh, args.lhs(), args.rhs(), ctx)
+          cxx: eval_complex(std::acosh, lhs, rhs)
 
       - name: Atanh
         brief: Hyperbolic arctan
         codegen-value:
-          cxx: eval_complex(std::atanh, args.lhs(), args.rhs(), ctx)
+          cxx: eval_complex(std::atanh, lhs, rhs)
 
       - name: Exp
         brief: Exponential (e^x)
         codegen-value:
-          cxx: eval_complex(std::exp, args.lhs(), args.rhs(), ctx)
+          cxx: eval_complex(std::exp, lhs, rhs)
 
       - name: Erf
         brief: Error function
         codegen-value:
-          cxx: eval_real(std::erf, args.lhs(), args.rhs(), ctx)
+          cxx: eval_real(std::erf, lhs, rhs)
 
       - name: Erfc
         brief: Error function complement
         codegen-value:
-          cxx: eval_real(std::erfc, args.lhs(), args.rhs(), ctx)
+          cxx: eval_real(std::erfc, lhs, rhs)
 
       - name: Gamma
         brief: Gamma function
         codegen-value:
-          cxx: eval_real(std::tgamma, args.lhs(), args.rhs(), ctx)
+          cxx: eval_real(std::tgamma, lhs, rhs)
 
       - name: Abs
         brief: Absolute value
         codegen-value:
-          cxx: eval_complex_to_real(std::abs, args.lhs(), args.rhs(), ctx)
+          cxx: eval_complex_to_real(std::abs, lhs, rhs)
 
       - name: Ceil
         codegen-value:
-          cxx: eval_real(std::ceil, args.lhs(), args.rhs(), ctx)
+          cxx: eval_real(std::ceil, lhs, rhs)
 
       - name: Floor
         codegen-value:
-          cxx: eval_real(std::floor, args.lhs(), args.rhs(), ctx)
+          cxx: eval_real(std::floor, lhs, rhs)
 
       - name: Round
         brief: Round to nearest integer
@@ -213,18 +213,18 @@ keyword_groups:
           Hint: To round to ndigits precision after the decimal point,
           use `Mul(ndigits) | Round | Div(ndigits)` combo.
         codegen-value:
-          cxx: eval_real(std::round, args.lhs(), args.rhs(), ctx)
+          cxx: eval_real(std::round, lhs, rhs)
 
       - name: Sqrt
         brief: Square root
         codegen-value:
-          cxx: eval_complex(std::sqrt, args.lhs(), args.rhs(), ctx)
+          cxx: eval_complex(std::sqrt, lhs, rhs)
 
       - name: Sign
         domain: real
         codomain: int
         codegen-value:
-          cxx: 'args.lhs().eval({}, ctx).data().as<double>() >= 0 ? 1 : -1'
+          cxx: 'lhs.as<double>() >= 0 ? 1 : -1'
 
   Arithmetic Operators:
     defaults:
@@ -465,6 +465,7 @@ keyword_groups:
       signature: Binary
       domain: [set, set]
       codomain: set
+      tags: [op]
     keywords:
 
       - name: Union
@@ -822,7 +823,7 @@ keyword_groups:
         examples: |-
           42 | ToList ↦ [42]
         # codegen-value:
-        #   cxx: boost::json::array{ args.lhs().to_json() }
+        #   cxx: boost::json::array{ lhs.to_json() }
 
       - name: First
         brief: First item of sequence
@@ -932,8 +933,6 @@ keyword_groups:
         signature: Unary
         domain: any
         codomain: str
-        codegen-value:
-          cxx: args.lhs().prettify().c_str()
         imports:
           cxx:
             - boost/json.hpp
@@ -1261,8 +1260,27 @@ keyword_groups:
         codomain: any
         examples: |-
           42 | Id ↦ 42
-        codegen-value:
-          cxx: args.lhs()
+        # codegen-value:
+        #   cxx: lhs
+
+      - name: Q
+        signature: Binary
+        aliases: [ C, Const ]
+        brief: Quote parameter, similar to Lisp quotation.
+        details: |-
+          Quotation lifts any parameter to constant, s.t.
+          produced expression will return the design-time parameter
+          on evaluation, ignoring input. If evaluable expression
+          is passed, it is returned unevaluated.
+          Unlike plain literals which can be treated
+          as predicate matchers in certain context, Q(x) is always
+          a constant expression discarding input.
+          ~Q (Flip(Q)) is equivalent to Id.
+        domain: [any, any]
+        examples: |-
+          null | C(42) ↦ 42
+        # codegen-value:
+        #   cxx: rhs
 
       - name: Fold
         signature: Binary
@@ -1757,6 +1775,13 @@ keyword_groups:
           Q(Fold(Add)) | Prms ↦ Add
           [1, 1, 1] | Prms ↦ [1, 1, 1]
 
+      - name: Err
+        aliases: [ Error ]
+        brief: Error object
+        signature: Special
+        details: |-
+          Error object handling the message and context info
+
   Evaluation handlers:
     defaults:
       signature: Binary
@@ -1764,42 +1789,15 @@ keyword_groups:
 
     keywords:
 
-      - name: Q
-        aliases: [ C, Const ]
-        brief: Quote parameter, similar to Lisp quotation.
-        details: |-
-          Quotation lifts any parameter to constant, s.t.
-          produced expression will return the design-time parameter
-          on evaluation, ignoring input. If evaluable expression
-          is passed, it is returned unevaluated.
-          Unlike plain literals which can be treated
-          as predicate matchers in certain context, Q(x) is always
-          a constant expression discarding input.
-          ~Q (Flip(Q)) is equivalent to Id.
-        domain: [any, any]
-        examples: |-
-          null | C(42) ↦ 42
-        codegen-value:
-          cxx: args.rhs()
-
       - name: D
         aliases: [ Default ]
         brief: Return x if not null, else return default value
         domain: [any, any]
         # codegen-value:
-        #   cxx: '(args.lhs().is_error() || args.lhs().is_void() || (args.lhs().is_literal() && args.lhs().is_null())) ? rhs.eval({}, ctx) : lhs'
+        #   cxx: '(lhs.is_error() || lhs.is_void() || (lhs.is_literal() && lhs.is_null())) ? rhs.eval({}, ctx) : lhs'
         examples: |-
           null | Default(42) ↦ 42
           13 | Default(42) ↦ 13
-
-      - name: Err
-        aliases: [ Error ]
-        brief: Error object
-        signature: Special
-        details: |-
-          Error object handling the message and context info
-        codegen-value:
-          cxx: args.rhs()
 
       - name: IsErr
         codomain: bool
@@ -1807,7 +1805,7 @@ keyword_groups:
         brief: Test the argument is Err expression
         signature: Unary
         codegen-value:
-          cxx: args.lhs().is_error()
+          cxx: lhs.is<error>()
 
       - name: Assert
         brief: Return argument if it holds assertion or error otherwise.
@@ -1831,4 +1829,4 @@ keyword_groups:
         examples: |-
           null | C(42) ↦ 42
         codegen-value:
-          cxx: args.rhs()
+          cxx: rhs

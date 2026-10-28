@@ -145,6 +145,7 @@ char const* keyword_to_str(Keyword const& kw)
     case Keyword::Lookup: { return "Lookup"; break; }
     case Keyword::Cast: { return "Cast"; break; }
     case Keyword::Id: { return "Id"; break; }
+    case Keyword::Q: { return "Q"; break; }
     case Keyword::Fold: { return "Fold"; break; }
     case Keyword::Map: { return "Map"; break; }
     case Keyword::Filter: { return "Filter"; break; }
@@ -179,9 +180,8 @@ char const* keyword_to_str(Keyword const& kw)
     case Keyword::Try: { return "Try"; break; }
     case Keyword::Kwrd: { return "Kwrd"; break; }
     case Keyword::Prms: { return "Prms"; break; }
-    case Keyword::Q: { return "Q"; break; }
-    case Keyword::D: { return "D"; break; }
     case Keyword::Err: { return "Err"; break; }
+    case Keyword::D: { return "D"; break; }
     case Keyword::IsErr: { return "IsErr"; break; }
     case Keyword::Assert: { return "Assert"; break; }
     case Keyword::Trace: { return "Trace"; break; }

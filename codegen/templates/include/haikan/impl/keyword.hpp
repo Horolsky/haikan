@@ -28,9 +28,9 @@ namespace impl {
 enum class Keyword : std::uint64_t
 {
     Undefined,
-@for keyword in data.Keywords:
+@for idx, keyword in enumerate(data.Keywords):
 
-    /// @keyword.Name
+    /// @keyword.Name @str(idx + 1)
     @keyword.Name,
 @end
 

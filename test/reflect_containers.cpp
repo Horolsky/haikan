@@ -175,6 +175,25 @@ BOOST_AUTO_TEST_CASE(ReflectPair)
     BOOST_CHECK(!haikan::impl::TypeRegistry::Deserialize(table, haikan::type<Pair>));
 }
 
+BOOST_AUTO_TEST_CASE(ReflectTuple)
+{
+    using Tuple = std::tuple<int, std::string, double>;
+
+    sol::state state{};
+    Tuple const input{42, "Lol", 3.5};
+
+    sol::object serialized = haikan::impl::TypeRegistry::Serialize(input, state);
+    BOOST_REQUIRE(serialized.is<sol::table>());
+    sol::table table = serialized;
+    BOOST_CHECK_EQUAL(table[1].get<int>(), std::get<0>(input));
+    BOOST_CHECK_EQUAL(table[2].get<std::string>(), std::get<1>(input));
+    BOOST_CHECK_EQUAL(table[3].get<double>(), std::get<2>(input));
+
+    auto deserialized = haikan::impl::TypeRegistry::Deserialize(serialized, haikan::type<Tuple>);
+    BOOST_REQUIRE(deserialized);
+    BOOST_CHECK(*deserialized == input);
+}
+
 BOOST_AUTO_TEST_CASE(ReflectMap)
 {
     auto test_kekmap = std::map<std::string, Kek>{};

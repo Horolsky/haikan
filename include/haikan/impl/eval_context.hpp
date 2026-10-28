@@ -21,15 +21,16 @@
 
 #include "haikan/impl/eval_log.hpp"
 #include "haikan/impl/lua_state.hpp"
+#include "haikan/impl/expression.hpp"
 
 
 
 namespace haikan {
 namespace impl {
 
-struct EvalContextLua
+struct EvalContext
 {
-    static EvalContextLua make();
+    static EvalContext make();
 
     /// Evaluation log
     EvalLog log;
@@ -41,10 +42,10 @@ struct EvalContextLua
     /// Evaluation stack depth
     std::uint64_t depth;
 
-    EvalContextLua();
+    EvalContext();
 
     /// Copy context with depth increment
-    EvalContextLua operator++() const;
+    EvalContext operator++() const;
 };
 
 

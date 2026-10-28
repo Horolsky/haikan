@@ -12,6 +12,7 @@
 #include <string>
 #include <type_traits>
 #include <typeindex>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -200,6 +201,20 @@ struct type_codec
 template <class T>
 struct type_codec<T const, void> : type_codec<T> {};
 
+template <>
+struct type_codec<sol::object, void>
+{
+    static sol::object serialize(sol::object const& value, sol::state_view)
+    {
+        return value;
+    }
+
+    static boost::optional<sol::object> deserialize(sol::object value)
+    {
+        return value;
+    }
+};
+
 template <class T>
 struct type_codec<std::reference_wrapper<T>, void>
 {
@@ -341,6 +356,59 @@ struct type_codec<std::pair<T1, T2>, void>
             return boost::none;
         }
         return std::make_pair(std::move(first.value()), std::move(second.value()));
+    }
+};
+
+template <class... T>
+struct type_codec<std::tuple<T...>, void>
+{
+    using tuple_type = std::tuple<T...>;
+
+    static sol::object serialize(tuple_type const& value, sol::state_view state)
+    {
+        return serialize_impl(value, state, std::index_sequence_for<T...>{});
+    }
+
+    static boost::optional<tuple_type> deserialize(sol::object object)
+    {
+        if (object.get_type() != sol::type::table)
+        {
+            return boost::none;
+        }
+        sol::table table = object;
+        if (table.size() != sizeof...(T))
+        {
+            return boost::none;
+        }
+        return deserialize_impl(table, std::index_sequence_for<T...>{});
+    }
+
+private:
+    template <std::size_t... I>
+    static sol::object serialize_impl(
+        tuple_type const& value, sol::state_view state, std::index_sequence<I...>)
+    {
+        sol::table result = state.create_table(sizeof...(T), 0);
+        int const unused[] = {
+            0, (result.add(TypeRegistry::Serialize(std::get<I>(value), state)), 0)...};
+        (void)unused;
+        return result;
+    }
+
+    template <std::size_t... I>
+    static boost::optional<tuple_type> deserialize_impl(
+        sol::table table, std::index_sequence<I...>)
+    {
+        auto values = std::make_tuple(
+            TypeRegistry::Deserialize(table[I + 1], type<typename std::tuple_element<I, tuple_type>::type>)...);
+        bool valid = true;
+        int const unused[] = {0, (valid = valid && static_cast<bool>(std::get<I>(values)), 0)...};
+        (void)unused;
+        if (!valid)
+        {
+            return boost::none;
+        }
+        return tuple_type{std::move(std::get<I>(values).value())...};
     }
 };
 

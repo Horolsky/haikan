@@ -264,6 +264,10 @@ class KeywordGrammar:
         return self.where(lambda x: x.IsHiOrd)
 
     @property
+    def Common(self) -> list[Keyword]:
+        return self.where(lambda x: not x.IsHiOrd and not x.IsOperator)
+
+    @property
     def UnaryOperators(self) -> list[Keyword]:
         return self.where(lambda x: x.IsOperator and x.Arity == 1)
 

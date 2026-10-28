@@ -16,10 +16,9 @@
 
 #include <cmath>
 #include <complex>
-#include <boost/json.hpp>
 
 #include "haikan/impl/expression.hpp"
-#include "haikan/impl/eval_context.hpp"
+#include "haikan/impl/vm.hpp"
 
 namespace haikan {
 namespace impl {
@@ -58,166 +57,170 @@ sol::object from_complex(std::complex<T> num)
 }
 
 typedef std::complex<double> (*complex_fn)(std::complex<double> const&);
-Expression eval_complex(complex_fn f, Expression const& lhs, Expression const& rhs, EvalContextLua ctx)
+sol::object eval_complex(complex_fn f, sol::object const& lhs, sol::object const& rhs)
 {
     (void)rhs;
-    return Expression(from_complex(f(to_complex(lhs.eval({}, ctx).data()))));
+    return from_complex(f(to_complex(lhs)));
 }
 
 typedef double (*real_fn)(double);
-Expression eval_real(real_fn f, Expression const& lhs, Expression const& rhs, EvalContextLua ctx)
+sol::object eval_real(real_fn f, sol::object const& lhs, sol::object const& rhs)
 {
     (void)rhs;
-    return Expression(f(lhs.eval({}, ctx).data().as<double>()));
+    return lua::make_object(f(lhs.as<double>()));
 }
 
 typedef double (*complex_to_real_fn)(std::complex<double> const&);
-Expression eval_complex_to_real(complex_to_real_fn f, Expression const& lhs, Expression const& rhs, EvalContextLua ctx)
+sol::object eval_complex_to_real(complex_to_real_fn f, sol::object const& lhs, sol::object const& rhs)
 {
     (void)rhs;
-    return Expression(f(to_complex(lhs.eval({}, ctx).data())));
+    return lua::make_object(f(to_complex(lhs)));
 }
 } // namespace
 
-Expression dispatch_eval(keyword_tag_t<Keyword::Sin>, Expression::Args const args, EvalContextLua ctx)
+template <> sol::object VirtualMachine::Evaluate<Keyword::Sin>(sol::object const& lhs, sol::object const& rhs) const
 {
-    (void)ctx;
-    return Expression(eval_complex(std::sin, args.lhs(), args.rhs(), ctx));
+    (void) lhs;
+    (void) rhs;
+    return lua::make_object(eval_complex(std::sin, lhs, rhs));
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::Cos>, Expression::Args const args, EvalContextLua ctx)
+template <> sol::object VirtualMachine::Evaluate<Keyword::Cos>(sol::object const& lhs, sol::object const& rhs) const
 {
-    (void)ctx;
-    return Expression(eval_complex(std::cos, args.lhs(), args.rhs(), ctx));
+    (void) lhs;
+    (void) rhs;
+    return lua::make_object(eval_complex(std::cos, lhs, rhs));
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::Tan>, Expression::Args const args, EvalContextLua ctx)
+template <> sol::object VirtualMachine::Evaluate<Keyword::Tan>(sol::object const& lhs, sol::object const& rhs) const
 {
-    (void)ctx;
-    return Expression(eval_complex(std::tan, args.lhs(), args.rhs(), ctx));
+    (void) lhs;
+    (void) rhs;
+    return lua::make_object(eval_complex(std::tan, lhs, rhs));
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::Asin>, Expression::Args const args, EvalContextLua ctx)
+template <> sol::object VirtualMachine::Evaluate<Keyword::Asin>(sol::object const& lhs, sol::object const& rhs) const
 {
-    (void)ctx;
-    return Expression(eval_complex(std::asin, args.lhs(), args.rhs(), ctx));
+    (void) lhs;
+    (void) rhs;
+    return lua::make_object(eval_complex(std::asin, lhs, rhs));
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::Acos>, Expression::Args const args, EvalContextLua ctx)
+template <> sol::object VirtualMachine::Evaluate<Keyword::Acos>(sol::object const& lhs, sol::object const& rhs) const
 {
-    (void)ctx;
-    return Expression(eval_complex(std::acos, args.lhs(), args.rhs(), ctx));
+    (void) lhs;
+    (void) rhs;
+    return lua::make_object(eval_complex(std::acos, lhs, rhs));
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::Atan>, Expression::Args const args, EvalContextLua ctx)
+template <> sol::object VirtualMachine::Evaluate<Keyword::Atan>(sol::object const& lhs, sol::object const& rhs) const
 {
-    (void)ctx;
-    return Expression(eval_complex(std::atan, args.lhs(), args.rhs(), ctx));
+    (void) lhs;
+    (void) rhs;
+    return lua::make_object(eval_complex(std::atan, lhs, rhs));
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::Sinh>, Expression::Args const args, EvalContextLua ctx)
+template <> sol::object VirtualMachine::Evaluate<Keyword::Sinh>(sol::object const& lhs, sol::object const& rhs) const
 {
-    (void)ctx;
-    return Expression(eval_complex(std::sinh, args.lhs(), args.rhs(), ctx));
+    (void) lhs;
+    (void) rhs;
+    return lua::make_object(eval_complex(std::sinh, lhs, rhs));
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::Cosh>, Expression::Args const args, EvalContextLua ctx)
+template <> sol::object VirtualMachine::Evaluate<Keyword::Cosh>(sol::object const& lhs, sol::object const& rhs) const
 {
-    (void)ctx;
-    return Expression(eval_complex(std::cosh, args.lhs(), args.rhs(), ctx));
+    (void) lhs;
+    (void) rhs;
+    return lua::make_object(eval_complex(std::cosh, lhs, rhs));
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::Tanh>, Expression::Args const args, EvalContextLua ctx)
+template <> sol::object VirtualMachine::Evaluate<Keyword::Tanh>(sol::object const& lhs, sol::object const& rhs) const
 {
-    (void)ctx;
-    return Expression(eval_complex(std::tanh, args.lhs(), args.rhs(), ctx));
+    (void) lhs;
+    (void) rhs;
+    return lua::make_object(eval_complex(std::tanh, lhs, rhs));
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::Asinh>, Expression::Args const args, EvalContextLua ctx)
+template <> sol::object VirtualMachine::Evaluate<Keyword::Asinh>(sol::object const& lhs, sol::object const& rhs) const
 {
-    (void)ctx;
-    return Expression(eval_complex(std::asinh, args.lhs(), args.rhs(), ctx));
+    (void) lhs;
+    (void) rhs;
+    return lua::make_object(eval_complex(std::asinh, lhs, rhs));
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::Acosh>, Expression::Args const args, EvalContextLua ctx)
+template <> sol::object VirtualMachine::Evaluate<Keyword::Acosh>(sol::object const& lhs, sol::object const& rhs) const
 {
-    (void)ctx;
-    return Expression(eval_complex(std::acosh, args.lhs(), args.rhs(), ctx));
+    (void) lhs;
+    (void) rhs;
+    return lua::make_object(eval_complex(std::acosh, lhs, rhs));
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::Atanh>, Expression::Args const args, EvalContextLua ctx)
+template <> sol::object VirtualMachine::Evaluate<Keyword::Atanh>(sol::object const& lhs, sol::object const& rhs) const
 {
-    (void)ctx;
-    return Expression(eval_complex(std::atanh, args.lhs(), args.rhs(), ctx));
+    (void) lhs;
+    (void) rhs;
+    return lua::make_object(eval_complex(std::atanh, lhs, rhs));
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::Exp>, Expression::Args const args, EvalContextLua ctx)
+template <> sol::object VirtualMachine::Evaluate<Keyword::Exp>(sol::object const& lhs, sol::object const& rhs) const
 {
-    (void)ctx;
-    return Expression(eval_complex(std::exp, args.lhs(), args.rhs(), ctx));
+    (void) lhs;
+    (void) rhs;
+    return lua::make_object(eval_complex(std::exp, lhs, rhs));
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::Erf>, Expression::Args const args, EvalContextLua ctx)
+template <> sol::object VirtualMachine::Evaluate<Keyword::Erf>(sol::object const& lhs, sol::object const& rhs) const
 {
-    (void)ctx;
-    return Expression(eval_real(std::erf, args.lhs(), args.rhs(), ctx));
+    (void) lhs;
+    (void) rhs;
+    return lua::make_object(eval_real(std::erf, lhs, rhs));
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::Erfc>, Expression::Args const args, EvalContextLua ctx)
+template <> sol::object VirtualMachine::Evaluate<Keyword::Erfc>(sol::object const& lhs, sol::object const& rhs) const
 {
-    (void)ctx;
-    return Expression(eval_real(std::erfc, args.lhs(), args.rhs(), ctx));
+    (void) lhs;
+    (void) rhs;
+    return lua::make_object(eval_real(std::erfc, lhs, rhs));
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::Gamma>, Expression::Args const args, EvalContextLua ctx)
+template <> sol::object VirtualMachine::Evaluate<Keyword::Gamma>(sol::object const& lhs, sol::object const& rhs) const
 {
-    (void)ctx;
-    return Expression(eval_real(std::tgamma, args.lhs(), args.rhs(), ctx));
+    (void) lhs;
+    (void) rhs;
+    return lua::make_object(eval_real(std::tgamma, lhs, rhs));
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::Abs>, Expression::Args const args, EvalContextLua ctx)
+template <> sol::object VirtualMachine::Evaluate<Keyword::Abs>(sol::object const& lhs, sol::object const& rhs) const
 {
-    (void)ctx;
-    return Expression(eval_complex_to_real(std::abs, args.lhs(), args.rhs(), ctx));
+    (void) lhs;
+    (void) rhs;
+    return lua::make_object(eval_complex_to_real(std::abs, lhs, rhs));
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::Ceil>, Expression::Args const args, EvalContextLua ctx)
+template <> sol::object VirtualMachine::Evaluate<Keyword::Ceil>(sol::object const& lhs, sol::object const& rhs) const
 {
-    (void)ctx;
-    return Expression(eval_real(std::ceil, args.lhs(), args.rhs(), ctx));
+    (void) lhs;
+    (void) rhs;
+    return lua::make_object(eval_real(std::ceil, lhs, rhs));
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::Floor>, Expression::Args const args, EvalContextLua ctx)
+template <> sol::object VirtualMachine::Evaluate<Keyword::Floor>(sol::object const& lhs, sol::object const& rhs) const
 {
-    (void)ctx;
-    return Expression(eval_real(std::floor, args.lhs(), args.rhs(), ctx));
+    (void) lhs;
+    (void) rhs;
+    return lua::make_object(eval_real(std::floor, lhs, rhs));
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::Round>, Expression::Args const args, EvalContextLua ctx)
+template <> sol::object VirtualMachine::Evaluate<Keyword::Round>(sol::object const& lhs, sol::object const& rhs) const
 {
-    (void)ctx;
-    return Expression(eval_real(std::round, args.lhs(), args.rhs(), ctx));
+    (void) lhs;
+    (void) rhs;
+    return lua::make_object(eval_real(std::round, lhs, rhs));
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::Sqrt>, Expression::Args const args, EvalContextLua ctx)
+template <> sol::object VirtualMachine::Evaluate<Keyword::Sqrt>(sol::object const& lhs, sol::object const& rhs) const
 {
-    (void)ctx;
-    return Expression(eval_complex(std::sqrt, args.lhs(), args.rhs(), ctx));
+    (void) lhs;
+    (void) rhs;
+    return lua::make_object(eval_complex(std::sqrt, lhs, rhs));
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::Sign>, Expression::Args const args, EvalContextLua ctx)
+template <> sol::object VirtualMachine::Evaluate<Keyword::Sign>(sol::object const& lhs, sol::object const& rhs) const
 {
-    (void)ctx;
-    return Expression(args.lhs().eval({}, ctx).data().as<double>() >= 0 ? 1 : -1);
+    (void) lhs;
+    (void) rhs;
+    return lua::make_object(lhs.as<double>() >= 0 ? 1 : -1);
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::Str>, Expression::Args const args, EvalContextLua ctx)
+template <> sol::object VirtualMachine::Evaluate<Keyword::IsErr>(sol::object const& lhs, sol::object const& rhs) const
 {
-    (void)ctx;
-    return Expression(args.lhs().prettify().c_str());
+    (void) lhs;
+    (void) rhs;
+    return lua::make_object(lhs.is<error>());
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::Id>, Expression::Args const args, EvalContextLua ctx)
+template <> sol::object VirtualMachine::Evaluate<Keyword::PreProc>(sol::object const& lhs, sol::object const& rhs) const
 {
-    (void)ctx;
-    return Expression(args.lhs());
-}
-Expression dispatch_eval(keyword_tag_t<Keyword::Q>, Expression::Args const args, EvalContextLua ctx)
-{
-    (void)ctx;
-    return Expression(args.rhs());
-}
-Expression dispatch_eval(keyword_tag_t<Keyword::Err>, Expression::Args const args, EvalContextLua ctx)
-{
-    (void)ctx;
-    return Expression(args.rhs());
-}
-Expression dispatch_eval(keyword_tag_t<Keyword::IsErr>, Expression::Args const args, EvalContextLua ctx)
-{
-    (void)ctx;
-    return Expression(args.lhs().is_error());
-}
-Expression dispatch_eval(keyword_tag_t<Keyword::PreProc>, Expression::Args const args, EvalContextLua ctx)
-{
-    (void)ctx;
-    return Expression(args.rhs());
+    (void) lhs;
+    (void) rhs;
+    return lua::make_object(rhs);
 }
 
 } // namespace impl

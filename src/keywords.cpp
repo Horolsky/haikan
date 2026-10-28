@@ -151,6 +151,9 @@ impl::SignatureVariadic<::haikan::impl::Keyword::Upd> const HAIKAN_KEYWORD_INIT 
 impl::SignatureBinary<::haikan::impl::Keyword::Lookup> const HAIKAN_KEYWORD_INIT Lookup = {};
 impl::SignatureCast const HAIKAN_KEYWORD_INIT Cast = {};
 impl::SignatureUnary<::haikan::impl::Keyword::Id> const HAIKAN_KEYWORD_INIT Id = {};
+impl::SignatureBinary<::haikan::impl::Keyword::Q> const HAIKAN_KEYWORD_INIT Q = {};
+impl::SignatureBinary<::haikan::impl::Keyword::Q> const HAIKAN_KEYWORD_INIT C = Q;
+impl::SignatureBinary<::haikan::impl::Keyword::Q> const HAIKAN_KEYWORD_INIT Const = Q;
 impl::SignatureBinary<::haikan::impl::Keyword::Fold> const HAIKAN_KEYWORD_INIT Fold = {};
 impl::SignatureBinary<::haikan::impl::Keyword::Fold> const HAIKAN_KEYWORD_INIT Reduce = Fold;
 impl::SignatureBinary<::haikan::impl::Keyword::Map> const HAIKAN_KEYWORD_INIT Map = {};
@@ -189,13 +192,10 @@ impl::SignatureBinary<::haikan::impl::Keyword::Try> const HAIKAN_KEYWORD_INIT Tr
 impl::SignatureUnary<::haikan::impl::Keyword::Kwrd> const HAIKAN_KEYWORD_INIT Kwrd = {};
 impl::SignatureUnary<::haikan::impl::Keyword::Prms> const HAIKAN_KEYWORD_INIT Prms = {};
 impl::SignatureUnary<::haikan::impl::Keyword::Prms> const HAIKAN_KEYWORD_INIT Parameters = Prms;
-impl::SignatureBinary<::haikan::impl::Keyword::Q> const HAIKAN_KEYWORD_INIT Q = {};
-impl::SignatureBinary<::haikan::impl::Keyword::Q> const HAIKAN_KEYWORD_INIT C = Q;
-impl::SignatureBinary<::haikan::impl::Keyword::Q> const HAIKAN_KEYWORD_INIT Const = Q;
-impl::SignatureBinary<::haikan::impl::Keyword::D> const HAIKAN_KEYWORD_INIT D = {};
-impl::SignatureBinary<::haikan::impl::Keyword::D> const HAIKAN_KEYWORD_INIT Default = D;
 impl::SignatureErr const HAIKAN_KEYWORD_INIT Err = {};
 impl::SignatureErr const HAIKAN_KEYWORD_INIT Error = Err;
+impl::SignatureBinary<::haikan::impl::Keyword::D> const HAIKAN_KEYWORD_INIT D = {};
+impl::SignatureBinary<::haikan::impl::Keyword::D> const HAIKAN_KEYWORD_INIT Default = D;
 impl::SignatureUnary<::haikan::impl::Keyword::IsErr> const HAIKAN_KEYWORD_INIT IsErr = {};
 impl::SignatureUnary<::haikan::impl::Keyword::IsErr> const HAIKAN_KEYWORD_INIT Iserror = IsErr;
 impl::SignatureBinary<::haikan::impl::Keyword::Assert> const HAIKAN_KEYWORD_INIT Assert = {};

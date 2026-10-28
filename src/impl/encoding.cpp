@@ -195,7 +195,64 @@ bool Encoding::preprocess()
     return complete;
 }
 
-sol::object Encoding::to_object() const
+EncodingView::EncodingView(Keyword const* keywords, std::size_t const* depths,
+                           sol::object const* data, std::size_t size,
+                           std::size_t index_offset) noexcept
+    : keywords_(size ? keywords : nullptr)
+    , depths_(size ? depths : nullptr)
+    , data_(size ? data : nullptr)
+    , size_(size)
+    , index_offset_(size ? index_offset : 0)
+{
+}
+
+EncodingView::EncodingView(Encoding const& encoding) noexcept
+    : EncodingView(encoding.keywords_.data(), encoding.depths_.data(),
+                   encoding.data_.data(), encoding.size(), 0)
+{
+}
+
+EncodingView::ExprRow EncodingView::front() const { return at(0); }
+EncodingView::ExprRow EncodingView::back() const { return at(size_ - 1); }
+
+EncodingView::ExprRow EncodingView::at(std::size_t i) const
+{
+    if (i >= size_)
+    {
+        boost::throw_exception(std::range_error("Out of bounds EncodingView::at"));
+    }
+    return {keywords_[i], depths_[i] - depths_[0], &data_[i], i + index_offset_};
+}
+
+bool EncodingView::operator==(EncodingView const& o) const
+{
+    if (size_ != o.size_) return false;
+    if (size_ == 0) return true;
+    if (keywords_ == o.keywords_ && depths_ == o.depths_ && data_ == o.data_) return true;
+    if (!std::equal(keywords_, keywords_ + size_, o.keywords_)) return false;
+
+    auto const lhs_base = depths_[0];
+    auto const rhs_base = o.depths_[0];
+    for (std::size_t i = 0; i < size_; ++i)
+    {
+        if (depths_[i] - lhs_base != o.depths_[i] - rhs_base) return false;
+    }
+    return std::equal(data_, data_ + size_, o.data_);
+}
+
+Encoding EncodingView::freeze() const
+{
+    Encoding out;
+    if (empty()) return out;
+    out.keywords_.assign(keywords_, keywords_ + size_);
+    out.depths_.reserve(size_);
+    auto const base = depths_[0];
+    for (std::size_t i = 0; i < size_; ++i) out.depths_.push_back(depths_[i] - base);
+    out.data_.assign(data_, data_ + size_);
+    return out;
+}
+
+sol::object EncodingView::to_object() const
 {
 
     if (size() == 0)
@@ -216,16 +273,17 @@ sol::object Encoding::to_object() const
         break;
     }
 
-    auto keywords_out = lua::create_table(static_cast<int>(keywords_.size()), 0);
-    auto depth_out = lua::create_table(static_cast<int>(depths_.size()), 0);
-    auto data_out = lua::create_table(static_cast<int>(data_.size()), 0);
+    auto keywords_out = lua::create_table(static_cast<int>(size_), 0);
+    auto depth_out = lua::create_table(static_cast<int>(size_), 0);
+    auto data_out = lua::create_table(static_cast<int>(size_), 0);
 
-    for (std::size_t i = 0; i < keywords_.size(); ++i)
+    auto const depth_base = depths_[0];
+    for (std::size_t i = 0; i < size_; ++i)
     {
         auto const lua_index = i + 1;
 
         keywords_out.set(lua_index, lua::make_object(keyword_to_str(keywords_[i])));
-        depth_out.set(lua_index, depths_[i]);
+        depth_out.set(lua_index, depths_[i] - depth_base);
 
         auto const& value = data_[i];
         if (value.valid() && value.get_type() == sol::type::userdata)
@@ -256,42 +314,33 @@ sol::object Encoding::to_object() const
     );
 }
 
-boost::json::value Encoding::to_json() const
+boost::json::value EncodingView::to_json() const
 {
     return lua_to_json(to_object()).value_or(nullptr);
 }
 
-Encoding Encoding::slice(std::size_t start, std::size_t count) const noexcept
+EncodingView EncodingView::slice(std::size_t start, std::size_t count) const noexcept
 {
-    Encoding enc{};
-    if ((count != 0) && (start <= size()) && (count <= size() - start))
-    {
-        enc.keywords_.assign(keywords_.begin() + start, keywords_.begin() + start + count);
-        enc.depths_.assign(depths_.begin() + start, depths_.begin() + start + count);
-        enc.data_.assign(data_.begin() + start, data_.begin() + start + count);
-    }
-    return enc;
+    if (count == 0 || start > size_ || count > size_ - start) return {};
+    return {keywords_ + start, depths_ + start, data_ + start, count, index_offset_ + start};
 }
 
-Encoding Encoding::subtree(std::size_t const node) const noexcept
+EncodingView EncodingView::subtree(std::size_t const node) const noexcept
 {
     std::size_t ignored{};
     return traverse_subtrees(node, ignored);
 }
 
-std::size_t Encoding::arity() const
+std::size_t EncodingView::arity() const noexcept
 {
-    if (depths_.empty())
-    {
-        return 0;
-    }
-    return std::count(depths_.begin(), depths_.end(), depths_.front() + 1);
+    if (empty()) return 0;
+    return std::count(depths_, depths_ + size_, depths_[0] + 1);
 }
 
 
-std::vector<Encoding> Encoding::children() const
+std::vector<EncodingView> EncodingView::children() const
 {
-    std::vector<Encoding> st;
+    std::vector<EncodingView> st;
     if (size() < 2)
     {
         return st;
@@ -306,17 +355,17 @@ std::vector<Encoding> Encoding::children() const
 }
 
 
-Keyword Encoding::head() const noexcept
+Keyword EncodingView::head() const noexcept
 {
-    return keywords_.size() ? keywords_[0] : Keyword::Undefined;
+    return size_ ? keywords_[0] : Keyword::Undefined;
 }
 
-Encoding Encoding::child(int ord) const noexcept
+EncodingView EncodingView::child(int ord) const noexcept
 {
     return subtree(child_idx(ord));
 }
 
-std::size_t Encoding::child_idx(int ord) const noexcept
+std::size_t EncodingView::child_idx(int ord) const noexcept
 {
     auto const N = size();
     if (N == 0)
@@ -351,7 +400,7 @@ std::size_t Encoding::child_idx(int ord) const noexcept
 }
 
 
-bool Encoding::is_const() const
+bool EncodingView::is_const() const
 {
     auto const a = keyword_attributes(head());
     if (a & attr::is_pipe && size() > 1)
@@ -403,7 +452,7 @@ bool Encoding::is_const() const
     }
 }
 
-bool Encoding::is_boolean() const
+bool EncodingView::is_boolean() const
 {
     auto const a = keyword_attributes(head());
 
@@ -428,35 +477,25 @@ bool Encoding::is_boolean() const
 
 
 
-Encoding Encoding::traverse_subtrees(std::size_t const node, std::size_t& next) const noexcept
+EncodingView EncodingView::traverse_subtrees(std::size_t const node, std::size_t& next) const noexcept
 {
     if (node >= size())
     {
         next = size();
         return {};
     }
-    auto keywords_it = keywords_.begin() + node;
-    auto depth_it = depths_.begin() + node;
-    auto data_it = data_.begin() + node;
-
     next = size();
-    std::size_t const node_depth = *depth_it;
+    std::size_t const node_depth = depths_[node];
     std::size_t count {1};
-    ++keywords_it;
-    ++depth_it;
-    ++data_it;
-    while (keywords_it < keywords_.cend())
+    while (node + count < size_)
     {
-        if (*depth_it <= node_depth)
+        if (depths_[node + count] <= node_depth)
         {
             // TODO: test me
             next = node + count;
             break;
         }
         ++count;
-        ++keywords_it;
-        ++depth_it;
-        ++data_it;
     }
     return slice(node, count);
 }

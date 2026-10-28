@@ -9,29 +9,40 @@
 
 #include <memory>
 #include <ostream>
-#include <boost/json.hpp>
+
+#define SOL_ALL_SAFETIES_ON
+#define SOL_CHECK_ARGUMENTS
+#include <sol/sol.hpp>
+
+#include "haikan/impl/expression.hpp"
 
 namespace haikan {
 namespace impl {
 
-class Expression;
-
 /// Expression evaluation log
 struct EvalLog
 {
-    mutable std::shared_ptr<boost::json::array> stack;
+    struct Record
+    {
+        Expression expr;
+        sol::object x;
+        sol::object result;
+        std::size_t depth;
+    };
+
+    mutable std::shared_ptr<std::vector<Record>> stack;
 
     /// Default instance with null log stack
     EvalLog() = default;
 
     /// Stringify log
-    boost::json::string str(int const indent = 0) const;
+    std::string str(int const indent = 0) const;
 
     /// Push record to log stack
-    void push(Expression const& expr, Expression const& x, Expression const& result, std::uint64_t const depth) const;
+    void push(Expression const& expr, sol::object const& x, sol::object const& result, std::uint64_t const depth) const;
 
 
-    static void format(std::ostream& os, boost::json::array const& log, int const indent = 0);
+    static void format(std::ostream& os, std::vector<Record> const& log, int const indent = 0);
 
     friend std::ostream& operator<<(std::ostream& os, EvalLog const& log);
 

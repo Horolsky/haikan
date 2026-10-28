@@ -161,9 +161,9 @@ BOOST_AUTO_TEST_CASE(SyntacticSugar)
 
 BOOST_AUTO_TEST_CASE(ExprEval)
 {
-    using haikan::impl::EvalContextLua;
+    using haikan::impl::EvalContext;
 
-    EvalContextLua ctx{};
+    EvalContext ctx{};
     Expression lit {42};
     sol::object result = lit.eval(sol::nil, ctx).data();
     BOOST_CHECK_EQUAL(result.as<int>(), 42);
@@ -174,10 +174,10 @@ BOOST_AUTO_TEST_CASE(ExprEval)
 BOOST_AUTO_TEST_CASE(ApiConst)
 {
     using namespace haikan;
-    using haikan::impl::EvalContextLua;
+    using haikan::impl::EvalContext;
 
 
-    EvalContextLua ctx{};
+    EvalContext ctx{};
     sol::object result = Pi.eval({}, ctx).data();
     BOOST_CHECK_EQUAL(result.as<double>(), boost::math::constants::pi<double>());
 }
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(ApiFunc)
     using namespace haikan;
     using namespace haikan::impl;
 
-    EvalContextLua ctx{};
+    EvalContext ctx{};
 
     {
         sol::object result = Sqrt.eval(16, ctx).data();
@@ -210,20 +210,20 @@ BOOST_AUTO_TEST_CASE(ApiFunc)
 BOOST_AUTO_TEST_CASE(ApiOp)
 {
     using namespace haikan;
-    using haikan::impl::EvalContextLua;
+    using haikan::impl::EvalContext;
 
     {
-        EvalContextLua ctx{};
+        EvalContext ctx{};
         sol::object result = Div(11).eval(44, ctx).data();
         BOOST_CHECK_EQUAL(result.as<int>(), 4);
     }
     {
-        EvalContextLua ctx{};
+        EvalContext ctx{};
         sol::object result = (Pi|Mul(2)).eval({}, ctx).data();
         BOOST_CHECK_EQUAL(result.as<double>(), boost::math::constants::pi<double>()*2);
     }
     {
-        EvalContextLua ctx{};
+        EvalContext ctx{};
         sol::object result = Div(Pi).eval(Pi|Mul(2), ctx).data();
         BOOST_CHECK_EQUAL(result.as<int>(), 2);
     }

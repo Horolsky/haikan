@@ -584,6 +584,22 @@ extern impl::SignatureCast const Cast;
 /// \brief Identity function
 extern impl::SignatureUnary<::haikan::impl::Keyword::Id> const Id;
 
+/// \brief Quote parameter, similar to lisp quotation.
+/// \details
+/// Quotation lifts any parameter to constant, s.t.
+/// produced expression will return the design-time parameter
+/// on evaluation, ignoring input. If evaluable expression
+/// is passed, it is returned unevaluated.
+/// Unlike plain literals which can be treated
+/// as predicate matchers in certain context, Q(x) is always
+/// a constant expression discarding input.
+/// ~Q (Flip(Q)) is equivalent to Id.
+extern impl::SignatureBinary<::haikan::impl::Keyword::Q> const Q;
+/// \brief Alias for Q
+extern impl::SignatureBinary<::haikan::impl::Keyword::Q> const C;
+/// \brief Alias for Q
+extern impl::SignatureBinary<::haikan::impl::Keyword::Q> const Const;
+
 /// \brief Reduce sequence with binary operator
 /// \details
 /// To set a specific initial value, use composition with Push, e.g.
@@ -799,33 +815,17 @@ extern impl::SignatureUnary<::haikan::impl::Keyword::Prms> const Prms;
 /// \brief Alias for Prms
 extern impl::SignatureUnary<::haikan::impl::Keyword::Prms> const Parameters;
 
-/// \brief Quote parameter, similar to lisp quotation.
-/// \details
-/// Quotation lifts any parameter to constant, s.t.
-/// produced expression will return the design-time parameter
-/// on evaluation, ignoring input. If evaluable expression
-/// is passed, it is returned unevaluated.
-/// Unlike plain literals which can be treated
-/// as predicate matchers in certain context, Q(x) is always
-/// a constant expression discarding input.
-/// ~Q (Flip(Q)) is equivalent to Id.
-extern impl::SignatureBinary<::haikan::impl::Keyword::Q> const Q;
-/// \brief Alias for Q
-extern impl::SignatureBinary<::haikan::impl::Keyword::Q> const C;
-/// \brief Alias for Q
-extern impl::SignatureBinary<::haikan::impl::Keyword::Q> const Const;
-
-/// \brief Return x if not null, else return default value
-extern impl::SignatureBinary<::haikan::impl::Keyword::D> const D;
-/// \brief Alias for D
-extern impl::SignatureBinary<::haikan::impl::Keyword::D> const Default;
-
 /// \brief Error object
 /// \details
 /// Error object handling the message and context info
 extern impl::SignatureErr const Err;
 /// \brief Alias for Err
 extern impl::SignatureErr const Error;
+
+/// \brief Return x if not null, else return default value
+extern impl::SignatureBinary<::haikan::impl::Keyword::D> const D;
+/// \brief Alias for D
+extern impl::SignatureBinary<::haikan::impl::Keyword::D> const Default;
 
 /// \brief Test the argument is err expression
 extern impl::SignatureUnary<::haikan::impl::Keyword::IsErr> const IsErr;

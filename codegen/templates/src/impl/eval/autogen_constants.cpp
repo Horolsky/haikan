@@ -20,16 +20,16 @@
 @end
 
 #include "haikan/impl/expression.hpp"
-#include "haikan/impl/eval_context.hpp"
+#include "haikan/impl/vm.hpp"
 
 
 namespace haikan {
 namespace impl {
 
 @for keyword in data.Constants:
-Expression dispatch_eval(keyword_tag_t<Keyword::@keyword.Name>, Expression::Args const, EvalContextLua)
+template <> sol::object VirtualMachine::Evaluate<Keyword::@keyword.Name>(sol::object const&, sol::object const&) const
 {
-    return Expression(@keyword.CodegenValue);
+    return lua::make_object(@keyword.CodegenValue);
 }
 @end
 

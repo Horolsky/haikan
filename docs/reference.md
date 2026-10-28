@@ -1633,6 +1633,27 @@ Identity function
 
  * `42 | Id `$\mapsto$` 42`
 
+### Q
+
+*Signature*: [Binary](../user-guide/expressions.md#syntax)
+
+*Aliases*: C, Const
+
+Quote parameter, similar to lisp quotation.
+
+Quotation lifts any parameter to constant, s.t.
+produced expression will return the design-time parameter
+on evaluation, ignoring input. If evaluable expression
+is passed, it is returned unevaluated.
+Unlike plain literals which can be treated
+as predicate matchers in certain context, Q(x) is always
+a constant expression discarding input.
+~Q (Flip(Q)) is equivalent to Id.
+
+*Examples*:
+
+ * `null | C(42) `$\mapsto$` 42`
+
 ### Fold
 
 *Signature*: [Binary](../user-guide/expressions.md#syntax)
@@ -2190,29 +2211,19 @@ Introspect expression parameters.
  * `Q(Fold(Add)) | Prms `$\mapsto$` Add`
  * `[1, 1, 1] | Prms `$\mapsto$` [1, 1, 1]`
 
+### Err
+
+*Signature*: [Special](../user-guide/expressions.md#syntax)
+
+*Aliases*: Error
+
+Error object
+
+Error object handling the message and context info
+
+
 
 ## Evaluation handlers
-
-### Q
-
-*Signature*: [Binary](../user-guide/expressions.md#syntax)
-
-*Aliases*: C, Const
-
-Quote parameter, similar to lisp quotation.
-
-Quotation lifts any parameter to constant, s.t.
-produced expression will return the design-time parameter
-on evaluation, ignoring input. If evaluable expression
-is passed, it is returned unevaluated.
-Unlike plain literals which can be treated
-as predicate matchers in certain context, Q(x) is always
-a constant expression discarding input.
-~Q (Flip(Q)) is equivalent to Id.
-
-*Examples*:
-
- * `null | C(42) `$\mapsto$` 42`
 
 ### D
 
@@ -2227,17 +2238,6 @@ Return x if not null, else return default value
 
  * `null | Default(42) `$\mapsto$` 42`
  * `13 | Default(42) `$\mapsto$` 13`
-
-### Err
-
-*Signature*: [Special](../user-guide/expressions.md#syntax)
-
-*Aliases*: Error
-
-Error object
-
-Error object handling the message and context info
-
 
 ### IsErr
 

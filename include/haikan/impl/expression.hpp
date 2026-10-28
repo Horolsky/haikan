@@ -20,7 +20,7 @@
 #include "haikan/impl/encoding.hpp"
 #include "haikan/impl/lua_state.hpp"
 #include "haikan/impl/expression_parameter.hpp"
-#include "haikan/impl/eval_context.hpp"
+// #include "haikan/impl/eval_context.hpp"
 #include "haikan/logger.hpp"
 #include "haikan/impl/keyword_attributes.hpp"
 
@@ -38,6 +38,7 @@ public:
 
     using Keyword = impl::Keyword;
     using Encoding = impl::Encoding;
+    using EncodingView = impl::EncodingView;
 
     //////////////////
     // CTORS
@@ -85,7 +86,7 @@ public:
     {
     }
 
-    Encoding encoding_view() const
+    EncodingView encoding_view() const
     {
         return encoding_;
     }
@@ -201,7 +202,7 @@ public:
         result.reserve(subtrees.size());
         std::transform(subtrees.cbegin(), subtrees.cend(),
                 std::back_inserter(result),
-                [](Encoding const& v) { return Expression{v}; });
+                [](EncodingView const v) { return Expression{v.freeze()}; });
         return result;
     }
 
@@ -214,7 +215,7 @@ public:
 
         for (auto const& s: tuple.children())
         {
-            result.emplace_back(s);
+            result.emplace_back(s.freeze());
         }
         return result;
     }
@@ -231,11 +232,11 @@ public:
         sol::object res;
         if (!child.empty() && ((a & impl::attr::is_literal) || (a & impl::attr::is_preproc)))
         {
-            res = child.data_.front();
+            res = *child.if_data();
         }
         else
         {
-            res = encoding_view().data_.front();
+            res = *encoding_view().if_data();
         }
         return res;
     }
@@ -364,8 +365,8 @@ public:
         {
             return false;
         }
-        auto const& kw = encoding_view().child(0).keywords_;
-        return kw.empty() ? false : (kw.front() != Keyword::Tuple);
+        auto const child = encoding_view().child(0);
+        return child.empty() ? false : (child.head() != Keyword::Tuple);
     }
 
     bool is_infix_fork() const
@@ -407,23 +408,12 @@ public:
     std::list<std::pair<std::string, std::string>> preprocessing_parameters() const;
 
 
-    ///////////////////
-    // EVALUATORS
-    ///////////////////
-
-    /// @brief Evaluate expression
-    /// @param x run-time argument
-    /// @param ctx evaluation context
-    /// @return
-    Expression eval(Expression const& x, EvalContextLua ctx) const;
-
-
     Expression param() const
     {
         auto const child = encoding_view().child(0);
         if (!child.empty())
         {
-            return Expression(child);
+            return Expression(child.freeze());
         }
         else
         {
@@ -433,20 +423,14 @@ public:
 
 
     /// Eval const expressions as Eq(expr), except for Noop,
-    /// otherwise eval expr.
-    bool eval_as_predicate(Expression const& x, Expression& err_sts, EvalContextLua ctx) const;
+    // /// otherwise eval expr.
+    // bool eval_as_predicate(Expression const& x, Expression& err_sts, EvalContext ctx) const;
 
-    /// Eval const expressions as Eq(expr), except for Noop,
-    /// otherwise eval expr. Store result in arg reference and return error status.
-    bool eval_as_predicate(sol::object const& x, Expression& err_sts, EvalContextLua ctx) const;
+    // /// Eval const expressions as Eq(expr), except for Noop,
+    // /// otherwise eval expr. Store result in arg reference and return error status.
+    // bool eval_as_predicate(sol::object const& x, Expression& err_sts, EvalContext ctx) const;
 
-    Expression eval_maybe_predicate(Expression const& x, EvalContextLua ctx) const;
-
-    /// @brief Evaluate expression
-    /// @param x run-time argument
-    /// @param ctx evaluation context
-    /// @return
-    // sol::object eval(sol::object const& x = sol::nil, impl::EvalContextLua ctx = {}) const;
+    // Expression eval_maybe_predicate(Expression const& x, EvalContext ctx) const;
 
     /// Eval and cast to boolean, return false on error
     bool match(sol::object const& x) const;
@@ -509,36 +493,6 @@ auto tag_invoke(boost::json::value_to_tag<T> const&, boost::json::value const& v
 {
     return T(v);
 }
-
-class Expression::Args
-{
-    std::reference_wrapper<Expression const> self_ref_;
-    std::reference_wrapper<Expression const> lhs_ref_;
-
-  public:
-    Args(Expression const& self, Expression const& lhs)
-        : self_ref_{self}
-        , lhs_ref_{lhs}
-    {
-
-    }
-
-    Expression const& self() const
-    {
-        return self_ref_.get();
-    }
-
-    Expression const& lhs() const
-    {
-        return lhs_ref_.get();
-    }
-
-    Expression rhs() const
-    {
-        return self().param();
-    }
-
-};
 
 
 }  // namespace impl

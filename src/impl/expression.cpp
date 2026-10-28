@@ -141,14 +141,6 @@ Expression operator<<(Expression link, Expression referent)
 //     return eval_e(x, std::move(ctx));
 // }
 
-
-// bool Expression::match(boost::json::value const& x, Operator const& op) const
-// {
-//     auto result = eval(x, EvalContext::make(op));
-//     auto const if_bool = result.if_bool();
-//     return if_bool ? *if_bool : false;
-// }
-
 // boost::json::value operator*(Expression lhs, Expression const& rhs)
 // {
 //     return lhs.eval_e(rhs, {}).to_json();

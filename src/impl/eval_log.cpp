@@ -8,8 +8,12 @@
 #include <ostream>
 #include <sstream>
 
+#include <boost/utility/string_view.hpp>
+
+
 #include "haikan/impl/eval_log.hpp"
 #include "haikan/impl/expression.hpp"
+#include "haikan/serialization.hpp"
 #include "haikan/logger.hpp"
 
 
@@ -18,17 +22,16 @@
 #define CLEAR_BIT(x, n) ((x) &= ~(1UL << (n)))
 
 
-namespace
-{
-using Keyword = haikan::impl::Keyword;
+namespace haikan {
+namespace impl {
+namespace {
 
-
-void trim_line(std::ostream& os, boost::json::array const& rec)
+void trim_line(std::ostream& os, EvalLog::Record const& rec)
 {
     constexpr std::size_t BuffSize {100};
     constexpr std::size_t MinExpr = 10;
 
-    std::size_t const depth = rec.at(0).as_uint64();
+    std::size_t const depth = rec.depth;
     std::size_t const capacity = BuffSize - 4U*depth;
 
     if ((capacity < 3*MinExpr) || capacity > BuffSize)
@@ -42,7 +45,7 @@ void trim_line(std::ostream& os, boost::json::array const& rec)
     char buf_fx[BuffSize];
 
 
-    auto const shrink = [](boost::json::string_view& view, std::uint64_t const n){
+    auto const shrink = [](boost::string_view& view, std::uint64_t const n){
         if (view.size() < n) return;
         view = view.substr(0, n);
         if (n < 3) return;
@@ -56,19 +59,19 @@ void trim_line(std::ostream& os, boost::json::array const& rec)
         buf[n-3] = '.';
         return;
     };
-    using E = haikan::impl::Expression;
 
-    E e_f(rec.at(1));
-    E e_x(rec.at(2));
-    E e_fx(rec.at(3));
+
+    Expression e_f(rec.expr);
+    Expression e_x(rec.x);
+    Expression e_fx(rec.result);
 
     e_f.prettify_to(buf_f);
     e_x.prettify_to(buf_x);
     e_fx.prettify_to(buf_fx);
 
-    boost::json::string_view f = buf_f;
-    boost::json::string_view x = buf_x;
-    boost::json::string_view fx = buf_fx;
+    boost::string_view f = buf_f;
+    boost::string_view x = buf_x;
+    boost::string_view fx = buf_fx;
 
     std::size_t total_size = f.size() + x.size() + fx.size();
 
@@ -95,11 +98,7 @@ void trim_line(std::ostream& os, boost::json::array const& rec)
 } // namespace
 
 
-namespace haikan {
-namespace impl {
-
-
-void EvalLog::format(std::ostream& os, boost::json::array const& log, int const indent)
+void EvalLog::format(std::ostream& os, std::vector<Record> const& log, int const indent)
 {
 
     std::uint64_t prev_depth = 0;
@@ -107,10 +106,9 @@ void EvalLog::format(std::ostream& os, boost::json::array const& log, int const 
 
     auto const notrim = Logger::is_notrim_enabled();
 
-    for (auto const& item: log)
+    for (auto const& rec: log)
     {
-        auto const& rec = item.as_array();
-        std::uint64_t const depth = rec.at(0).as_uint64();
+        std::uint64_t const depth = rec.depth;
 
         if(!notrim && depth > 20)
         {
@@ -147,17 +145,18 @@ void EvalLog::format(std::ostream& os, boost::json::array const& log, int const 
             CLEAR_BIT(vertical_groups, depth);
         }
 
-        if (notrim)
+        if (true or notrim)
         {
-            using E = haikan::impl::Expression;
-            E f(rec.at(1));
-            E x(rec.at(2));
-            E fx(rec.at(3));
-            f.prettify_to(os);
+            // Expression f(rec.expr);
+            // Expression x(rec.x);
+            // Expression fx(rec.result);
+            rec.expr.prettify_to(os);
             os << " $ ";
-            x.prettify_to(os);
+            lua_to_stream(os,  to_plain_lua(rec.x), 0, false);
+            // x.prettify_to(os);
             os << " = ";
-            fx.prettify_to(os);
+            lua_to_stream(os, rec.result, 0, false);
+            // fx.prettify_to(os);
             os << '\n';
         }
         else
@@ -170,13 +169,13 @@ void EvalLog::format(std::ostream& os, boost::json::array const& log, int const 
 }
 
 
-boost::json::string EvalLog::str(int const indent) const
+std::string EvalLog::str(int const indent) const
 {
     if (stack)
     {
         std::stringstream ss;
         EvalLog::format(ss, *stack, indent);
-        return ss.str().c_str();
+        return ss.str();
     }
     return "";
 }
@@ -191,19 +190,19 @@ std::ostream& operator<<(std::ostream& os, EvalLog const& log)
 }
 
 
-void EvalLog::push(Expression const& expr, Expression const& x, Expression const& result, std::uint64_t const depth) const
+void EvalLog::push(Expression const& expr, sol::object const& x, sol::object const& result, std::uint64_t const depth) const
 {
     if (!stack)
     {
         return;
     }
-    stack->push_back({depth, expr.to_json(), x.to_json(), result.to_json()});
+    stack->push_back({expr, x, result, depth});
 }
 
 
 EvalLog EvalLog::make()
 {
-    return {std::make_shared<boost::json::array>()};
+    return {std::make_shared<std::vector<Record>>()};
 }
 
 

@@ -20,51 +20,51 @@
 #include <boost/math/constants/constants.hpp>
 
 #include "haikan/impl/expression.hpp"
-#include "haikan/impl/eval_context.hpp"
+#include "haikan/impl/vm.hpp"
 
 
 namespace haikan {
 namespace impl {
 
-Expression dispatch_eval(keyword_tag_t<Keyword::Noop>, Expression::Args const, EvalContextLua)
+template <> sol::object VirtualMachine::Evaluate<Keyword::Noop>(sol::object const&, sol::object const&) const
 {
-    return Expression(true);
+    return lua::make_object(true);
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::Null>, Expression::Args const, EvalContextLua)
+template <> sol::object VirtualMachine::Evaluate<Keyword::Null>(sol::object const&, sol::object const&) const
 {
-    return Expression(nullptr);
+    return lua::make_object(nullptr);
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::True>, Expression::Args const, EvalContextLua)
+template <> sol::object VirtualMachine::Evaluate<Keyword::True>(sol::object const&, sol::object const&) const
 {
-    return Expression(true);
+    return lua::make_object(true);
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::False>, Expression::Args const, EvalContextLua)
+template <> sol::object VirtualMachine::Evaluate<Keyword::False>(sol::object const&, sol::object const&) const
 {
-    return Expression(false);
+    return lua::make_object(false);
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::Pi>, Expression::Args const, EvalContextLua)
+template <> sol::object VirtualMachine::Evaluate<Keyword::Pi>(sol::object const&, sol::object const&) const
 {
-    return Expression(boost::math::constants::pi<double>());
+    return lua::make_object(boost::math::constants::pi<double>());
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::E>, Expression::Args const, EvalContextLua)
+template <> sol::object VirtualMachine::Evaluate<Keyword::E>(sol::object const&, sol::object const&) const
 {
-    return Expression(boost::math::constants::e<double>());
+    return lua::make_object(boost::math::constants::e<double>());
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::Inf>, Expression::Args const, EvalContextLua)
+template <> sol::object VirtualMachine::Evaluate<Keyword::Inf>(sol::object const&, sol::object const&) const
 {
-    return Expression(std::numeric_limits<double>::infinity());
+    return lua::make_object(std::numeric_limits<double>::infinity());
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::Eps>, Expression::Args const, EvalContextLua)
+template <> sol::object VirtualMachine::Evaluate<Keyword::Eps>(sol::object const&, sol::object const&) const
 {
-    return Expression(std::numeric_limits<double>::epsilon());
+    return lua::make_object(std::numeric_limits<double>::epsilon());
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::NaN>, Expression::Args const, EvalContextLua)
+template <> sol::object VirtualMachine::Evaluate<Keyword::NaN>(sol::object const&, sol::object const&) const
 {
-    return Expression(std::numeric_limits<double>::quiet_NaN());
+    return lua::make_object(std::numeric_limits<double>::quiet_NaN());
 }
-Expression dispatch_eval(keyword_tag_t<Keyword::Thread>, Expression::Args const, EvalContextLua)
+template <> sol::object VirtualMachine::Evaluate<Keyword::Thread>(sol::object const&, sol::object const&) const
 {
-    return Expression((std::stringstream() << std::this_thread::get_id()).str());
+    return lua::make_object((std::stringstream() << std::this_thread::get_id()).str());
 }
 
 

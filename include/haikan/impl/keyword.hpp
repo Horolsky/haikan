@@ -28,478 +28,478 @@ enum class Keyword : std::uint64_t
 {
     Undefined,
 
-    /// _Literal
+    /// _Literal 1
     _Literal,
 
-    /// _Void
+    /// _Void 2
     _Void,
 
-    /// _Continue
+    /// _Continue 3
     _Continue,
 
-    /// _Resolve
+    /// _Resolve 4
     _Resolve,
 
-    /// Noop
+    /// Noop 5
     Noop,
 
-    /// Null
+    /// Null 6
     Null,
 
-    /// True
+    /// True 7
     True,
 
-    /// False
+    /// False 8
     False,
 
-    /// Pi
+    /// Pi 9
     Pi,
 
-    /// E
+    /// E 10
     E,
 
-    /// Inf
+    /// Inf 11
     Inf,
 
-    /// Eps
+    /// Eps 12
     Eps,
 
-    /// NaN
+    /// NaN 13
     NaN,
 
-    /// Thread
+    /// Thread 14
     Thread,
 
-    /// Sin
+    /// Sin 15
     Sin,
 
-    /// Cos
+    /// Cos 16
     Cos,
 
-    /// Tan
+    /// Tan 17
     Tan,
 
-    /// Asin
+    /// Asin 18
     Asin,
 
-    /// Acos
+    /// Acos 19
     Acos,
 
-    /// Atan
+    /// Atan 20
     Atan,
 
-    /// Sinh
+    /// Sinh 21
     Sinh,
 
-    /// Cosh
+    /// Cosh 22
     Cosh,
 
-    /// Tanh
+    /// Tanh 23
     Tanh,
 
-    /// Asinh
+    /// Asinh 24
     Asinh,
 
-    /// Acosh
+    /// Acosh 25
     Acosh,
 
-    /// Atanh
+    /// Atanh 26
     Atanh,
 
-    /// Exp
+    /// Exp 27
     Exp,
 
-    /// Erf
+    /// Erf 28
     Erf,
 
-    /// Erfc
+    /// Erfc 29
     Erfc,
 
-    /// Gamma
+    /// Gamma 30
     Gamma,
 
-    /// Abs
+    /// Abs 31
     Abs,
 
-    /// Ceil
+    /// Ceil 32
     Ceil,
 
-    /// Floor
+    /// Floor 33
     Floor,
 
-    /// Round
+    /// Round 34
     Round,
 
-    /// Sqrt
+    /// Sqrt 35
     Sqrt,
 
-    /// Sign
+    /// Sign 36
     Sign,
 
-    /// Neg
+    /// Neg 37
     Neg,
 
-    /// Add
+    /// Add 38
     Add,
 
-    /// Sub
+    /// Sub 39
     Sub,
 
-    /// Mul
+    /// Mul 40
     Mul,
 
-    /// Div
+    /// Div 41
     Div,
 
-    /// Pow
+    /// Pow 42
     Pow,
 
-    /// Log
+    /// Log 43
     Log,
 
-    /// Mod
+    /// Mod 44
     Mod,
 
-    /// Quot
+    /// Quot 45
     Quot,
 
-    /// BitNot
+    /// BitNot 46
     BitNot,
 
-    /// BitAnd
+    /// BitAnd 47
     BitAnd,
 
-    /// BitOr
+    /// BitOr 48
     BitOr,
 
-    /// BitXor
+    /// BitXor 49
     BitXor,
 
-    /// Lshift
+    /// Lshift 50
     Lshift,
 
-    /// Rshift
+    /// Rshift 51
     Rshift,
 
-    /// Eq
+    /// Eq 52
     Eq,
 
-    /// Ne
+    /// Ne 53
     Ne,
 
-    /// Lt
+    /// Lt 54
     Lt,
 
-    /// Le
+    /// Le 55
     Le,
 
-    /// Gt
+    /// Gt 56
     Gt,
 
-    /// Ge
+    /// Ge 57
     Ge,
 
-    /// Near
+    /// Near 58
     Near,
 
-    /// Union
+    /// Union 59
     Union,
 
-    /// Intersect
+    /// Intersect 60
     Intersect,
 
-    /// Diff
+    /// Diff 61
     Diff,
 
-    /// SetEq
+    /// SetEq 62
     SetEq,
 
-    /// Subset
+    /// Subset 63
     Subset,
 
-    /// Superset
+    /// Superset 64
     Superset,
 
-    /// PSubset
+    /// PSubset 65
     PSubset,
 
-    /// PSuperset
+    /// PSuperset 66
     PSuperset,
 
-    /// In
+    /// In 67
     In,
 
-    /// NotIn
+    /// NotIn 68
     NotIn,
 
-    /// Ni
+    /// Ni 69
     Ni,
 
-    /// NotNi
+    /// NotNi 70
     NotNi,
 
-    /// Bool
+    /// Bool 71
     Bool,
 
-    /// Not
+    /// Not 72
     Not,
 
-    /// And
+    /// And 73
     And,
 
-    /// Or
+    /// Or 74
     Or,
 
-    /// If
+    /// If 75
     If,
 
-    /// Elif
+    /// Elif 76
     Elif,
 
-    /// Else
+    /// Else 77
     Else,
 
-    /// Transp
+    /// Transp 78
     Transp,
 
-    /// Cartesian
+    /// Cartesian 79
     Cartesian,
 
-    /// Reverse
+    /// Reverse 80
     Reverse,
 
-    /// Uniques
+    /// Uniques 81
     Uniques,
 
-    /// Items
+    /// Items 82
     Items,
 
-    /// Keys
+    /// Keys 83
     Keys,
 
-    /// Values
+    /// Values 84
     Values,
 
-    /// Enumerate
+    /// Enumerate 85
     Enumerate,
 
-    /// Flatten
+    /// Flatten 86
     Flatten,
 
-    /// ToList
+    /// ToList 87
     ToList,
 
-    /// First
+    /// First 88
     First,
 
-    /// Last
+    /// Last 89
     Last,
 
-    /// Rand
+    /// Rand 90
     Rand,
 
-    /// RandInt
+    /// RandInt 91
     RandInt,
 
-    /// Sequence
+    /// Sequence 92
     Sequence,
 
-    /// Arange
+    /// Arange 93
     Arange,
 
-    /// Parse
+    /// Parse 94
     Parse,
 
-    /// Str
+    /// Str 95
     Str,
 
-    /// Re
+    /// Re 96
     Re,
 
-    /// Fmt
+    /// Fmt 97
     Fmt,
 
-    /// Capitalize
+    /// Capitalize 98
     Capitalize,
 
-    /// LowerCase
+    /// LowerCase 99
     LowerCase,
 
-    /// UpperCase
+    /// UpperCase 100
     UpperCase,
 
-    /// Card
+    /// Card 101
     Card,
 
-    /// Size
+    /// Size 102
     Size,
 
-    /// Sum
+    /// Sum 103
     Sum,
 
-    /// Prod
+    /// Prod 104
     Prod,
 
-    /// Avg
+    /// Avg 105
     Avg,
 
-    /// Slide
+    /// Slide 106
     Slide,
 
-    /// Stride
+    /// Stride 107
     Stride,
 
-    /// Chunks
+    /// Chunks 108
     Chunks,
 
-    /// Repeat
+    /// Repeat 109
     Repeat,
 
-    /// Cat
+    /// Cat 110
     Cat,
 
-    /// Push
+    /// Push 111
     Push,
 
-    /// At
+    /// At 112
     At,
 
-    /// Del
+    /// Del 113
     Del,
 
-    /// Upd
+    /// Upd 114
     Upd,
 
-    /// Lookup
+    /// Lookup 115
     Lookup,
 
-    /// Cast
+    /// Cast 116
     Cast,
 
-    /// Id
+    /// Id 117
     Id,
 
-    /// Fold
-    Fold,
-
-    /// Map
-    Map,
-
-    /// Filter
-    Filter,
-
-    /// Count
-    Count,
-
-    /// Each
-    Each,
-
-    /// Sort
-    Sort,
-
-    /// Find
-    Find,
-
-    /// FindPtr
-    FindPtr,
-
-    /// FindIdx
-    FindIdx,
-
-    /// Min
-    Min,
-
-    /// Max
-    Max,
-
-    /// Argmin
-    Argmin,
-
-    /// Argmax
-    Argmax,
-
-    /// Recur
-    Recur,
-
-    /// Unfold
-    Unfold,
-
-    /// Op
-    Op,
-
-    /// Bind
-    Bind,
-
-    /// Fn
-    Fn,
-
-    /// Link
-    Link,
-
-    /// Get
-    Get,
-
-    /// EnvLoad
-    EnvLoad,
-
-    /// EnvStore
-    EnvStore,
-
-    /// Any
-    Any,
-
-    /// All
-    All,
-
-    /// Saturate
-    Saturate,
-
-    /// Pipe
-    Pipe,
-
-    /// Tuple
-    Tuple,
-
-    /// Fork
-    Fork,
-
-    /// Flip
-    Flip,
-
-    /// Dbg
-    Dbg,
-
-    /// Eval
-    Eval,
-
-    /// Try
-    Try,
-
-    /// Kwrd
-    Kwrd,
-
-    /// Prms
-    Prms,
-
-    /// Q
+    /// Q 118
     Q,
 
-    /// D
-    D,
+    /// Fold 119
+    Fold,
 
-    /// Err
+    /// Map 120
+    Map,
+
+    /// Filter 121
+    Filter,
+
+    /// Count 122
+    Count,
+
+    /// Each 123
+    Each,
+
+    /// Sort 124
+    Sort,
+
+    /// Find 125
+    Find,
+
+    /// FindPtr 126
+    FindPtr,
+
+    /// FindIdx 127
+    FindIdx,
+
+    /// Min 128
+    Min,
+
+    /// Max 129
+    Max,
+
+    /// Argmin 130
+    Argmin,
+
+    /// Argmax 131
+    Argmax,
+
+    /// Recur 132
+    Recur,
+
+    /// Unfold 133
+    Unfold,
+
+    /// Op 134
+    Op,
+
+    /// Bind 135
+    Bind,
+
+    /// Fn 136
+    Fn,
+
+    /// Link 137
+    Link,
+
+    /// Get 138
+    Get,
+
+    /// EnvLoad 139
+    EnvLoad,
+
+    /// EnvStore 140
+    EnvStore,
+
+    /// Any 141
+    Any,
+
+    /// All 142
+    All,
+
+    /// Saturate 143
+    Saturate,
+
+    /// Pipe 144
+    Pipe,
+
+    /// Tuple 145
+    Tuple,
+
+    /// Fork 146
+    Fork,
+
+    /// Flip 147
+    Flip,
+
+    /// Dbg 148
+    Dbg,
+
+    /// Eval 149
+    Eval,
+
+    /// Try 150
+    Try,
+
+    /// Kwrd 151
+    Kwrd,
+
+    /// Prms 152
+    Prms,
+
+    /// Err 153
     Err,
 
-    /// IsErr
+    /// D 154
+    D,
+
+    /// IsErr 155
     IsErr,
 
-    /// Assert
+    /// Assert 156
     Assert,
 
-    /// Trace
+    /// Trace 157
     Trace,
 
-    /// PreProc
+    /// PreProc 158
     PreProc,
 
     _count

@@ -20,7 +20,6 @@
 #include "haikan/impl/lua_state.hpp"
 #include "haikan/impl/lua_stream.hpp"
 #include "haikan/impl/expression.hpp"
-#include "haikan/impl/vm.hpp"
 
 
 namespace{
@@ -161,6 +160,7 @@ void Logger::drain(std::ostream& sink, bool const skip_meta)
             << ' ' << src_loc_
             << ' ';
         }
+
         for (auto const& record: payload_cache_)
         {
             if (not record.lua_state())
@@ -174,18 +174,6 @@ void Logger::drain(std::ostream& sink, bool const skip_meta)
             else if (record.is<error>())
             {
                 ss << record.as<error const&>();
-            }
-            else if (record.is<impl::Args>())
-            {
-                // TODO: fix unescaped null characters terminating whole log message here
-                ss << "{";
-                impl::Args const& args = record.as<impl::Args const&>();
-                impl::lua_to_stream(ss, args.lhs, 0, false);
-                ss << ", ";
-                impl::lua_to_stream(ss, args.rhs, 0, false);
-                ss << "}";
-
-                // ss << "{" << args.lhs << args.rhs 
             }
             else if (record.get_type() == sol::type::userdata)
             {
