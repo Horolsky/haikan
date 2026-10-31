@@ -1,0 +1,44 @@
+# (c) Copyright 2024-2025 Zenseact AB
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
+load("@rules_pkg//pkg:deb.bzl", "pkg_deb")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+
+genrule(
+    name = "version.h",
+    outs = ["include/haikan/version.h"],
+    stamp = True,
+    cmd = """
+VERSION=$$(grep STABLE_GIT_TAG_OR_COMMIT bazel-out/stable-status.txt | awk  '{print $$2}')
+echo "#define HAIKAN_VERSION $$VERSION" > $@
+""",
+)
+
+pkg_files(
+    name = "pkg_include",
+    visibility = ["//visibility:private"],
+    srcs = [
+        "//:headers_fg",
+        ":include/haikan/version.h"
+    ],
+    strip_prefix = strip_prefix.from_pkg()
+)
+
+pkg_files(
+    name = "pkg_lib",
+    visibility = ["//visibility:private"],
+    srcs = [
+        "//:haikan",
+    ],
+    prefix = "lib",
+    strip_prefix = strip_prefix.from_pkg()
+)
+
+pkg_tar(
+    name = "tar",
+    out = "haikan.tar.gz",
+    tags = ["manual"],
+    srcs = [
+        ":pkg_include",
+        ":pkg_lib",
+    ],
+)

@@ -1,0 +1,147 @@
+/**
+ * @file
+ * @copyright (c) Copyright 2026 Oleksandr Khorolskyi
+ * @license SPDX-License-Identifier: Apache-2.0
+ */
+
+#include <boost/test/unit_test.hpp>
+#include <boost/describe.hpp>
+
+#include "haikan/impl/encoding.hpp"
+#include "haikan/impl/type_registry.hpp"
+
+
+struct EncodingPayload
+{
+    int value;
+
+    friend bool operator==(EncodingPayload const& lhs, EncodingPayload const& rhs)
+    {
+        return lhs.value == rhs.value;
+    }
+};
+
+BOOST_DESCRIBE_STRUCT(EncodingPayload, (), (value))
+
+using haikan::impl::Encoding;
+using haikan::impl::Keyword;
+using haikan::impl::is_link_token;
+using haikan::impl::is_preproc_token;
+
+namespace
+{
+
+struct EncodingLuaSuite
+{
+    sol::state state;
+
+    sol::object object(int value)
+    {
+        return sol::make_object(state, value);
+    }
+};
+
+} // namespace
+
+BOOST_FIXTURE_TEST_SUITE(EncodingLuaTests, EncodingLuaSuite)
+
+BOOST_AUTO_TEST_CASE(ClassifiesStringTokens)
+{
+    BOOST_CHECK(is_preproc_token(sol::make_object(state, "$[value]")));
+    BOOST_CHECK(!is_preproc_token(sol::make_object(state, "$value")));
+    BOOST_CHECK(is_link_token(sol::make_object(state, "$value")));
+    BOOST_CHECK(!is_link_token(sol::make_object(state, "$[value]")));
+    BOOST_CHECK(!is_link_token(object(1)));
+}
+
+BOOST_AUTO_TEST_CASE(ConstructsLiteralAndTokens)
+{
+    Encoding literal(object(7));
+    Encoding preproc(sol::make_object(state, "$[value]"));
+    Encoding link(sol::make_object(state, "$value"));
+
+    BOOST_CHECK_EQUAL(literal.size(), 1U);
+    BOOST_CHECK(literal.head() == Keyword::_Literal);
+    BOOST_CHECK(preproc.head() == Keyword::PreProc);
+    BOOST_CHECK(link.head() == Keyword::Link);
+}
+
+BOOST_AUTO_TEST_CASE(SlicesAndTraversesTrees)
+{
+    Encoding tree{};
+    tree.push_back(Keyword::Add, 0, object(0));
+    tree.push_back(Keyword::Mul, 1, object(1));
+    tree.push_back(Keyword::_Literal, 2, object(2));
+    tree.push_back(Keyword::_Literal, 1, object(3));
+
+    Encoding first = tree.child(0);
+    Encoding last = tree.child(-1);
+
+    BOOST_CHECK_EQUAL(tree.arity(), 2U);
+    BOOST_CHECK_EQUAL(first.size(), 2U);
+    BOOST_CHECK(first.head() == Keyword::Mul);
+    BOOST_CHECK_EQUAL(last.size(), 1U);
+    BOOST_CHECK_EQUAL(last.data_.front().as<int>(), 3);
+    BOOST_CHECK_EQUAL(tree.children().size(), 2U);
+    BOOST_CHECK(tree.slice(4, 1).size() == 0U);
+}
+
+BOOST_AUTO_TEST_CASE(AppendsAtRootDepth)
+{
+    Encoding root(object(0));
+    Encoding tail{};
+    tail.push_back(Keyword::Mul, 0, object(1));
+    tail.push_back(Keyword::_Literal, 1, object(2));
+
+    root.append_to_root(std::move(tail));
+
+    BOOST_CHECK_EQUAL(root.size(), 3U);
+    BOOST_CHECK_EQUAL(root.depths_[1], 1U);
+    BOOST_CHECK_EQUAL(root.depths_[2], 2U);
+}
+
+BOOST_AUTO_TEST_CASE(EmptyAndMissingChildrenAreSafe)
+{
+    Encoding empty{};
+
+    BOOST_CHECK_EQUAL(empty.child_idx(0), 0U);
+    BOOST_CHECK(empty.child(0).size() == 0U);
+    BOOST_CHECK(empty.subtree(0).size() == 0U);
+}
+
+BOOST_AUTO_TEST_CASE(ToObjectPreservesPlainPayload)
+{
+    Encoding encoding{};
+    encoding.push_back(Keyword::Add, 0, object(17));
+
+    sol::table result = encoding.to_object();
+    sol::table data = result["data"];
+
+    BOOST_CHECK_EQUAL(data.get<int>(1), 17);
+}
+
+BOOST_AUTO_TEST_CASE(ToObjectSolifiesRegisteredUserdata)
+{
+    EncodingPayload expected{42};
+    sol::object payload = sol::make_object(state, expected);
+    state["payload"] = payload;
+
+    BOOST_CHECK_THROW(state.script("return payload.value == 42").get<bool>(), sol::error);
+    haikan::impl::TypeRegistry registry;
+    registry.Add(haikan::type<EncodingPayload>);
+    registry.init(state);
+    BOOST_REQUIRE(state.script("return payload.value == 42").get<bool>());
+
+    Encoding encoding{};
+    encoding.push_back(Keyword::Add, 0, payload);
+
+    sol::table result = encoding.to_object();
+    sol::table data = result["data"];
+    sol::object serialized = data[1];
+
+    BOOST_REQUIRE(serialized.is<sol::table>());
+    BOOST_CHECK_EQUAL(serialized.as<sol::table>().get<int>("value"), expected.value);
+
+}
+
+BOOST_AUTO_TEST_SUITE_END()

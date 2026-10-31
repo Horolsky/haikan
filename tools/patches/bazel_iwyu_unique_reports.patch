@@ -1,0 +1,11 @@
+--- a/bazel/iwyu/iwyu.bzl
++++ b/bazel/iwyu/iwyu.bzl
+@@ -51,7 +51,7 @@ def _is_cuda_target(ctx, srcs, all_flags):
+ def _run_iwyu(ctx, iwyu_executable, iwyu_runfiles, iwyu_mappings, iwyu_options, flags, target, infile, cc_toolchain):
+     compilation_context = target[CcInfo].compilation_context
+     outfile = ctx.actions.declare_file(
+-        "{}.{}.iwyu.txt".format(target.label.name, infile.basename),
++        "_iwyu/{}/{}.iwyu.txt".format(target.label.name, infile.short_path),
+     )
+ 
+     # add args specified by iwyu_options, the toolchain, on the command line and rule copts
