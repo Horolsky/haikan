@@ -8,13 +8,10 @@ namespace impl {
 template <> void VirtualMachine::Evaluate<Keyword::Pipe>(VirtualMachine::Stack& stack)
 {
     auto& frame = stack.front();
-
-    auto const& subs = frame.expr.subexpressions_vec();
-
-    if (frame.index < subs.size())
+    auto const child = frame.expr.child(frame.index);
+    if (!child.empty())
     {
-        auto const& child = subs[frame.index++];
-
+        ++frame.index;
         frame.state = &VirtualMachine::ResumeFrame;
         stack.push_front(Frame(child));
     }

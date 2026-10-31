@@ -8,7 +8,7 @@ namespace impl {
 template <> void VirtualMachine::Evaluate<Keyword::Flip>(VirtualMachine::Stack& stack)
 {
     auto& frame = stack.front();
-    Expression const child = frame.expr.subexpressions_vec().front();
+    auto const child = frame.expr.child(0);
 
     switch (frame.index)
     {
@@ -26,7 +26,7 @@ template <> void VirtualMachine::Evaluate<Keyword::Flip>(VirtualMachine::Stack& 
         {
             // Evaluate complex parameter with Void input.
             frame.state = &VirtualMachine::ResumeFrame;
-            stack.push_front(Frame(child.subexpressions_vec().front()));
+            stack.push_front(Frame(child.child(0), &VirtualMachine::Enter));
         }
         break;
 

@@ -50,23 +50,23 @@ class VirtualMachine
 
     struct Frame
     {
-        Expression expr;
+        EncodingView expr;
         sol::object value{lua::make_object(sol::nil)};
         sol::object input_trace{lua::make_object(sol::nil)};
         State state {&VirtualMachine::Enter};
         std::size_t index{0};
 
 
-        Frame(Expression e, sol::object v, State const s)
+        Frame(EncodingView e, sol::object v, State const s)
             : expr{e}
             , value{v}
             , state{s}
         {
         }
 
-        Frame() : Frame(Expression(), lua::make_object(sol::nil), &VirtualMachine::Enter) {}
-        Frame(Expression e) : Frame(e, lua::make_object(sol::nil), &VirtualMachine::Enter) {}
-        Frame(Expression e, State const s) : Frame(e, lua::make_object(sol::nil), s) {}
+        Frame() : Frame(EncodingView(), lua::make_object(sol::nil), &VirtualMachine::Enter) {}
+        Frame(EncodingView e) : Frame(e, lua::make_object(sol::nil), &VirtualMachine::Enter) {}
+        Frame(EncodingView e, State const s) : Frame(e, lua::make_object(sol::nil), s) {}
 
         Frame(Frame const&) = default;
         Frame(Frame &&) = default;
@@ -78,11 +78,16 @@ class VirtualMachine
 public:
     using Stack = std::deque<Frame>;
 
-    VirtualMachine(sol::object arg, Expression expr, EvalContext ctx = {})
+    VirtualMachine(sol::object arg, EncodingView expr, EvalContext ctx = {})
         : register_{std::move(arg)}, context_{ctx}
     {
-        stack_.push_front(Frame{std::move(expr)});
+        stack_.push_front(Frame{expr});
         args_ = lua::create_table(2, 0);
+    }
+
+    VirtualMachine(sol::object arg, Expression const& expr, EvalContext ctx = {})
+        : VirtualMachine(arg, expr.encoding_view(), ctx)
+    {
     }
 
     sol::object evaluate()

@@ -8,7 +8,6 @@ namespace impl {
 template <> void VirtualMachine::Evaluate<Keyword::Fold>(VirtualMachine::Stack& stack)
 {
     auto& frame = stack.front();
-    Expression const& expr = frame.expr;
 
     // Initialize accumulator with first element.
     if (frame.index == 0)
@@ -40,8 +39,7 @@ template <> void VirtualMachine::Evaluate<Keyword::Fold>(VirtualMachine::Stack& 
             register_ = new_val;
 
             frame.state = &VirtualMachine::ResumeFrame;
-            Expression function = expr.subexpressions_vec().front();
-            stack.push_front(Frame(function));
+            stack.push_front(Frame(frame.expr.child(0)));
         }
         else
         {

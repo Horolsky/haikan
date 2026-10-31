@@ -31,7 +31,7 @@ template <> void VirtualMachine::Evaluate<Keyword::@keyword.Name>(VirtualMachine
 void VirtualMachine::DispatchHiOrd()
 {
     auto& frame = stack_.front();
-    switch(frame.expr.keyword())
+    switch(frame.expr.head())
     {
 @for keyword in data.HiOrdFns:
     case Keyword::@keyword.Name: Evaluate<Keyword::@keyword.Name>(stack_); break;

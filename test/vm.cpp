@@ -63,18 +63,18 @@ BOOST_AUTO_TEST_CASE(Demo)
         EvalContext ctx = EvalContext::make();
         VirtualMachine vm {arg, expr, ctx};
         result = vm.evaluate();
-        ss << ctx.log;
+        ss << '\n' << ctx.log;
         // log.drain(ss, true);
     }
     auto expected = R"(
-{1.0, 2.0} | Add -> 3.0
-{3.0, 3.0} | Add -> 6.0
-{6.0, 42.5} | Add -> 48.5
-{1.0,2.0,3.0,42.5} | Fold(Add) -> 48.5
-{1.0,2.0,3.0,42.5} | Size -> 4
-{1.0,2.0,3.0,42.5} | Fold(Add) & Size -> {48.5,4}
-{48.5,4} | Div -> 12.125
-{1.0,2.0,3.0,42.5} | (Fold(Add) & Size) | Div -> 12.125
+         ┌── Add $ {1.0,2.0} = 3.0
+         ├── Add $ {3.0,3.0} = 6.0
+         ├── Add $ {6.0,42.5} = 48.5
+      ┌── Fold(Add) $ {1.0,2.0,3.0,42.5} = 48.5
+      ├── Size $ {1.0,2.0,3.0,42.5} = 4
+   ┌── Fold(Add) & Size $ {1.0,2.0,3.0,42.5} = {48.5,4}
+   ├── Div $ {48.5,4} = 12.125
+□  (Fold(Add) & Size) | Div $ {1.0,2.0,3.0,42.5} = 12.125
 )";
 
     BOOST_CHECK_EQUAL(ss.str(), expected);

@@ -64,7 +64,7 @@ template <> void VirtualMachine::Evaluate<Keyword::Err>(VirtualMachine::Stack&);
 void VirtualMachine::DispatchHiOrd()
 {
     auto& frame = stack_.front();
-    switch(frame.expr.keyword())
+    switch(frame.expr.head())
     {
     case Keyword::Id: Evaluate<Keyword::Id>(stack_); break;
     case Keyword::Q: Evaluate<Keyword::Q>(stack_); break;

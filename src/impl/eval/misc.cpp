@@ -28,10 +28,14 @@ template <> void VirtualMachine::Evaluate<Keyword::Id>(VirtualMachine::Stack& st
 template <> void VirtualMachine::Evaluate<Keyword::Q>(VirtualMachine::Stack& stack)
 {
     // TODO: remove serialization, pass encoding or expr. view directly
-    auto& f = stack.front();
-    auto const c = f.expr.subexpressions_vec();
-    register_ = c.empty() ? f.expr.data() : c.front().encoding_view().to_object();
-    f.state = &VirtualMachine::Return;
+    auto& frame = stack.front();
+    // auto const c = frame.expr.subexpressions_vec();
+    // register_ = c.empty() ? frame.expr.data() : c.front().encoding_view().to_object();
+
+    auto child = frame.expr.child(0);
+    register_ = child.to_object();
+
+    frame.state = &VirtualMachine::Return;
 }
 
 } // namespace impl

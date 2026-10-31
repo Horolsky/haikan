@@ -380,8 +380,7 @@ std::size_t EncodingView::child_idx(int ord) const noexcept
         {
             if ((depths_[static_cast<std::size_t>(i)] - depths_[0]) == 1)
             {
-                idx = i;
-                if (++ord >= 0) break;
+                if (++ord >= 0) return static_cast<std::size_t>(i);
             }
         }
     }
@@ -391,8 +390,7 @@ std::size_t EncodingView::child_idx(int ord) const noexcept
         {
             if ((depths_[i] - depths_[0]) == 1)
             {
-                idx = i;
-                if (--ord < 0) break;
+                if (--ord < 0) return i;
             }
         }
     }
@@ -479,12 +477,11 @@ bool EncodingView::is_boolean() const
 
 EncodingView EncodingView::traverse_subtrees(std::size_t const node, std::size_t& next) const noexcept
 {
+    next = size();
     if (node >= size())
     {
-        next = size();
         return {};
     }
-    next = size();
     std::size_t const node_depth = depths_[node];
     std::size_t count {1};
     while (node + count < size_)
