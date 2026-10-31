@@ -1,11 +1,11 @@
 #include <cstdint>
 #include "haikan/impl/keyword.hpp"
-#include "haikan/impl/vm.hpp"
+#include "haikan/impl/interpreter.hpp"
 
 namespace haikan {
 namespace impl {
 
-template <> void VirtualMachine::Evaluate<Keyword::Fold>(VirtualMachine::Stack& stack)
+template <> void Interpreter::Evaluate<Keyword::Fold>(Interpreter::Stack& stack)
 {
     auto& frame = stack.front();
 
@@ -22,11 +22,11 @@ template <> void VirtualMachine::Evaluate<Keyword::Fold>(VirtualMachine::Stack& 
         }
         else
         {
-            frame.state = &VirtualMachine::Return;
+            frame.state = &Interpreter::Return;
         }
     }
 
-    if (frame.state != &VirtualMachine::Return)
+    if (frame.state != &Interpreter::Return)
     {
         sol::table source = frame.value.as<sol::table>();
 
@@ -38,12 +38,12 @@ template <> void VirtualMachine::Evaluate<Keyword::Fold>(VirtualMachine::Stack& 
 
             register_ = new_val;
 
-            frame.state = &VirtualMachine::ResumeFrame;
+            frame.state = &Interpreter::ResumeFrame;
             stack.push_front(Frame(frame.expr.child(0)));
         }
         else
         {
-            frame.state = &VirtualMachine::Return;
+            frame.state = &Interpreter::Return;
         }
     }
 }

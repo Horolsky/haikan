@@ -24,11 +24,11 @@ namespace haikan {
 namespace impl {
 
 
-class VirtualMachine
+class Interpreter
 {
 
 
-    using State = void (VirtualMachine::*)();
+    using State = void (Interpreter::*)();
 
     void Enter();
     void EvalParam();
@@ -53,7 +53,7 @@ class VirtualMachine
         EncodingView expr;
         sol::object value{lua::make_object(sol::nil)};
         sol::object input_trace{lua::make_object(sol::nil)};
-        State state {&VirtualMachine::Enter};
+        State state {&Interpreter::Enter};
         std::size_t index{0};
 
 
@@ -64,8 +64,8 @@ class VirtualMachine
         {
         }
 
-        Frame() : Frame(EncodingView(), lua::make_object(sol::nil), &VirtualMachine::Enter) {}
-        Frame(EncodingView e) : Frame(e, lua::make_object(sol::nil), &VirtualMachine::Enter) {}
+        Frame() : Frame(EncodingView(), lua::make_object(sol::nil), &Interpreter::Enter) {}
+        Frame(EncodingView e) : Frame(e, lua::make_object(sol::nil), &Interpreter::Enter) {}
         Frame(EncodingView e, State const s) : Frame(e, lua::make_object(sol::nil), s) {}
 
         Frame(Frame const&) = default;
@@ -78,15 +78,15 @@ class VirtualMachine
 public:
     using Stack = std::deque<Frame>;
 
-    VirtualMachine(sol::object arg, EncodingView expr, EvalContext ctx = {})
+    Interpreter(sol::object arg, EncodingView expr, EvalContext ctx = {})
         : register_{std::move(arg)}, context_{ctx}
     {
         stack_.push_front(Frame{expr});
         args_ = lua::create_table(2, 0);
     }
 
-    VirtualMachine(sol::object arg, Expression const& expr, EvalContext ctx = {})
-        : VirtualMachine(arg, expr.encoding_view(), ctx)
+    Interpreter(sol::object arg, Expression const& expr, EvalContext ctx = {})
+        : Interpreter(arg, expr.encoding_view(), ctx)
     {
     }
 
@@ -111,7 +111,7 @@ private:
 
     // Higher Order eval
     template <Keyword K>
-    void Evaluate(VirtualMachine::Stack& stack);
+    void Evaluate(Interpreter::Stack& stack);
 };
 
 } // namespace impl

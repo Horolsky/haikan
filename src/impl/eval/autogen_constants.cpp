@@ -20,49 +20,49 @@
 #include <boost/math/constants/constants.hpp>
 
 #include "haikan/impl/expression.hpp"
-#include "haikan/impl/vm.hpp"
+#include "haikan/impl/interpreter.hpp"
 
 
 namespace haikan {
 namespace impl {
 
-template <> sol::object VirtualMachine::Evaluate<Keyword::Noop>(sol::object const&, sol::object const&) const
+template <> sol::object Interpreter::Evaluate<Keyword::Noop>(sol::object const&, sol::object const&) const
 {
     return lua::make_object(true);
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::Null>(sol::object const&, sol::object const&) const
+template <> sol::object Interpreter::Evaluate<Keyword::Null>(sol::object const&, sol::object const&) const
 {
     return lua::make_object(nullptr);
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::True>(sol::object const&, sol::object const&) const
+template <> sol::object Interpreter::Evaluate<Keyword::True>(sol::object const&, sol::object const&) const
 {
     return lua::make_object(true);
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::False>(sol::object const&, sol::object const&) const
+template <> sol::object Interpreter::Evaluate<Keyword::False>(sol::object const&, sol::object const&) const
 {
     return lua::make_object(false);
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::Pi>(sol::object const&, sol::object const&) const
+template <> sol::object Interpreter::Evaluate<Keyword::Pi>(sol::object const&, sol::object const&) const
 {
     return lua::make_object(boost::math::constants::pi<double>());
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::E>(sol::object const&, sol::object const&) const
+template <> sol::object Interpreter::Evaluate<Keyword::E>(sol::object const&, sol::object const&) const
 {
     return lua::make_object(boost::math::constants::e<double>());
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::Inf>(sol::object const&, sol::object const&) const
+template <> sol::object Interpreter::Evaluate<Keyword::Inf>(sol::object const&, sol::object const&) const
 {
     return lua::make_object(std::numeric_limits<double>::infinity());
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::Eps>(sol::object const&, sol::object const&) const
+template <> sol::object Interpreter::Evaluate<Keyword::Eps>(sol::object const&, sol::object const&) const
 {
     return lua::make_object(std::numeric_limits<double>::epsilon());
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::NaN>(sol::object const&, sol::object const&) const
+template <> sol::object Interpreter::Evaluate<Keyword::NaN>(sol::object const&, sol::object const&) const
 {
     return lua::make_object(std::numeric_limits<double>::quiet_NaN());
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::Thread>(sol::object const&, sol::object const&) const
+template <> sol::object Interpreter::Evaluate<Keyword::Thread>(sol::object const&, sol::object const&) const
 {
     return lua::make_object((std::stringstream() << std::this_thread::get_id()).str());
 }

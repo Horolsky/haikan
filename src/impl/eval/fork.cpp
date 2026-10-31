@@ -1,11 +1,11 @@
 #include <cstdint>
 #include "haikan/impl/keyword.hpp"
-#include "haikan/impl/vm.hpp"
+#include "haikan/impl/interpreter.hpp"
 
 namespace haikan {
 namespace impl {
 
-template <> void VirtualMachine::Evaluate<Keyword::Fork>(VirtualMachine::Stack& stack)
+template <> void Interpreter::Evaluate<Keyword::Fork>(Interpreter::Stack& stack)
 {
     auto& frame = stack.front();
 
@@ -29,7 +29,7 @@ template <> void VirtualMachine::Evaluate<Keyword::Fork>(VirtualMachine::Stack& 
     {
         // Every branch receives the original input.
         register_ = frame.value.as<sol::table>()[1];
-        frame.state = &VirtualMachine::ResumeFrame;
+        frame.state = &Interpreter::ResumeFrame;
         ++frame.index;
         stack.push_front(Frame(child));
     }
@@ -37,7 +37,7 @@ template <> void VirtualMachine::Evaluate<Keyword::Fork>(VirtualMachine::Stack& 
     {
         // All branches completed.
         register_ = frame.value.as<sol::table>()[2];
-        frame.state = &VirtualMachine::Return;
+        frame.state = &Interpreter::Return;
     }
 }
 

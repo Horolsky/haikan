@@ -14,7 +14,7 @@
 #include "haikan/impl/expression.hpp"
 #include "haikan/impl/operator_table.hpp"
 #include "haikan/impl/type_registry.hpp"
-#include "haikan/impl/vm.hpp"
+#include "haikan/impl/interpreter.hpp"
 
 namespace utf = boost::unit_test;
 using namespace haikan;
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(Demo)
     sol::object result;
     {
         EvalContext ctx = EvalContext::make();
-        VirtualMachine vm {arg, expr, ctx};
+        Interpreter vm {arg, expr, ctx};
         result = vm.evaluate();
         ss << '\n' << ctx.log;
         // log.drain(ss, true);

@@ -18,17 +18,17 @@
 
 #include <cstdint>
 #include "haikan/impl/keyword.hpp"
-#include "haikan/impl/vm.hpp"
+#include "haikan/impl/interpreter.hpp"
 
 namespace haikan {
 namespace impl {
 
 
 @for keyword in data.HiOrdFns:
-template <> void VirtualMachine::Evaluate<Keyword::@keyword.Name>(VirtualMachine::Stack&);
+template <> void Interpreter::Evaluate<Keyword::@keyword.Name>(Interpreter::Stack&);
 @end
 
-void VirtualMachine::DispatchHiOrd()
+void Interpreter::DispatchHiOrd()
 {
     auto& frame = stack_.front();
     switch(frame.expr.head())

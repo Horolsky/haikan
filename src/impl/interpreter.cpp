@@ -1,4 +1,4 @@
-#include "haikan/impl/vm.hpp"
+#include "haikan/impl/interpreter.hpp"
 #include "haikan/keywords.hpp"
 #include "haikan/impl/expression.hpp"
 #include "haikan/impl/operator_table.hpp"
@@ -11,17 +11,17 @@ namespace impl
 {
 
 
-void VirtualMachine::Enter()
+void Interpreter::Enter()
 {
     auto& frame = stack_.front();
     auto const kattr = keyword_attributes(frame.expr.head());
     frame.input_trace = register_;
     frame.state = (kattr & attr::is_hiord)
-        ? &VirtualMachine::DispatchHiOrd
-        : &VirtualMachine::EvalParam;
+        ? &Interpreter::DispatchHiOrd
+        : &Interpreter::EvalParam;
 }
 
-void VirtualMachine::EvalParam()
+void Interpreter::EvalParam()
 {
     auto& frame = stack_.front();
     auto const child = frame.expr.child(0);
@@ -29,7 +29,7 @@ void VirtualMachine::EvalParam()
 
     if (child.empty())
     {
-        frame.state = &VirtualMachine::ResolveArgs;
+        frame.state = &Interpreter::ResolveArgs;
     }
     else
     {
@@ -37,21 +37,21 @@ void VirtualMachine::EvalParam()
             register_, lua::make_object(sol::nil)
         );
 
-        frame.state = &VirtualMachine::ResumeFrame;
+        frame.state = &Interpreter::ResumeFrame;
         stack_.push_front(Frame(child));
     }
 }
 
-void VirtualMachine::ResumeFrame()
+void Interpreter::ResumeFrame()
 {
     auto& frame = stack_.front();
     auto const kattr = keyword_attributes(frame.expr.head());
     frame.state = (kattr & attr::is_hiord)
-        ? (&VirtualMachine::DispatchHiOrd)
-        : (&VirtualMachine::ResolveArgs);
+        ? (&Interpreter::DispatchHiOrd)
+        : (&Interpreter::ResolveArgs);
 }
 
-void VirtualMachine::ResolveArgs()
+void Interpreter::ResolveArgs()
 {
     auto& frame = stack_.front();
     auto const kattr = keyword_attributes(frame.expr.head());
@@ -88,13 +88,13 @@ void VirtualMachine::ResolveArgs()
         }
     }
 
-    frame.state = &VirtualMachine::Execute;
+    frame.state = &Interpreter::Execute;
 }
 
-void VirtualMachine::Execute()
+void Interpreter::Execute()
 {
     auto& frame = stack_.front();
-    frame.state = &VirtualMachine::Return;
+    frame.state = &Interpreter::Return;
 
     sol::object lhs, rhs;
     if (register_ == args_)
@@ -128,7 +128,7 @@ void VirtualMachine::Execute()
 }
 
 
-void VirtualMachine::Return()
+void Interpreter::Return()
 {
     auto& frame = stack_.front();
     // context_.log << "\n"
@@ -147,7 +147,7 @@ void VirtualMachine::Return()
 }
 
 
-void VirtualMachine::Step()
+void Interpreter::Step()
 {
     auto& frame = stack_.front();
     (this->*frame.state)();

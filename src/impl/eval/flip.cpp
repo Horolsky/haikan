@@ -1,11 +1,11 @@
 #include <cstdint>
 #include "haikan/impl/keyword.hpp"
-#include "haikan/impl/vm.hpp"
+#include "haikan/impl/interpreter.hpp"
 
 namespace haikan {
 namespace impl {
 
-template <> void VirtualMachine::Evaluate<Keyword::Flip>(VirtualMachine::Stack& stack)
+template <> void Interpreter::Evaluate<Keyword::Flip>(Interpreter::Stack& stack)
 {
     auto& frame = stack.front();
     auto const child = frame.expr.child(0);
@@ -25,8 +25,8 @@ template <> void VirtualMachine::Evaluate<Keyword::Flip>(VirtualMachine::Stack& 
         // else
         {
             // Evaluate complex parameter with Void input.
-            frame.state = &VirtualMachine::ResumeFrame;
-            stack.push_front(Frame(child.child(0), &VirtualMachine::Enter));
+            frame.state = &Interpreter::ResumeFrame;
+            stack.push_front(Frame(child.child(0), &Interpreter::Enter));
         }
         break;
 
@@ -38,15 +38,15 @@ template <> void VirtualMachine::Evaluate<Keyword::Flip>(VirtualMachine::Stack& 
             result[2] = std::exchange(frame.value, lua::make_object(sol::nil));
             register_ =  result;
             frame.index = 2;
-            frame.state = &VirtualMachine::ResumeFrame;
+            frame.state = &Interpreter::ResumeFrame;
             // Skip Enter: operands are already prepared.
-            stack.push_front(Frame(child, &VirtualMachine::Execute));
+            stack.push_front(Frame(child, &Interpreter::Execute));
             break;
         }
 
     case 2:
         // Child returned its result in register_.
-        frame.state = &VirtualMachine::Return;
+        frame.state = &Interpreter::Return;
         break;
     }
 }

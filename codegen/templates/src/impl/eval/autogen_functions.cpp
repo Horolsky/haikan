@@ -20,7 +20,7 @@
 @end
 
 #include "haikan/impl/expression.hpp"
-#include "haikan/impl/vm.hpp"
+#include "haikan/impl/interpreter.hpp"
 
 namespace haikan {
 namespace impl {
@@ -81,7 +81,7 @@ sol::object eval_complex_to_real(complex_to_real_fn f, sol::object const& lhs, s
 } // namespace
 
 @for keyword in data.CodegenFns:
-template <> sol::object VirtualMachine::Evaluate<Keyword::@keyword.Name>(sol::object const& lhs, sol::object const& rhs) const
+template <> sol::object Interpreter::Evaluate<Keyword::@keyword.Name>(sol::object const& lhs, sol::object const& rhs) const
 {
     (void) lhs;
     (void) rhs;

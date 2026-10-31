@@ -18,7 +18,7 @@
 #include <complex>
 
 #include "haikan/impl/expression.hpp"
-#include "haikan/impl/vm.hpp"
+#include "haikan/impl/interpreter.hpp"
 
 namespace haikan {
 namespace impl {
@@ -78,145 +78,145 @@ sol::object eval_complex_to_real(complex_to_real_fn f, sol::object const& lhs, s
 }
 } // namespace
 
-template <> sol::object VirtualMachine::Evaluate<Keyword::Sin>(sol::object const& lhs, sol::object const& rhs) const
+template <> sol::object Interpreter::Evaluate<Keyword::Sin>(sol::object const& lhs, sol::object const& rhs) const
 {
     (void) lhs;
     (void) rhs;
     return lua::make_object(eval_complex(std::sin, lhs, rhs));
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::Cos>(sol::object const& lhs, sol::object const& rhs) const
+template <> sol::object Interpreter::Evaluate<Keyword::Cos>(sol::object const& lhs, sol::object const& rhs) const
 {
     (void) lhs;
     (void) rhs;
     return lua::make_object(eval_complex(std::cos, lhs, rhs));
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::Tan>(sol::object const& lhs, sol::object const& rhs) const
+template <> sol::object Interpreter::Evaluate<Keyword::Tan>(sol::object const& lhs, sol::object const& rhs) const
 {
     (void) lhs;
     (void) rhs;
     return lua::make_object(eval_complex(std::tan, lhs, rhs));
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::Asin>(sol::object const& lhs, sol::object const& rhs) const
+template <> sol::object Interpreter::Evaluate<Keyword::Asin>(sol::object const& lhs, sol::object const& rhs) const
 {
     (void) lhs;
     (void) rhs;
     return lua::make_object(eval_complex(std::asin, lhs, rhs));
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::Acos>(sol::object const& lhs, sol::object const& rhs) const
+template <> sol::object Interpreter::Evaluate<Keyword::Acos>(sol::object const& lhs, sol::object const& rhs) const
 {
     (void) lhs;
     (void) rhs;
     return lua::make_object(eval_complex(std::acos, lhs, rhs));
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::Atan>(sol::object const& lhs, sol::object const& rhs) const
+template <> sol::object Interpreter::Evaluate<Keyword::Atan>(sol::object const& lhs, sol::object const& rhs) const
 {
     (void) lhs;
     (void) rhs;
     return lua::make_object(eval_complex(std::atan, lhs, rhs));
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::Sinh>(sol::object const& lhs, sol::object const& rhs) const
+template <> sol::object Interpreter::Evaluate<Keyword::Sinh>(sol::object const& lhs, sol::object const& rhs) const
 {
     (void) lhs;
     (void) rhs;
     return lua::make_object(eval_complex(std::sinh, lhs, rhs));
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::Cosh>(sol::object const& lhs, sol::object const& rhs) const
+template <> sol::object Interpreter::Evaluate<Keyword::Cosh>(sol::object const& lhs, sol::object const& rhs) const
 {
     (void) lhs;
     (void) rhs;
     return lua::make_object(eval_complex(std::cosh, lhs, rhs));
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::Tanh>(sol::object const& lhs, sol::object const& rhs) const
+template <> sol::object Interpreter::Evaluate<Keyword::Tanh>(sol::object const& lhs, sol::object const& rhs) const
 {
     (void) lhs;
     (void) rhs;
     return lua::make_object(eval_complex(std::tanh, lhs, rhs));
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::Asinh>(sol::object const& lhs, sol::object const& rhs) const
+template <> sol::object Interpreter::Evaluate<Keyword::Asinh>(sol::object const& lhs, sol::object const& rhs) const
 {
     (void) lhs;
     (void) rhs;
     return lua::make_object(eval_complex(std::asinh, lhs, rhs));
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::Acosh>(sol::object const& lhs, sol::object const& rhs) const
+template <> sol::object Interpreter::Evaluate<Keyword::Acosh>(sol::object const& lhs, sol::object const& rhs) const
 {
     (void) lhs;
     (void) rhs;
     return lua::make_object(eval_complex(std::acosh, lhs, rhs));
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::Atanh>(sol::object const& lhs, sol::object const& rhs) const
+template <> sol::object Interpreter::Evaluate<Keyword::Atanh>(sol::object const& lhs, sol::object const& rhs) const
 {
     (void) lhs;
     (void) rhs;
     return lua::make_object(eval_complex(std::atanh, lhs, rhs));
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::Exp>(sol::object const& lhs, sol::object const& rhs) const
+template <> sol::object Interpreter::Evaluate<Keyword::Exp>(sol::object const& lhs, sol::object const& rhs) const
 {
     (void) lhs;
     (void) rhs;
     return lua::make_object(eval_complex(std::exp, lhs, rhs));
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::Erf>(sol::object const& lhs, sol::object const& rhs) const
+template <> sol::object Interpreter::Evaluate<Keyword::Erf>(sol::object const& lhs, sol::object const& rhs) const
 {
     (void) lhs;
     (void) rhs;
     return lua::make_object(eval_real(std::erf, lhs, rhs));
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::Erfc>(sol::object const& lhs, sol::object const& rhs) const
+template <> sol::object Interpreter::Evaluate<Keyword::Erfc>(sol::object const& lhs, sol::object const& rhs) const
 {
     (void) lhs;
     (void) rhs;
     return lua::make_object(eval_real(std::erfc, lhs, rhs));
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::Gamma>(sol::object const& lhs, sol::object const& rhs) const
+template <> sol::object Interpreter::Evaluate<Keyword::Gamma>(sol::object const& lhs, sol::object const& rhs) const
 {
     (void) lhs;
     (void) rhs;
     return lua::make_object(eval_real(std::tgamma, lhs, rhs));
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::Abs>(sol::object const& lhs, sol::object const& rhs) const
+template <> sol::object Interpreter::Evaluate<Keyword::Abs>(sol::object const& lhs, sol::object const& rhs) const
 {
     (void) lhs;
     (void) rhs;
     return lua::make_object(eval_complex_to_real(std::abs, lhs, rhs));
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::Ceil>(sol::object const& lhs, sol::object const& rhs) const
+template <> sol::object Interpreter::Evaluate<Keyword::Ceil>(sol::object const& lhs, sol::object const& rhs) const
 {
     (void) lhs;
     (void) rhs;
     return lua::make_object(eval_real(std::ceil, lhs, rhs));
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::Floor>(sol::object const& lhs, sol::object const& rhs) const
+template <> sol::object Interpreter::Evaluate<Keyword::Floor>(sol::object const& lhs, sol::object const& rhs) const
 {
     (void) lhs;
     (void) rhs;
     return lua::make_object(eval_real(std::floor, lhs, rhs));
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::Round>(sol::object const& lhs, sol::object const& rhs) const
+template <> sol::object Interpreter::Evaluate<Keyword::Round>(sol::object const& lhs, sol::object const& rhs) const
 {
     (void) lhs;
     (void) rhs;
     return lua::make_object(eval_real(std::round, lhs, rhs));
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::Sqrt>(sol::object const& lhs, sol::object const& rhs) const
+template <> sol::object Interpreter::Evaluate<Keyword::Sqrt>(sol::object const& lhs, sol::object const& rhs) const
 {
     (void) lhs;
     (void) rhs;
     return lua::make_object(eval_complex(std::sqrt, lhs, rhs));
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::Sign>(sol::object const& lhs, sol::object const& rhs) const
+template <> sol::object Interpreter::Evaluate<Keyword::Sign>(sol::object const& lhs, sol::object const& rhs) const
 {
     (void) lhs;
     (void) rhs;
     return lua::make_object(lhs.as<double>() >= 0 ? 1 : -1);
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::IsErr>(sol::object const& lhs, sol::object const& rhs) const
+template <> sol::object Interpreter::Evaluate<Keyword::IsErr>(sol::object const& lhs, sol::object const& rhs) const
 {
     (void) lhs;
     (void) rhs;
     return lua::make_object(lhs.is<error>());
 }
-template <> sol::object VirtualMachine::Evaluate<Keyword::PreProc>(sol::object const& lhs, sol::object const& rhs) const
+template <> sol::object Interpreter::Evaluate<Keyword::PreProc>(sol::object const& lhs, sol::object const& rhs) const
 {
     (void) lhs;
     (void) rhs;

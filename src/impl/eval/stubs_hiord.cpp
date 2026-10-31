@@ -1,42 +1,42 @@
 #include <cstdint>
 #include "haikan/impl/keyword.hpp"
-#include "haikan/impl/vm.hpp"
+#include "haikan/impl/interpreter.hpp"
 
 namespace haikan {
 namespace impl {
 
 
-template <> void VirtualMachine::Evaluate<Keyword::Map>(VirtualMachine::Stack&) {}
-template <> void VirtualMachine::Evaluate<Keyword::Filter>(VirtualMachine::Stack&) {}
-template <> void VirtualMachine::Evaluate<Keyword::Count>(VirtualMachine::Stack&) {}
-template <> void VirtualMachine::Evaluate<Keyword::Each>(VirtualMachine::Stack&) {}
-template <> void VirtualMachine::Evaluate<Keyword::Sort>(VirtualMachine::Stack&) {}
-template <> void VirtualMachine::Evaluate<Keyword::Find>(VirtualMachine::Stack&) {}
-template <> void VirtualMachine::Evaluate<Keyword::FindPtr>(VirtualMachine::Stack&) {}
-template <> void VirtualMachine::Evaluate<Keyword::FindIdx>(VirtualMachine::Stack&) {}
-template <> void VirtualMachine::Evaluate<Keyword::Min>(VirtualMachine::Stack&) {}
-template <> void VirtualMachine::Evaluate<Keyword::Max>(VirtualMachine::Stack&) {}
-template <> void VirtualMachine::Evaluate<Keyword::Argmin>(VirtualMachine::Stack&) {}
-template <> void VirtualMachine::Evaluate<Keyword::Argmax>(VirtualMachine::Stack&) {}
-template <> void VirtualMachine::Evaluate<Keyword::Recur>(VirtualMachine::Stack&) {}
-template <> void VirtualMachine::Evaluate<Keyword::Unfold>(VirtualMachine::Stack&) {}
-template <> void VirtualMachine::Evaluate<Keyword::Op>(VirtualMachine::Stack&) {}
-template <> void VirtualMachine::Evaluate<Keyword::Bind>(VirtualMachine::Stack&) {}
-template <> void VirtualMachine::Evaluate<Keyword::Fn>(VirtualMachine::Stack&) {}
-template <> void VirtualMachine::Evaluate<Keyword::Link>(VirtualMachine::Stack&) {}
-template <> void VirtualMachine::Evaluate<Keyword::Get>(VirtualMachine::Stack&) {}
-template <> void VirtualMachine::Evaluate<Keyword::EnvLoad>(VirtualMachine::Stack&) {}
-template <> void VirtualMachine::Evaluate<Keyword::EnvStore>(VirtualMachine::Stack&) {}
-template <> void VirtualMachine::Evaluate<Keyword::Any>(VirtualMachine::Stack&) {}
-template <> void VirtualMachine::Evaluate<Keyword::All>(VirtualMachine::Stack&) {}
-template <> void VirtualMachine::Evaluate<Keyword::Saturate>(VirtualMachine::Stack&) {}
-template <> void VirtualMachine::Evaluate<Keyword::Tuple>(VirtualMachine::Stack&) {}
-template <> void VirtualMachine::Evaluate<Keyword::Dbg>(VirtualMachine::Stack&) {}
-template <> void VirtualMachine::Evaluate<Keyword::Eval>(VirtualMachine::Stack&) {}
-template <> void VirtualMachine::Evaluate<Keyword::Try>(VirtualMachine::Stack&) {}
-template <> void VirtualMachine::Evaluate<Keyword::Kwrd>(VirtualMachine::Stack&) {}
-template <> void VirtualMachine::Evaluate<Keyword::Prms>(VirtualMachine::Stack&) {}
-template <> void VirtualMachine::Evaluate<Keyword::Err>(VirtualMachine::Stack&) {}
+template <> void Interpreter::Evaluate<Keyword::Map>(Interpreter::Stack&) {}
+template <> void Interpreter::Evaluate<Keyword::Filter>(Interpreter::Stack&) {}
+template <> void Interpreter::Evaluate<Keyword::Count>(Interpreter::Stack&) {}
+template <> void Interpreter::Evaluate<Keyword::Each>(Interpreter::Stack&) {}
+template <> void Interpreter::Evaluate<Keyword::Sort>(Interpreter::Stack&) {}
+template <> void Interpreter::Evaluate<Keyword::Find>(Interpreter::Stack&) {}
+template <> void Interpreter::Evaluate<Keyword::FindPtr>(Interpreter::Stack&) {}
+template <> void Interpreter::Evaluate<Keyword::FindIdx>(Interpreter::Stack&) {}
+template <> void Interpreter::Evaluate<Keyword::Min>(Interpreter::Stack&) {}
+template <> void Interpreter::Evaluate<Keyword::Max>(Interpreter::Stack&) {}
+template <> void Interpreter::Evaluate<Keyword::Argmin>(Interpreter::Stack&) {}
+template <> void Interpreter::Evaluate<Keyword::Argmax>(Interpreter::Stack&) {}
+template <> void Interpreter::Evaluate<Keyword::Recur>(Interpreter::Stack&) {}
+template <> void Interpreter::Evaluate<Keyword::Unfold>(Interpreter::Stack&) {}
+template <> void Interpreter::Evaluate<Keyword::Op>(Interpreter::Stack&) {}
+template <> void Interpreter::Evaluate<Keyword::Bind>(Interpreter::Stack&) {}
+template <> void Interpreter::Evaluate<Keyword::Fn>(Interpreter::Stack&) {}
+template <> void Interpreter::Evaluate<Keyword::Link>(Interpreter::Stack&) {}
+template <> void Interpreter::Evaluate<Keyword::Get>(Interpreter::Stack&) {}
+template <> void Interpreter::Evaluate<Keyword::EnvLoad>(Interpreter::Stack&) {}
+template <> void Interpreter::Evaluate<Keyword::EnvStore>(Interpreter::Stack&) {}
+template <> void Interpreter::Evaluate<Keyword::Any>(Interpreter::Stack&) {}
+template <> void Interpreter::Evaluate<Keyword::All>(Interpreter::Stack&) {}
+template <> void Interpreter::Evaluate<Keyword::Saturate>(Interpreter::Stack&) {}
+template <> void Interpreter::Evaluate<Keyword::Tuple>(Interpreter::Stack&) {}
+template <> void Interpreter::Evaluate<Keyword::Dbg>(Interpreter::Stack&) {}
+template <> void Interpreter::Evaluate<Keyword::Eval>(Interpreter::Stack&) {}
+template <> void Interpreter::Evaluate<Keyword::Try>(Interpreter::Stack&) {}
+template <> void Interpreter::Evaluate<Keyword::Kwrd>(Interpreter::Stack&) {}
+template <> void Interpreter::Evaluate<Keyword::Prms>(Interpreter::Stack&) {}
+template <> void Interpreter::Evaluate<Keyword::Err>(Interpreter::Stack&) {}
 
 } // namespace impl
 } // namespace haikan

@@ -18,7 +18,7 @@
 
 #include <cstdint>
 #include "haikan/impl/keyword.hpp"
-#include "haikan/impl/vm.hpp"
+#include "haikan/impl/interpreter.hpp"
 #include "haikan/impl/operator_table.hpp"
 
 namespace haikan {
@@ -26,11 +26,11 @@ namespace impl {
 
 
 @for keyword in data.Common:
-template <> sol::object VirtualMachine::Evaluate<Keyword::@keyword.Name>(sol::object const&, sol::object const&) const;
+template <> sol::object Interpreter::Evaluate<Keyword::@keyword.Name>(sol::object const&, sol::object const&) const;
 @end
 
 
-sol::object VirtualMachine::Dispatch(Keyword const k, sol::object const& lhs, sol::object const& rhs) const
+sol::object Interpreter::Dispatch(Keyword const k, sol::object const& lhs, sol::object const& rhs) const
 {
     sol::object result;
     switch (k)

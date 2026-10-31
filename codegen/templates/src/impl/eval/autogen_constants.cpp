@@ -20,14 +20,14 @@
 @end
 
 #include "haikan/impl/expression.hpp"
-#include "haikan/impl/vm.hpp"
+#include "haikan/impl/interpreter.hpp"
 
 
 namespace haikan {
 namespace impl {
 
 @for keyword in data.Constants:
-template <> sol::object VirtualMachine::Evaluate<Keyword::@keyword.Name>(sol::object const&, sol::object const&) const
+template <> sol::object Interpreter::Evaluate<Keyword::@keyword.Name>(sol::object const&, sol::object const&) const
 {
     return lua::make_object(@keyword.CodegenValue);
 }
