@@ -25,8 +25,8 @@ try
     std::string out;
     std::back_insert_iterator<std::string> sink(out);
 
-    impl::ExpressionLuaGrammar<std::back_insert_iterator<std::string>> gen;
-    boost::spirit::karma::generate(sink, gen, *this);
+    impl::ExpressionGrammar<std::back_insert_iterator<std::string>> gen;
+    boost::spirit::karma::generate(sink, gen, encoding_view());
 
     return out;
 }
@@ -38,8 +38,8 @@ catch (std::exception const& e)
 std::ostream& Expression::prettify_to(std::ostream& os) const
 {
     boost::spirit::ostream_iterator sink(os);
-    impl::ExpressionLuaGrammar<boost::spirit::ostream_iterator> gen;
-    boost::spirit::karma::generate(sink, gen, *this);
+    impl::ExpressionGrammar<boost::spirit::ostream_iterator> gen;
+    boost::spirit::karma::generate(sink, gen, encoding_view());
 
     return os;
 }
@@ -49,8 +49,8 @@ void Expression::prettify_to(char* buff, std::size_t n) const
 {
     boost::iostreams::stream<boost::iostreams::array_sink> stream(buff, n);
     boost::spirit::ostream_iterator sink(stream);
-    impl::ExpressionLuaGrammar<boost::spirit::ostream_iterator> gen;
-    boost::spirit::karma::generate(sink, gen, *this);
+    impl::ExpressionGrammar<boost::spirit::ostream_iterator> gen;
+    boost::spirit::karma::generate(sink, gen, encoding_view());
 
     stream.flush();
     std::size_t written = stream.tellp();

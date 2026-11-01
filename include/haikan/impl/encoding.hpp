@@ -153,9 +153,11 @@ public:
     bool is_const() const;
     bool is_boolean() const;
 
-    Keyword const* if_keywords() const noexcept { return keywords_; }
-    std::size_t const* if_depths() const noexcept { return depths_; }
-    sol::object const* if_data() const noexcept { return data_; }
+
+    sol::object data() const noexcept
+    {
+        return data_ ? *data_ : sol::nil;
+    }
 
 private:
     Keyword const* keywords_ = nullptr;

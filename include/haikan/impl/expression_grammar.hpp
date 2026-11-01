@@ -11,14 +11,14 @@
 
 #include "haikan/impl/expression.hpp"
 #include "haikan/impl/keyword_grammar.hpp"
+#include "haikan/impl/keyword_to_str.hpp"
 
 namespace haikan {
 namespace impl {
 
-
 template <typename OutputIterator>
-struct ExpressionLuaGrammar : boost::spirit::karma::grammar<OutputIterator, Expression()> {
-    ExpressionLuaGrammar() : ExpressionLuaGrammar::base_type(start)
+struct ExpressionGrammar : boost::spirit::karma::grammar<OutputIterator, EncodingView()> {
+    ExpressionGrammar() : ExpressionGrammar::base_type(start)
     {
         namespace karma = boost::spirit::karma;
         namespace phoenix = boost::phoenix;
@@ -29,58 +29,111 @@ struct ExpressionLuaGrammar : boost::spirit::karma::grammar<OutputIterator, Expr
         using karma::lit;
         using karma::string;
 
-        auto const is_literal          = boost::phoenix::bind(&Expression::is_literal, _val);
-        auto const is_preproc          = boost::phoenix::bind(&Expression::is_preproc, _val);
-        auto const is_link             = boost::phoenix::bind(&Expression::is_link, _val);
-        auto const is_valid_link       = boost::phoenix::bind(&Expression::is_valid_link, _val);
-        auto const has_subexpr         = boost::phoenix::bind(&Expression::has_subexpr, _val);
-        auto const serialize           = boost::phoenix::bind(&Expression::serialize, _val);
-        auto const keyword_to_str      = boost::phoenix::bind(&Expression::keyword_to_str, _val);
-        auto const subexpressions_vec = boost::phoenix::bind(&Expression::subexpressions_vec, _val);
-        auto const link_parameters     = boost::phoenix::bind(&Expression::link_parameters, _val);
-        auto const is_infix_pipe       = boost::phoenix::bind(&Expression::is_infix_pipe, _val);
-        auto const is_infix_fork       = boost::phoenix::bind(&Expression::is_infix_fork, _val);
-        auto const is_infix_tuple      = boost::phoenix::bind(&Expression::is_infix_tuple, _val);
-        auto const is_complete_flip    = boost::phoenix::bind(&Expression::is_complete_flip, _val);
+        auto const is_literal         = phoenix::bind(&ExpressionGrammar::is_literal, _val);
+        auto const is_preproc         = phoenix::bind(&ExpressionGrammar::is_preproc, _val);
+        auto const is_link            = phoenix::bind(&ExpressionGrammar::is_link, _val);
+        auto const is_valid_link      = phoenix::bind(&ExpressionGrammar::is_valid_link, _val);
+        auto const has_subexpr        = phoenix::bind(&ExpressionGrammar::has_subexpr, _val);
+        auto const serialize          = phoenix::bind(&ExpressionGrammar::serialize, _val);
+        auto const keyword_to_string  = phoenix::bind(&ExpressionGrammar::keyword_to_string, _val);
+        auto const children           = phoenix::bind(&EncodingView::children, _val);
+        auto const is_infix_pipe      = phoenix::bind(&ExpressionGrammar::is_infix_pipe, _val);
+        auto const is_infix_fork      = phoenix::bind(&ExpressionGrammar::is_infix_fork, _val);
+        auto const is_infix_tuple     = phoenix::bind(&ExpressionGrammar::is_infix_tuple, _val);
+        auto const is_complete_flip   = phoenix::bind(&ExpressionGrammar::is_complete_flip, _val);
 
         start
-            = eps(is_literal)      << karma::lazy(serialize)
-            | eps(is_preproc)      << karma::lazy(serialize)
-            | eps(is_link)         << karma::lazy(serialize)
-            | eps(is_valid_link)   << link[_1 = link_parameters]
-            | eps(is_infix_pipe)   << pipe[_1 = subexpressions_vec]
-            | eps(is_infix_fork)   << fork[_1 = subexpressions_vec]
-            | eps(is_infix_tuple)  << tuple[_1 = subexpressions_vec]
-            | eps(is_complete_flip)<< flip[_1 = subexpressions_vec]
+            = eps(is_literal)       << karma::lazy(serialize)
+            | eps(is_preproc)       << karma::lazy(serialize)
+            | eps(is_link)          << karma::lazy(serialize)
+            | eps(is_valid_link)    << link[_1 = children]
+            | eps(is_infix_pipe)    << pipe[_1 = children]
+            | eps(is_infix_fork)    << fork[_1 = children]
+            | eps(is_infix_tuple)   << tuple[_1 = children]
+            | eps(is_complete_flip) << flip[_1 = children]
             | keyword;
 
         subexpr
             = eps(is_literal)       << karma::lazy(serialize)
             | eps(is_preproc)       << karma::lazy(serialize)
             | eps(is_link)          << karma::lazy(serialize)
-            | eps(is_valid_link)    << nested_link[_1 = link_parameters]
-            | eps(is_infix_pipe)    << nested_pipe[_1 = subexpressions_vec]
-            | eps(is_infix_fork)    << nested_fork[_1 = subexpressions_vec]
-            | eps(is_infix_tuple)   << tuple[_1 = subexpressions_vec]
-            | eps(is_complete_flip) << flip[_1 = subexpressions_vec]
+            | eps(is_valid_link)    << nested_link[_1 = children]
+            | eps(is_infix_pipe)    << nested_pipe[_1 = children]
+            | eps(is_infix_fork)    << nested_fork[_1 = children]
+            | eps(is_infix_tuple)   << tuple[_1 = children]
+            | eps(is_complete_flip) << flip[_1 = children]
             | keyword;
 
-        pipe    = subexpr % lit(" | ");
-        fork    = subexpr % lit(" & ");
-        link    = subexpr % lit(" << ");
-        flip    = lit('~') << subexpr;
-        tuple   = lit('(') << subexpr % lit(", ") << ')';
+        pipe         = subexpr % lit(" | ");
+        fork         = subexpr % lit(" & ");
+        link         = subexpr % lit(" << ");
+        flip         = lit('~') << subexpr;
+        tuple        = lit('(') << subexpr % lit(", ") << ')';
         nested_link  = lit('(') << subexpr % lit(" << ") << ')';
         nested_pipe  = lit('(') << subexpr % lit(" | ") << ')';
         nested_fork  = lit('(') << subexpr % lit(" & ") << ')';
-        parameters   = lit('(') << -(start % lit(", "))  << ')';
+        parameters   = lit('(') << -(start % lit(", ")) << ')';
 
-        keyword = string[_1 = keyword_to_str] << -(eps(has_subexpr)  << parameters[_1 = subexpressions_vec]);
+        keyword = string[_1 = keyword_to_string]
+            << -(eps(has_subexpr) << parameters[_1 = children]);
     }
 
-    boost::spirit::karma::rule<OutputIterator, Expression()> start, subexpr, keyword;
-    boost::spirit::karma::rule<OutputIterator, std::vector<Expression>()> parameters, fork, pipe, tuple, link, flip, nested_pipe, nested_fork, nested_link;
+private:
+    static bool is(EncodingView const& expression, Keyword keyword)
+    {
+        return expression.head() == keyword;
+    }
+
+    static bool is_literal(EncodingView const& expression) { return is(expression, Keyword::_Literal); }
+    static bool is_preproc(EncodingView const& expression) { return is(expression, Keyword::PreProc); }
+    static bool is_link(EncodingView const& expression) { return is(expression, Keyword::Link); }
+    static bool has_subexpr(EncodingView const& expression) { return expression.size() > 1; }
+
+    static bool is_valid_link(EncodingView const& expression)
+    {
+        return is(expression, Keyword::Fn) && expression.arity() == 2;
+    }
+
+    static bool is_infix_pipe(EncodingView const& expression)
+    {
+        return is(expression, Keyword::Pipe) && expression.arity() > 1;
+    }
+
+    static bool is_infix_fork(EncodingView const& expression)
+    {
+        return is(expression, Keyword::Fork) && expression.arity() == 2;
+    }
+
+    static bool is_infix_tuple(EncodingView const& expression)
+    {
+        if (!is(expression, Keyword::Tuple) || expression.arity() <= 1)
+            return false;
+        auto const child = expression.child(0);
+        return !child.empty() && child.head() != Keyword::Tuple;
+    }
+
+    static bool is_complete_flip(EncodingView const& expression)
+    {
+        return is(expression, Keyword::Flip) && expression.size() > 1;
+    }
+
+    static std::string serialize(EncodingView const& expression)
+    {
+        std::stringstream ss;
+        impl::lua_to_stream(ss, expression.to_object(), 0, false);
+        return ss.str();
+    }
+
+    static char const* keyword_to_string(EncodingView const& expression)
+    {
+        return impl::keyword_to_str(expression.head());
+    }
+
+    boost::spirit::karma::rule<OutputIterator, EncodingView()> start, subexpr, keyword;
+    boost::spirit::karma::rule<OutputIterator, std::vector<EncodingView>()>
+        parameters, fork, pipe, tuple, link, flip, nested_pipe, nested_fork, nested_link;
 };
+
 
 }  // namespace impl
 }  // namespace haikan

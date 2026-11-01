@@ -145,7 +145,7 @@ void EvalLog::format(std::ostream& os, std::vector<Record> const& log, int const
             CLEAR_BIT(vertical_groups, depth);
         }
 
-        if (true or notrim)
+        if (notrim)
         {
             // Expression f(rec.expr);
             // Expression x(rec.x);
@@ -155,7 +155,7 @@ void EvalLog::format(std::ostream& os, std::vector<Record> const& log, int const
             lua_to_stream(os,  to_plain_lua(rec.x), 0, false);
             // x.prettify_to(os);
             os << " = ";
-            lua_to_stream(os, rec.result, 0, false);
+            lua_to_stream(os, to_plain_lua(rec.result), 0, false);
             // fx.prettify_to(os);
             os << '\n';
         }

@@ -67,14 +67,18 @@ Encoding Expression::encodeNested(Keyword const& keyword, std::vector<Expression
 }
 
 
-bool Expression::to_predicate_if_const(Expression& e)
+boost::optional<Expression> Expression::to_predicate_if_const(Expression const& expr)
 {
-    if (!e.is_noop() && e.is_const())
+    auto e = expr.encoding_view();
+
+    if ((e.head() != Keyword::Noop) && e.is_const())
     {
-        e = Expression(encodeNested(Keyword::Eq, {e}));
-        return true;
+        Encoding predicate {};
+        predicate.push_back(Keyword::Eq, 0, nullptr);
+        predicate.append_to_root(e.freeze());
+        return Expression(predicate);
     }
-    return false;
+    return boost::none;
 }
 
 }  // namespace impl

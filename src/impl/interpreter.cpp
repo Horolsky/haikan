@@ -68,14 +68,13 @@ void Interpreter::ResolveArgs()
         else if (!child.empty()) // Immediate explicit parameter.
         {
             args_[1] = register_;
-            // args_[2] = frame.expr.param().data();
             if (child.head() == Keyword::_Literal || child.head() == Keyword::PreProc)
             {
-                args_[2] = *child.if_data(); // TODO: check me
+                args_[2] = child.data();
             }
             else
             {
-                args_[2] = *frame.expr.if_data(); // TODO: check me
+                args_[2] = frame.expr.data();
             }
             register_ = args_;
         }
