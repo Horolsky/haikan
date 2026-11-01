@@ -167,7 +167,7 @@ public:
 
     Keyword keyword() const
     {
-        return encoding_view().head();
+        return encoding_view().opcode();
     }
 
     boost::json::string_view keyword_to_str() const;

@@ -31,7 +31,7 @@ template <> void Interpreter::Evaluate<Keyword::@keyword.Name>(Interpreter::Stac
 void Interpreter::DispatchHiOrd()
 {
     auto& frame = stack_.front();
-    switch(frame.expr.head())
+    switch(frame.expr.opcode())
     {
 @for keyword in data.HiOrdFns:
     case Keyword::@keyword.Name: Evaluate<Keyword::@keyword.Name>(stack_); break;

@@ -61,9 +61,9 @@ BOOST_AUTO_TEST_CASE(ConstructsLiteralAndTokens)
     Encoding link(sol::make_object(state, "$value"));
 
     BOOST_CHECK_EQUAL(literal.size(), 1U);
-    BOOST_CHECK(literal.head() == Keyword::_Literal);
-    BOOST_CHECK(preproc.head() == Keyword::PreProc);
-    BOOST_CHECK(link.head() == Keyword::Link);
+    BOOST_CHECK(literal.opcode() == Keyword::_Literal);
+    BOOST_CHECK(preproc.opcode() == Keyword::PreProc);
+    BOOST_CHECK(link.opcode() == Keyword::Link);
 }
 
 BOOST_AUTO_TEST_CASE(SlicesAndTraversesTrees)
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(SlicesAndTraversesTrees)
 
     BOOST_CHECK_EQUAL(tree.arity(), 2U);
     BOOST_CHECK_EQUAL(first.size(), 2U);
-    BOOST_CHECK(first.head() == Keyword::Mul);
+    BOOST_CHECK(first.opcode() == Keyword::Mul);
     BOOST_CHECK_EQUAL(last.size(), 1U);
     BOOST_CHECK_EQUAL(last.data_.front().as<int>(), 3);
     BOOST_CHECK_EQUAL(tree.children().size(), 2U);

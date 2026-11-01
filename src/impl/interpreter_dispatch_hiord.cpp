@@ -64,7 +64,7 @@ template <> void Interpreter::Evaluate<Keyword::Err>(Interpreter::Stack&);
 void Interpreter::DispatchHiOrd()
 {
     auto& frame = stack_.front();
-    switch(frame.expr.head())
+    switch(frame.expr.opcode())
     {
     case Keyword::Id: Evaluate<Keyword::Id>(stack_); break;
     case Keyword::Q: Evaluate<Keyword::Q>(stack_); break;

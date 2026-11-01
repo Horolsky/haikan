@@ -71,7 +71,7 @@ boost::optional<Expression> Expression::to_predicate_if_const(Expression const& 
 {
     auto e = expr.encoding_view();
 
-    if ((e.head() != Keyword::Noop) && e.is_const())
+    if ((e.opcode() != Keyword::Noop) && e.is_const())
     {
         Encoding predicate {};
         predicate.push_back(Keyword::Eq, 0, nullptr);

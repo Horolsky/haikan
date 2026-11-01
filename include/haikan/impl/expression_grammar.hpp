@@ -81,7 +81,7 @@ struct ExpressionGrammar : boost::spirit::karma::grammar<OutputIterator, Encodin
 private:
     static bool is(EncodingView const& expression, Keyword keyword)
     {
-        return expression.head() == keyword;
+        return expression.opcode() == keyword;
     }
 
     static bool is_literal(EncodingView const& expression) { return is(expression, Keyword::_Literal); }
@@ -109,7 +109,7 @@ private:
         if (!is(expression, Keyword::Tuple) || expression.arity() <= 1)
             return false;
         auto const child = expression.child(0);
-        return !child.empty() && child.head() != Keyword::Tuple;
+        return !child.empty() && child.opcode() != Keyword::Tuple;
     }
 
     static bool is_complete_flip(EncodingView const& expression)
@@ -126,7 +126,7 @@ private:
 
     static char const* keyword_to_string(EncodingView const& expression)
     {
-        return impl::keyword_to_str(expression.head());
+        return impl::keyword_to_str(expression.opcode());
     }
 
     boost::spirit::karma::rule<OutputIterator, EncodingView()> start, subexpr, keyword;

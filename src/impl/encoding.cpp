@@ -260,7 +260,7 @@ sol::object EncodingView::to_object() const
         return lua::make_object(sol::nil);
     }
 
-    switch (head())
+    switch (opcode())
     {
     case Keyword::_Literal:
     case Keyword::PreProc:
@@ -328,7 +328,7 @@ EncodingView EncodingView::slice(std::size_t start, std::size_t count) const noe
 EncodingView EncodingView::subtree(std::size_t const node) const noexcept
 {
     std::size_t ignored{};
-    return traverse_subtrees(node, ignored);
+    return traverse_siblings(node, ignored);
 }
 
 std::size_t EncodingView::arity() const noexcept
@@ -349,13 +349,13 @@ std::vector<EncodingView> EncodingView::children() const
     std::size_t next{1};
     while(next < size())
     {
-        st.emplace_back(traverse_subtrees(next, next));
+        st.emplace_back(traverse_siblings(next, next));
     }
     return st;
 }
 
 
-Keyword EncodingView::head() const noexcept
+Keyword EncodingView::opcode() const noexcept
 {
     return size_ ? keywords_[0] : Keyword::Undefined;
 }
@@ -400,7 +400,7 @@ std::size_t EncodingView::child_idx(int ord) const noexcept
 
 bool EncodingView::is_const() const
 {
-    auto const a = keyword_attributes(head());
+    auto const a = keyword_attributes(opcode());
     if (a & attr::is_pipe && size() > 1)
     {
         {
@@ -414,12 +414,12 @@ bool EncodingView::is_const() const
             }
         }
         std::size_t next{1};
-        auto st = traverse_subtrees(next, next);
-        if (st.is_const() || st.head() == Keyword::_Literal) return true;
+        auto st = traverse_siblings(next, next);
+        if (st.is_const() || st.opcode() == Keyword::_Literal) return true;
         while(next < size())
         {
-            st = traverse_subtrees(next, next);
-            if (st.is_const() && (st.head() != Keyword::_Literal))
+            st = traverse_siblings(next, next);
+            if (st.is_const() && (st.opcode() != Keyword::_Literal))
             {
                 return true;
             }
@@ -431,7 +431,7 @@ bool EncodingView::is_const() const
         std::size_t next{1};
         while(next < size())
         {
-            if (not traverse_subtrees(next, next).is_const()) return false;
+            if (not traverse_siblings(next, next).is_const()) return false;
         }
         return true;
     }
@@ -452,7 +452,7 @@ bool EncodingView::is_const() const
 
 bool EncodingView::is_boolean() const
 {
-    auto const a = keyword_attributes(head());
+    auto const a = keyword_attributes(opcode());
 
     if(a & attr::is_literal && size() > 1)
     {
@@ -475,7 +475,7 @@ bool EncodingView::is_boolean() const
 
 
 
-EncodingView EncodingView::traverse_subtrees(std::size_t const node, std::size_t& next) const noexcept
+EncodingView EncodingView::traverse_siblings(std::size_t const node, std::size_t& next) const noexcept
 {
     next = size();
     if (node >= size())
@@ -483,18 +483,18 @@ EncodingView EncodingView::traverse_subtrees(std::size_t const node, std::size_t
         return {};
     }
     std::size_t const node_depth = depths_[node];
-    std::size_t count {1};
-    while (node + count < size_)
+    std::size_t offset {1};
+    while (node + offset < size_)
     {
-        if (depths_[node + count] <= node_depth)
+        if (depths_[node + offset] <= node_depth)
         {
             // TODO: test me
-            next = node + count;
+            next = node + offset;
             break;
         }
-        ++count;
+        ++offset;
     }
-    return slice(node, count);
+    return slice(node, offset);
 }
 
 

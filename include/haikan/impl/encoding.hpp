@@ -139,21 +139,44 @@ public:
 
     bool operator==(EncodingView const& o) const;
     bool operator!=(EncodingView const& o) const { return !(*this == o); }
+
+    Keyword opcode() const noexcept;
+
+    /// Hard-copy of current view as a standalone encoding
     Encoding freeze() const;
+
     sol::object to_object() const;
+
     boost::json::value to_json() const;
-    EncodingView slice(std::size_t start, std::size_t count) const noexcept;
+
+    /// Return subexpresion at start index + offset
+    EncodingView slice(std::size_t start, std::size_t offset) const noexcept;
+
+    /// Subtree node at given AST index
     EncodingView subtree(std::size_t node) const noexcept;
-    EncodingView traverse_subtrees(std::size_t node, std::size_t& next) const noexcept;
+
+    /// @brief Traverse sibling nodes
+    /// @param node node index
+    /// @param next_out next sibling index, or this->size() if none
+    /// @return EncodingView of subtree at given node idx
+    EncodingView traverse_siblings(std::size_t node, std::size_t& next_out) const noexcept;
+
     std::vector<EncodingView> children() const;
+
+    /// AST node arity
     std::size_t arity() const noexcept;
-    Keyword head() const noexcept;
+
+
+    // AST index of child node at given ordinal
     std::size_t child_idx(int ord) const noexcept;
+
+    // Child node at given ordinal
     EncodingView child(int ord) const noexcept;
+
     bool is_const() const;
     bool is_boolean() const;
 
-
+    /// Node data or nil if empty
     sol::object data() const noexcept
     {
         return data_ ? *data_ : sol::nil;

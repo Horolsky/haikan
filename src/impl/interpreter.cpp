@@ -14,7 +14,7 @@ namespace impl
 void Interpreter::Enter()
 {
     auto& frame = stack_.front();
-    auto const kattr = keyword_attributes(frame.expr.head());
+    auto const kattr = keyword_attributes(frame.expr.opcode());
     frame.input_trace = register_;
     frame.state = (kattr & attr::is_hiord)
         ? &Interpreter::DispatchHiOrd
@@ -45,7 +45,7 @@ void Interpreter::EvalParam()
 void Interpreter::ResumeFrame()
 {
     auto& frame = stack_.front();
-    auto const kattr = keyword_attributes(frame.expr.head());
+    auto const kattr = keyword_attributes(frame.expr.opcode());
     frame.state = (kattr & attr::is_hiord)
         ? (&Interpreter::DispatchHiOrd)
         : (&Interpreter::ResolveArgs);
@@ -54,7 +54,7 @@ void Interpreter::ResumeFrame()
 void Interpreter::ResolveArgs()
 {
     auto& frame = stack_.front();
-    auto const kattr = keyword_attributes(frame.expr.head());
+    auto const kattr = keyword_attributes(frame.expr.opcode());
     if (kattr & attr::is_binary)
     {
         // auto const& subs = frame.expr.size();
@@ -68,7 +68,7 @@ void Interpreter::ResolveArgs()
         else if (!child.empty()) // Immediate explicit parameter.
         {
             args_[1] = register_;
-            if (child.head() == Keyword::_Literal || child.head() == Keyword::PreProc)
+            if (child.opcode() == Keyword::_Literal || child.opcode() == Keyword::PreProc)
             {
                 args_[2] = child.data();
             }
@@ -109,7 +109,7 @@ void Interpreter::Execute()
 
     // handle error
 
-    Keyword const k = frame.expr.head();
+    Keyword const k = frame.expr.opcode();
     auto const kattr = keyword_attributes(k);
 
     if (kattr & attr::is_operator)
