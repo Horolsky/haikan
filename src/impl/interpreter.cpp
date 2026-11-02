@@ -54,37 +54,35 @@ void Interpreter::ResumeFrame()
 void Interpreter::ResolveArgs()
 {
     auto& frame = stack_.front();
+    auto const child = frame.expr.child(0);
     auto const kattr = keyword_attributes(frame.expr.opcode());
-    if (kattr & attr::is_binary)
+    if (kattr & (attr::is_literal | attr::is_preproc))
     {
-        // auto const& subs = frame.expr.size();
-        auto const child = frame.expr.child(0);
-        if (frame.expr.size() > 1) // Parameter was evaluated in a child frame.
+        frame.lhs = register_;
+        frame.rhs = frame.expr.data();
+        frame.args_resolved = true;
+    }
+    else if (kattr & attr::is_binary)
+    {
+        if (!child.empty())
         {
-            args_[1] = frame.value;
-            args_[2] = register_;
-            register_ = args_;
+            frame.lhs = frame.value;
+            frame.rhs = register_;
         }
-        else if (!child.empty()) // Immediate explicit parameter.
+        else if (register_.get_type() == sol::type::table
+                 || (register_.get_type() == sol::type::userdata
+                     && !register_.is<error>()))
         {
-            args_[1] = register_;
-            if (child.opcode() == Keyword::_Literal || child.opcode() == Keyword::PreProc)
-            {
-                args_[2] = child.data();
-            }
-            else
-            {
-                args_[2] = frame.expr.data();
-            }
-            register_ = args_;
+            sol::table const args = register_.as<sol::table>();
+            frame.lhs = args[1];
+            frame.rhs = args[2];
         }
-        else if (register_ != args_) // No parameter: unpack incoming [lhs, rhs].
+        else
         {
-            sol::table args = register_.as<sol::table>();
-            args_[1] = args[1];
-            args_[2] = args[2];
-            register_ = args_;
+            frame.lhs = register_;
+            frame.rhs = lua::make_object(sol::nil);
         }
+        frame.args_resolved = true;
     }
 
     frame.state = &Interpreter::Execute;
@@ -96,10 +94,10 @@ void Interpreter::Execute()
     frame.state = &Interpreter::Return;
 
     sol::object lhs, rhs;
-    if (register_ == args_)
+    if (frame.args_resolved)
     {
-        lhs = args_[1];
-        rhs = args_[2];
+        lhs = frame.lhs;
+        rhs = frame.rhs;
     }
     else
     {
@@ -130,17 +128,17 @@ void Interpreter::Execute()
 void Interpreter::Return()
 {
     auto& frame = stack_.front();
-    // context_.log << "\n"
-    //     << frame.input_trace
-    //     << " | " << frame.expr << " -> " << register_
-    //     ;
-
+    Keyword const k = frame.expr.opcode();
+    auto const kattr = keyword_attributes(k);
+    if (not (kattr & (attr::is_literal | attr::is_const | attr::is_quote)))
+    {
     // TODO: optimize log by allowing encoding view
-    context_.log.push(
-        Expression(frame.expr.freeze()),
-        frame.input_trace,
-        register_,
-        frame.expr.depth_offset());
+        context_.log.push(
+            Expression(frame.expr.freeze()),
+            frame.input_trace,
+            register_,
+            frame.expr.depth_offset());
+    }
     // void push(Expression const& expr, Expression const& x, Expression const& result, std::uint64_t const depth) const;
     stack_.pop_front();
 }

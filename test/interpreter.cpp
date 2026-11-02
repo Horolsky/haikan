@@ -38,11 +38,83 @@ using namespace haikan::impl;
 
 */
 
+using V = std::vector<double>;
+struct TestEvalSample
+{
+    Expression expr;
+    Expression expected;
+
+    friend std::ostream& operator<<(std::ostream& os, TestEvalSample const& sample)
+    {
+        return os << "{expr: " << sample.expr.prettify()
+                  << ", expected: " << sample.expected.prettify() << "}";
+    }
+
+};
+
+std::vector<TestEvalSample> const& TestSamples()
+{
+static std::vector<TestEvalSample> const samples
+{
+    {
+        V {1,2,3,4.25E1} | Fold(Add) & Size | Div,
+        1.2125E1
+    },
+    {
+        2 | Div(3),
+        2.0/3
+    },
+    {
+        2 | ~Div(3),
+        3.0/2
+    },
+    {
+        Pi | Mul(2) | Add(Pi | Neg),
+        3.1415926535898
+    },
+    // TODO: change Unfold and Recur syntax to [x, n] | Keyword(Fn)
+    // {Unfold(0, Add(1))          , 4                      , {0,1,2,3,4}          },
+    // {Unfold(1, Add(1))          , 4                      , {1,2,3,4,5}          },
+    // {Recur( 4, Add(1))          ,  Ge(12)                , 11                   },
+    // {Unfold(8, Add(1))          ,  Ge(12)                , {8,9,10,11}          },
+};
+    return samples;
+}
+
+BOOST_DATA_TEST_CASE(Evaluate, TestSamples(), sample)
+{
+    impl::TypeRegistry tr{};
+        tr.Add(type<std::vector<double>>);
+        tr.init(lua::global_state());
+
+    Logger::set_max_level(Logger::DEBUG);
+
+
+    std::stringstream ss;
+    sol::object result;
+    EvalContext ctx = EvalContext::make();
+    Interpreter vm {{}, sample.expr, ctx};
+
+    try
+    {
+
+        BOOST_TEST_INFO("Expression: " << sample.expr.prettify());
+        BOOST_TEST_INFO("Expected: " << sample.expected.prettify());
+
+        result = vm.evaluate();
+
+        BOOST_TEST_INFO("Result: " << Expression(result).prettify());
+        BOOST_TEST_INFO("Log: \n" << ctx.log);
+        BOOST_CHECK_EQUAL(Expression(result).prettify(), sample.expected.prettify());
+    }
+    catch(const std::exception& e)
+    {
+        BOOST_FAIL("Exception thrown: " << e.what());
+    }
+}
 
 BOOST_AUTO_TEST_CASE(Demo)
 {
-    // [1,2,3,4.25E1] -> (Fold(Add) & Size | Div)
-
     using namespace haikan;
 
     OperatorRegistry()
@@ -64,21 +136,103 @@ BOOST_AUTO_TEST_CASE(Demo)
         Interpreter vm {arg, expr, ctx};
         result = vm.evaluate();
         ss << '\n' << ctx.log;
-        // log.drain(ss, true);
     }
     auto expected = R"(
-         ┌── Add $ {1.0,2.0} = 3.0
-         ├── Add $ {3.0,3.0} = 6.0
-         ├── Add $ {6.0,42.5} = 48.5
-      ┌── Fold(Add) $ {1.0,2.0,3.0,42.5} = 48.5
-      ├── Size $ {1.0,2.0,3.0,42.5} = 4
-   ┌── Fold(Add) & Size $ {1.0,2.0,3.0,42.5} = {48.5,4}
-   ├── Div $ {48.5,4} = 12.125
-□  (Fold(Add) & Size) | Div $ {1.0,2.0,3.0,42.5} = 12.125
+         ┌── {1.0,2.0} | Add = 3.0
+         ├── {3.0,3.0} | Add = 6.0
+         ├── {6.0,42.5} | Add = 48.5
+      ┌── {1.0,2.0,3.0,42.5} | Fold(Add) = 48.5
+      ├── {1.0,2.0,3.0,42.5} | Size = 4
+   ┌── {1.0,2.0,3.0,42.5} | Fold(Add) & Size = {48.5,4}
+   ├── {48.5,4} | Div = 12.125
+□  {1.0,2.0,3.0,42.5} | (Fold(Add) & Size) | Div = 12.125
 )";
 
     BOOST_CHECK_EQUAL(ss.str(), expected);
 
     BOOST_ASSERT(result.is<double>());
     BOOST_CHECK_EQUAL(result.as<double>(), 1.2125E1);
+}
+
+
+BOOST_AUTO_TEST_CASE(Demo2)
+{
+    using namespace haikan;
+
+    OperatorRegistry()
+        .AddSignature(type<double>, template_list<std::vector, std::set>)
+        .Connects(type<int>, template_list<std::vector, std::set>)
+        ;
+    impl::TypeRegistry tr{};
+        tr.Add(type<std::vector<double>>);
+        tr.init(lua::global_state());
+
+    using V = std::vector<double>;
+    Expression expr = V{1,2,3,4.25E1} | Fold(Add) & Size | Div;
+
+    std::stringstream ss;
+    sol::object result;
+    {
+        EvalContext ctx = EvalContext::make();
+        Interpreter vm {{}, expr, ctx};
+        result = vm.evaluate();
+        ss << '\n' << ctx.log;
+    }
+    auto expected = R"(
+         ┌── {1.0,2.0} | Add = 3.0
+         ├── {3.0,3.0} | Add = 6.0
+         ├── {6.0,42.5} | Add = 48.5
+      ┌── {1.0,2.0,3.0,42.5} | Fold(Add) = 48.5
+      ├── {1.0,2.0,3.0,42.5} | Size = 4
+   ┌── {1.0,2.0,3.0,42.5} | Fold(Add) & Size = {48.5,4}
+   ├── {48.5,4} | Div = 12.125
+□  {1.0,2.0,3.0,42.5} | (Fold(Add) & Size) | Div = 12.125
+)";
+
+    BOOST_CHECK_EQUAL(ss.str(), expected);
+
+    BOOST_ASSERT(result.is<double>());
+    BOOST_CHECK_EQUAL(result.as<double>(), 1.2125E1);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(Demo3)
+{
+    using namespace haikan;
+
+    OperatorRegistry()
+        .AddSignature(type<double>, template_list<std::vector, std::set>)
+        .Connects(type<int>, template_list<std::vector, std::set>)
+        ;
+    impl::TypeRegistry tr{};
+        tr.Add(type<std::vector<double>>);
+        tr.init(lua::global_state());
+
+    using V = std::vector<double>;
+    Expression expr = V{2, 3} | Add | Mul(Pi | Add(Pi | Neg)) | Add(Q(42));
+
+    std::stringstream ss;
+    sol::object result;
+    {
+        EvalContext ctx = EvalContext::make();
+        Interpreter vm {{}, expr, ctx};
+        result = vm.evaluate();
+        ss << '\n' << ctx.log;
+    }
+    auto expected = R"(
+   ┌── {2.0,3.0} | Add = 5.0
+   │            ┌── 3.1415926535898 | Neg = -3.1415926535898
+   │         ┌── Pi | Neg = -3.1415926535898
+   │      ┌── 3.1415926535898 | Add(Pi | Neg) = 0.0
+   │   ┌── Pi | Add(Pi | Neg) = 0.0
+   ├── 5.0 | Mul(Pi | Add(Pi | Neg)) = 0.0
+   ├── 0.0 | Add(Q(42)) = 42.0
+□  {2.0,3.0} | Add | Mul(Pi | Add(Pi | Neg)) | Add(Q(42)) = 42.0
+)";
+
+    BOOST_CHECK_EQUAL(ss.str(), expected);
+
+    BOOST_ASSERT(result.is<double>());
+    BOOST_CHECK_CLOSE(result.as<double>(), 42, 1E-12);
 }

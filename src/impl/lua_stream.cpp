@@ -18,6 +18,7 @@
 extern "C"
 {
 #include <lua.h>
+#include <lauxlib.h>
 }
 
 namespace haikan {
@@ -147,13 +148,26 @@ bool lua_value_to_stream(std::ostream& os, lua_State* L, int index, int indent,b
         break;
 
     default:
-        return false;
+        {
+            std::size_t size = 0;
+            char const* const string = luaL_tolstring(L, index, &size);
+            if (string == nullptr)
+            {
+                os << "<unprintable>";
+            }
+            else
+            {
+                os.write(string, static_cast<std::streamsize>(size));
+            }
+            return true;
+        }
     }
 
     void const* const identity = lua_topointer(L, index);
     if (std::find(path.begin(), path.end(), identity) != path.end())
     {
-        return false;
+        os << "<cycle>";
+        return true;
     }
     path.push_back(identity);
     PathPop const pop_path{path};
@@ -256,7 +270,7 @@ std::ostream& lua_to_stream(
         lua_State* const L = value.lua_state();
         if (L == nullptr)
         {
-            os.setstate(std::ios_base::failbit);
+            os << "nil";
             return os;
         }
 
@@ -270,12 +284,12 @@ std::ostream& lua_to_stream(
         std::vector<void const*> path;
         if (!lua_value_to_stream(os, L, -1, initial_indent, pretty_print, path))
         {
-            os.setstate(std::ios_base::failbit);
+            os << "<unprintable>";
         }
     }
     catch (...)
     {
-        os.setstate(std::ios_base::failbit);
+        os << "<unprintable>";
     }
     return os;
 }

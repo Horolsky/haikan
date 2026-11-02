@@ -150,9 +150,12 @@ void EvalLog::format(std::ostream& os, std::vector<Record> const& log, int const
             // Expression f(rec.expr);
             // Expression x(rec.x);
             // Expression fx(rec.result);
+            if (rec.x.valid())
+            {
+                lua_to_stream(os,  to_plain_lua(rec.x), 0, false);
+                os << " | ";
+            }
             rec.expr.prettify_to(os);
-            os << " $ ";
-            lua_to_stream(os,  to_plain_lua(rec.x), 0, false);
             // x.prettify_to(os);
             os << " = ";
             lua_to_stream(os, to_plain_lua(rec.result), 0, false);

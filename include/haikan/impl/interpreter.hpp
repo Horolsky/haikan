@@ -53,6 +53,9 @@ class Interpreter
         EncodingView expr;
         sol::object value{lua::make_object(sol::nil)};
         sol::object input_trace{lua::make_object(sol::nil)};
+        sol::object lhs{lua::make_object(sol::nil)};
+        sol::object rhs{lua::make_object(sol::nil)};
+        bool args_resolved{false};
         State state {&Interpreter::Enter};
         std::size_t index{0};
 
@@ -82,7 +85,10 @@ public:
         : register_{std::move(arg)}, context_{ctx}
     {
         stack_.push_front(Frame{expr});
-        args_ = lua::create_table(2, 0);
+        if (not register_.valid())
+        {
+            register_ = lua::make_object(sol::nil);
+        }
     }
 
     Interpreter(sol::object arg, Expression const& expr, EvalContext ctx = {})
@@ -103,7 +109,6 @@ private:
 
     sol::object register_;
     EvalContext context_;
-    sol::table args_;
     Stack stack_{};
 
     template <Keyword K>

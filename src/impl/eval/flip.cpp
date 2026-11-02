@@ -13,39 +13,52 @@ template <> void Interpreter::Evaluate<Keyword::Flip>(Interpreter::Stack& stack)
     switch (frame.index)
     {
     case 0:
-        // Save original input (future RHS).
         frame.value = std::exchange(register_, lua::make_object(sol::nil));
-        frame.index = 1;
-
-        // if (child.subexpressions_vec().empty())
-        // {
-        //     // Immediate parameter.
-        //     register_ = child.param();
-        // }
-        // else
+        if (child.child(0).empty())
         {
-            // Evaluate complex parameter with Void input.
+            Frame operand(child, &Interpreter::Execute);
+            operand.args_resolved = true;
+
+            if (frame.value.get_type() == sol::type::table
+                || (frame.value.get_type() == sol::type::userdata
+                    && !frame.value.is<error>()))
+            {
+                sol::table const args = frame.value.as<sol::table>();
+                operand.lhs = args[2];
+                operand.rhs = args[1];
+            }
+            else
+            {
+                operand.lhs = lua::make_object(sol::nil);
+                operand.rhs = frame.value;
+            }
+
+            frame.index = 2;
             frame.state = &Interpreter::ResumeFrame;
-            stack.push_front(Frame(child.child(0), &Interpreter::Enter));
+            stack.push_front(std::move(operand));
+        }
+        else
+        {
+            frame.index = 1;
+            frame.state = &Interpreter::ResumeFrame;
+            stack.push_front(Frame(child.child(0)));
         }
         break;
 
     case 1:
-        // Parameter is resolved: swap operand positions.
         {
-            sol::table result = lua::create_table(2, 0);
-            result[1] = std::exchange(register_, lua::make_object(sol::nil));
-            result[2] = std::exchange(frame.value, lua::make_object(sol::nil));
-            register_ =  result;
+            Frame operand(child, &Interpreter::Execute);
+            operand.args_resolved = true;
+            operand.lhs = std::exchange(register_, lua::make_object(sol::nil));
+            operand.rhs = std::exchange(frame.value, lua::make_object(sol::nil));
+
             frame.index = 2;
             frame.state = &Interpreter::ResumeFrame;
-            // Skip Enter: operands are already prepared.
-            stack.push_front(Frame(child, &Interpreter::Execute));
+            stack.push_front(std::move(operand));
             break;
         }
 
     case 2:
-        // Child returned its result in register_.
         frame.state = &Interpreter::Return;
         break;
     }

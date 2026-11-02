@@ -75,7 +75,7 @@ public:
     }
 
     Expression()
-        : Expression(encodeNested(impl::Keyword::_Void, {sol::nil}))
+        : Expression(encodeNested(impl::Keyword::_Void, {}))
     {
     }
 
@@ -94,6 +94,11 @@ public:
     boost::json::value to_json() const
     {
         return encoding_view().to_json();
+    }
+
+    operator sol::object() const
+    {
+        return encoding_view().to_object();
     }
 
     ///////////////

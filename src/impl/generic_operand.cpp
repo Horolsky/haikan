@@ -38,9 +38,6 @@ GenericOperand evaluate(F&& f, GenericOperand const& lhs, GenericOperand const& 
         return evaluate_nil(f, lhs, rhs);
     }
 
-    auto log = HAIKAN_LOG(DEBUG)
-        << type_name<F>() << "()(" << lhs << ", "  << rhs << ") -> ";
-
     sol::object result;
     switch (lhs.get_type())
     {
@@ -53,7 +50,6 @@ GenericOperand evaluate(F&& f, GenericOperand const& lhs, GenericOperand const& 
     default:
         result = sol::make_object(lhs.lua_state(), error("invalid operands", BOOST_CURRENT_FUNCTION)); break;
     }
-    log << result;
     return GenericOperand{result};
 }
 
