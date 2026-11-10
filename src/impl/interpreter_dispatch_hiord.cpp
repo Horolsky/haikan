@@ -60,6 +60,9 @@ template <> void Interpreter::Evaluate<Keyword::Try>(Interpreter::Stack&);
 template <> void Interpreter::Evaluate<Keyword::Kwrd>(Interpreter::Stack&);
 template <> void Interpreter::Evaluate<Keyword::Prms>(Interpreter::Stack&);
 template <> void Interpreter::Evaluate<Keyword::Err>(Interpreter::Stack&);
+template <> void Interpreter::Evaluate<Keyword::If>(Interpreter::Stack&);
+template <> void Interpreter::Evaluate<Keyword::Elif>(Interpreter::Stack&);
+template <> void Interpreter::Evaluate<Keyword::Else>(Interpreter::Stack&);
 
 void Interpreter::DispatchHiOrd()
 {
@@ -103,6 +106,9 @@ void Interpreter::DispatchHiOrd()
     case Keyword::Kwrd: Evaluate<Keyword::Kwrd>(stack_); break;
     case Keyword::Prms: Evaluate<Keyword::Prms>(stack_); break;
     case Keyword::Err: Evaluate<Keyword::Err>(stack_); break;
+    case Keyword::If: Evaluate<Keyword::If>(stack_); break;
+    case Keyword::Elif: Evaluate<Keyword::Elif>(stack_); break;
+    case Keyword::Else: Evaluate<Keyword::Else>(stack_); break;
     default: break;
     }
 }

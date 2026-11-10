@@ -924,77 +924,6 @@ Generic behavior:
  * `true | And(42) | Or(13) `$\mapsto$` 42`
  * `false | And(42) | Or(13) `$\mapsto$` 13`
 
-### If
-
-*Signature*: [Variadic](../user-guide/expressions.md#syntax)
-
-
-Branching operator
-
-Branching operator can be used either in
-Lisp-like mode as `If(predicate, then_expr, else_expr)`,
-or in pipe mode with Elif or Else operators (see examples).
-
-In pipe mode (without `else_expr` parameter), the chain will produce
-error if the following order is violated or interrupted:
- `If [ Elif ]* Else`
-
-In both modes, `then_expr` and `else_expr` are lazy evaluated against
-run-time argument (which is also true for Elif and Else), making
-it possible to nest if-else expressions.
-
-*Examples*:
-
-**Pipe form**:
-
- * `42 | If(Lt(42), Mul(-1)) | Else(Id) `$\mapsto$` -42`
- * `67 | If(Lt(42), Mul(-1)) | Else(Id) `$\mapsto$`  67`
-
-**Lisp-like form**:
-
- * `42 | If(Lt(42), Mul(-1), Id) `$\mapsto$` -42`
- * `67 | If(Lt(42), Mul(-1), Id) `$\mapsto$`  67`
-
-**Nested Lisp-like**:
-
- * ` 7 | If(42, "42", If(41, "41", Id)) `$\mapsto$` 7`
- * `42 | If(42, "42", If(41, "41", Id)) `$\mapsto$` "41"`
-
-**Same in pipe form without nesting**:
-
- * ` 7 | If(42, "42") | Elif(41, "41") | Else(Id) `$\mapsto$` 7`
- * `42 | If(42, "42") | Elif(41, "41") | Else(Id) `$\mapsto$` "41"`
-
-### Elif
-
-*Signature*: [Variadic](../user-guide/expressions.md#syntax)
-
-
-Else if
-
-Continuation operator in If-Elif-Else pipe.
-Will fail if not preceded by If.
-See If.
-
-
-### Else
-
-*Signature*: [Binary](../user-guide/expressions.md#syntax)
-
-
-Else
-
-Resolving operator in If-Elif-Else pipe.
-Will fail if not preceded by If or Elif.
-See If.
-
-Note: Errors are passed through Else as is,
-without evaluating the parameter expression.
-Input errors are handled in preceding If/Elif clauses,
-while errors produced by If/Elif assumed to be
-handled  after the Else clause.
-
-
 
 ## Unary Structural transforms
 
@@ -2220,6 +2149,77 @@ Introspect expression parameters.
 Error object
 
 Error object handling the message and context info
+
+
+### If
+
+*Signature*: [Variadic](../user-guide/expressions.md#syntax)
+
+
+Branching operator
+
+Branching operator can be used either in
+Lisp-like mode as `If(predicate, then_expr, else_expr)`,
+or in pipe mode with Elif or Else operators (see examples).
+
+In pipe mode (without `else_expr` parameter), the chain will produce
+error if the following order is violated or interrupted:
+ `If [ Elif ]* Else`
+
+In both modes, `then_expr` and `else_expr` are lazy evaluated against
+run-time argument (which is also true for Elif and Else), making
+it possible to nest if-else expressions.
+
+*Examples*:
+
+**Pipe form**:
+
+ * `42 | If(Lt(42), Mul(-1)) | Else(Id) `$\mapsto$` -42`
+ * `67 | If(Lt(42), Mul(-1)) | Else(Id) `$\mapsto$`  67`
+
+**Lisp-like form**:
+
+ * `42 | If(Lt(42), Mul(-1), Id) `$\mapsto$` -42`
+ * `67 | If(Lt(42), Mul(-1), Id) `$\mapsto$`  67`
+
+**Nested Lisp-like**:
+
+ * ` 7 | If(42, "42", If(41, "41", Id)) `$\mapsto$` 7`
+ * `42 | If(42, "42", If(41, "41", Id)) `$\mapsto$` "41"`
+
+**Same in pipe form without nesting**:
+
+ * ` 7 | If(42, "42") | Elif(41, "41") | Else(Id) `$\mapsto$` 7`
+ * `42 | If(42, "42") | Elif(41, "41") | Else(Id) `$\mapsto$` "41"`
+
+### Elif
+
+*Signature*: [Variadic](../user-guide/expressions.md#syntax)
+
+
+Else if
+
+Continuation operator in If-Elif-Else pipe.
+Will fail if not preceded by If.
+See If.
+
+
+### Else
+
+*Signature*: [Binary](../user-guide/expressions.md#syntax)
+
+
+Else
+
+Resolving operator in If-Elif-Else pipe.
+Will fail if not preceded by If or Elif.
+See If.
+
+Note: Errors are passed through Else as is,
+without evaluating the parameter expression.
+Input errors are handled in preceding If/Elif clauses,
+while errors produced by If/Elif assumed to be
+handled  after the Else clause.
 
 
 

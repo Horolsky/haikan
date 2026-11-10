@@ -101,9 +101,6 @@ impl::SignatureUnary<::haikan::impl::Keyword::Not> const HAIKAN_KEYWORD_INIT Fal
 impl::SignatureUnary<::haikan::impl::Keyword::Not> const HAIKAN_KEYWORD_INIT Nil = Not;
 impl::SignatureBinary<::haikan::impl::Keyword::And> const HAIKAN_KEYWORD_INIT And = {};
 impl::SignatureBinary<::haikan::impl::Keyword::Or> const HAIKAN_KEYWORD_INIT Or = {};
-impl::SignatureVariadic<::haikan::impl::Keyword::If> const HAIKAN_KEYWORD_INIT If = {};
-impl::SignatureVariadic<::haikan::impl::Keyword::Elif> const HAIKAN_KEYWORD_INIT Elif = {};
-impl::SignatureBinary<::haikan::impl::Keyword::Else> const HAIKAN_KEYWORD_INIT Else = {};
 impl::SignatureUnary<::haikan::impl::Keyword::Transp> const HAIKAN_KEYWORD_INIT Transp = {};
 impl::SignatureUnary<::haikan::impl::Keyword::Cartesian> const HAIKAN_KEYWORD_INIT Cartesian = {};
 impl::SignatureUnary<::haikan::impl::Keyword::Reverse> const HAIKAN_KEYWORD_INIT Reverse = {};
@@ -194,6 +191,9 @@ impl::SignatureUnary<::haikan::impl::Keyword::Prms> const HAIKAN_KEYWORD_INIT Pr
 impl::SignatureUnary<::haikan::impl::Keyword::Prms> const HAIKAN_KEYWORD_INIT Parameters = Prms;
 impl::SignatureErr const HAIKAN_KEYWORD_INIT Err = {};
 impl::SignatureErr const HAIKAN_KEYWORD_INIT Error = Err;
+impl::SignatureVariadic<::haikan::impl::Keyword::If> const HAIKAN_KEYWORD_INIT If = {};
+impl::SignatureVariadic<::haikan::impl::Keyword::Elif> const HAIKAN_KEYWORD_INIT Elif = {};
+impl::SignatureBinary<::haikan::impl::Keyword::Else> const HAIKAN_KEYWORD_INIT Else = {};
 impl::SignatureBinary<::haikan::impl::Keyword::D> const HAIKAN_KEYWORD_INIT D = {};
 impl::SignatureBinary<::haikan::impl::Keyword::D> const HAIKAN_KEYWORD_INIT Default = D;
 impl::SignatureUnary<::haikan::impl::Keyword::IsErr> const HAIKAN_KEYWORD_INIT IsErr = {};

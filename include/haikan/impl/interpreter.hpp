@@ -47,6 +47,7 @@ class Interpreter
 
     sol::object Dispatch(Keyword const k, sol::object const& lhs, sol::object const& rhs) const;
 
+public:
 
     struct Frame
     {
@@ -78,7 +79,6 @@ class Interpreter
         ~Frame() = default;
     };
 
-public:
     using Stack = std::deque<Frame>;
 
     Interpreter(sol::object arg, EncodingView expr, EvalContext ctx = {})

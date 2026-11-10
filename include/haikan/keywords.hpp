@@ -305,41 +305,6 @@ extern impl::SignatureBinary<::haikan::impl::Keyword::And> const And;
 ///   returns first operand, second otherwise
 extern impl::SignatureBinary<::haikan::impl::Keyword::Or> const Or;
 
-/// \brief Branching operator
-/// \details
-/// Branching operator can be used either in
-/// Lisp-like mode as `If(predicate, then_expr, else_expr)`,
-/// or in pipe mode with Elif or Else operators (see examples).
-/// 
-/// In pipe mode (without `else_expr` parameter), the chain will produce
-/// error if the following order is violated or interrupted:
-///  `If [ Elif ]* Else`
-/// 
-/// In both modes, `then_expr` and `else_expr` are lazy evaluated against
-/// run-time argument (which is also true for Elif and Else), making
-/// it possible to nest if-else expressions.
-extern impl::SignatureVariadic<::haikan::impl::Keyword::If> const If;
-
-/// \brief Else if
-/// \details
-/// Continuation operator in If-Elif-Else pipe.
-/// Will fail if not preceded by If.
-/// See If.
-extern impl::SignatureVariadic<::haikan::impl::Keyword::Elif> const Elif;
-
-/// \brief Else
-/// \details
-/// Resolving operator in If-Elif-Else pipe.
-/// Will fail if not preceded by If or Elif.
-/// See If.
-/// 
-/// Note: Errors are passed through Else as is,
-/// without evaluating the parameter expression.
-/// Input errors are handled in preceding If/Elif clauses,
-/// while errors produced by If/Elif assumed to be
-/// handled  after the Else clause.
-extern impl::SignatureBinary<::haikan::impl::Keyword::Else> const Else;
-
 /// \brief Transpose multidimensional list, turning rows into columns
 /// \details
 /// May be used to zip sequences of equal length.
@@ -821,6 +786,41 @@ extern impl::SignatureUnary<::haikan::impl::Keyword::Prms> const Parameters;
 extern impl::SignatureErr const Err;
 /// \brief Alias for Err
 extern impl::SignatureErr const Error;
+
+/// \brief Branching operator
+/// \details
+/// Branching operator can be used either in
+/// Lisp-like mode as `If(predicate, then_expr, else_expr)`,
+/// or in pipe mode with Elif or Else operators (see examples).
+/// 
+/// In pipe mode (without `else_expr` parameter), the chain will produce
+/// error if the following order is violated or interrupted:
+///  `If [ Elif ]* Else`
+/// 
+/// In both modes, `then_expr` and `else_expr` are lazy evaluated against
+/// run-time argument (which is also true for Elif and Else), making
+/// it possible to nest if-else expressions.
+extern impl::SignatureVariadic<::haikan::impl::Keyword::If> const If;
+
+/// \brief Else if
+/// \details
+/// Continuation operator in If-Elif-Else pipe.
+/// Will fail if not preceded by If.
+/// See If.
+extern impl::SignatureVariadic<::haikan::impl::Keyword::Elif> const Elif;
+
+/// \brief Else
+/// \details
+/// Resolving operator in If-Elif-Else pipe.
+/// Will fail if not preceded by If or Elif.
+/// See If.
+/// 
+/// Note: Errors are passed through Else as is,
+/// without evaluating the parameter expression.
+/// Input errors are handled in preceding If/Elif clauses,
+/// while errors produced by If/Elif assumed to be
+/// handled  after the Else clause.
+extern impl::SignatureBinary<::haikan::impl::Keyword::Else> const Else;
 
 /// \brief Return x if not null, else return default value
 extern impl::SignatureBinary<::haikan::impl::Keyword::D> const D;

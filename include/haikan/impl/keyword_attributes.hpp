@@ -127,9 +127,6 @@ constexpr std::uint32_t keyword_attributes(Keyword const& oc)
     case Keyword::Not: return is_operator | is_predicate | is_unary;
     case Keyword::And: return is_binary | is_operator;
     case Keyword::Or: return is_binary | is_operator;
-    case Keyword::If: return is_variadic;
-    case Keyword::Elif: return is_variadic;
-    case Keyword::Else: return is_binary;
     case Keyword::Transp: return is_unary;
     case Keyword::Cartesian: return is_unary;
     case Keyword::Reverse: return is_unary;
@@ -206,6 +203,9 @@ constexpr std::uint32_t keyword_attributes(Keyword const& oc)
     case Keyword::Kwrd: return is_hiord | is_no_eval | is_unary;
     case Keyword::Prms: return is_hiord | is_no_eval | is_unary;
     case Keyword::Err: return is_error | is_hiord | is_no_eval | is_unary;
+    case Keyword::If: return is_hiord | is_no_eval | is_variadic;
+    case Keyword::Elif: return is_hiord | is_no_eval | is_variadic;
+    case Keyword::Else: return is_binary | is_hiord | is_no_eval;
     case Keyword::D: return is_binary;
     case Keyword::IsErr: return is_autogen | is_predicate | is_unary;
     case Keyword::Assert: return is_binary;

@@ -102,9 +102,6 @@ char const* keyword_to_str(Keyword const& kw)
     case Keyword::Not: { return "Not"; break; }
     case Keyword::And: { return "And"; break; }
     case Keyword::Or: { return "Or"; break; }
-    case Keyword::If: { return "If"; break; }
-    case Keyword::Elif: { return "Elif"; break; }
-    case Keyword::Else: { return "Else"; break; }
     case Keyword::Transp: { return "Transp"; break; }
     case Keyword::Cartesian: { return "Cartesian"; break; }
     case Keyword::Reverse: { return "Reverse"; break; }
@@ -181,6 +178,9 @@ char const* keyword_to_str(Keyword const& kw)
     case Keyword::Kwrd: { return "Kwrd"; break; }
     case Keyword::Prms: { return "Prms"; break; }
     case Keyword::Err: { return "Err"; break; }
+    case Keyword::If: { return "If"; break; }
+    case Keyword::Elif: { return "Elif"; break; }
+    case Keyword::Else: { return "Else"; break; }
     case Keyword::D: { return "D"; break; }
     case Keyword::IsErr: { return "IsErr"; break; }
     case Keyword::Assert: { return "Assert"; break; }

@@ -31,6 +31,22 @@ GenericOperand evaluate_nil(op::not_equal_to, GenericOperand const& lhs, Generic
 };
 
 template <class F>
+GenericOperand evaluate_heterogeneous(F, GenericOperand const& lhs, char const* where)
+{
+    return sol::make_object(lhs.lua_state(), error("invalid operands", where));
+}
+
+GenericOperand evaluate_heterogeneous(op::equal_to, GenericOperand const& lhs, char const*)
+{
+    return sol::make_object(lhs.lua_state(), false);
+}
+
+GenericOperand evaluate_heterogeneous(op::not_equal_to, GenericOperand const& lhs, char const*)
+{
+    return sol::make_object(lhs.lua_state(), true);
+}
+
+template <class F>
 GenericOperand evaluate(F&& f, GenericOperand const& lhs, GenericOperand const& rhs)
 {
     if (HAIKAN_UNLIKELY((!lhs.valid() || !rhs.valid())))
@@ -39,6 +55,12 @@ GenericOperand evaluate(F&& f, GenericOperand const& lhs, GenericOperand const& 
     }
 
     sol::object result;
+
+    if (HAIKAN_UNLIKELY(lhs.get_type() != rhs.get_type()))
+    {
+        return evaluate_heterogeneous(f, lhs, BOOST_CURRENT_FUNCTION);
+    }
+
     switch (lhs.get_type())
     {
     case sol::type::nil:   result = f(lhs.lua_state(), sol::nil, sol::nil); break;
@@ -52,6 +74,8 @@ GenericOperand evaluate(F&& f, GenericOperand const& lhs, GenericOperand const& 
     }
     return GenericOperand{result};
 }
+
+
 
 template <class F>
 GenericOperand evaluate(F&& f, GenericOperand const& arg)

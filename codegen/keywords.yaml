@@ -679,68 +679,6 @@ keyword_groups:
           true | And(42) | Or(13) ↦ 42
           false | And(42) | Or(13) ↦ 13
 
-      - name: If
-        brief: Branching operator
-        tags: []
-        signature: Variadic
-        details: |-
-          Branching operator can be used either in
-          Lisp-like mode as `If(predicate, then_expr, else_expr)`,
-          or in pipe mode with Elif or Else operators (see examples).
-
-          In pipe mode (without `else_expr` parameter), the chain will produce
-          error if the following order is violated or interrupted:
-           `If [ Elif ]* Else`
-
-          In both modes, `then_expr` and `else_expr` are lazy evaluated against
-          run-time argument (which is also true for Elif and Else), making
-          it possible to nest if-else expressions.
-
-        examples: |-
-          **Pipe form**:
-
-          42 | If(Lt(42), Mul(-1)) | Else(Id) ↦ -42
-          67 | If(Lt(42), Mul(-1)) | Else(Id) ↦  67
-
-          **Lisp-like form**:
-
-          42 | If(Lt(42), Mul(-1), Id) ↦ -42
-          67 | If(Lt(42), Mul(-1), Id) ↦  67
-
-          **Nested Lisp-like**:
-
-           7 | If(42, "42", If(41, "41", Id)) ↦ 7
-          42 | If(42, "42", If(41, "41", Id)) ↦ "41"
-
-          **Same in pipe form without nesting**:
-
-           7 | If(42, "42") | Elif(41, "41") | Else(Id) ↦ 7
-          42 | If(42, "42") | Elif(41, "41") | Else(Id) ↦ "41"
-
-
-
-      - name: Elif
-        brief: Else if
-        tags: []
-        signature: Variadic
-        details: |-
-          Continuation operator in If-Elif-Else pipe.
-          Will fail if not preceded by If.
-          See If.
-
-      - name: Else
-        signature: Binary
-        tags: []
-        details: |-
-          Resolving operator in If-Elif-Else pipe.
-          Will fail if not preceded by If or Elif.
-          See If.
-
-          Note: Errors are passed through Else as is,
-          without evaluating the parameter expression.
-          Input errors are handled in preceding If/Elif clauses,
-          while errors produced by If/Elif assumed to be
-          handled  after the Else clause.
 
   Unary Structural transforms:
     defaults:
@@ -1781,6 +1719,69 @@ keyword_groups:
         signature: Special
         details: |-
           Error object handling the message and context info
+
+
+      - name: If
+        brief: Branching operator
+        tags: []
+        signature: Variadic
+        details: |-
+          Branching operator can be used either in
+          Lisp-like mode as `If(predicate, then_expr, else_expr)`,
+          or in pipe mode with Elif or Else operators (see examples).
+
+          In pipe mode (without `else_expr` parameter), the chain will produce
+          error if the following order is violated or interrupted:
+           `If [ Elif ]* Else`
+
+          In both modes, `then_expr` and `else_expr` are lazy evaluated against
+          run-time argument (which is also true for Elif and Else), making
+          it possible to nest if-else expressions.
+
+        examples: |-
+          **Pipe form**:
+
+          42 | If(Lt(42), Mul(-1)) | Else(Id) ↦ -42
+          67 | If(Lt(42), Mul(-1)) | Else(Id) ↦  67
+
+          **Lisp-like form**:
+
+          42 | If(Lt(42), Mul(-1), Id) ↦ -42
+          67 | If(Lt(42), Mul(-1), Id) ↦  67
+
+          **Nested Lisp-like**:
+
+           7 | If(42, "42", If(41, "41", Id)) ↦ 7
+          42 | If(42, "42", If(41, "41", Id)) ↦ "41"
+
+          **Same in pipe form without nesting**:
+
+           7 | If(42, "42") | Elif(41, "41") | Else(Id) ↦ 7
+          42 | If(42, "42") | Elif(41, "41") | Else(Id) ↦ "41"
+
+      - name: Elif
+        brief: Else if
+        tags: []
+        signature: Variadic
+        details: |-
+          Continuation operator in If-Elif-Else pipe.
+          Will fail if not preceded by If.
+          See If.
+
+      - name: Else
+        signature: Binary
+        tags: []
+        details: |-
+          Resolving operator in If-Elif-Else pipe.
+          Will fail if not preceded by If or Elif.
+          See If.
+
+          Note: Errors are passed through Else as is,
+          without evaluating the parameter expression.
+          Input errors are handled in preceding If/Elif clauses,
+          while errors produced by If/Elif assumed to be
+          handled  after the Else clause.
+
 
   Evaluation handlers:
     defaults:

@@ -382,6 +382,10 @@ class OperatorRegistry
 
     static boost::optional<OperatorTable> get(sol::object x, sol::object y = sol::nil)
     {
+        if (HAIKAN_UNLIKELY(x.is<error>() || y.is<error>()))
+        {
+            return boost::none;
+        }
         auto const get_hash = [](sol::object o) -> std::size_t
         {
             switch (o.get_type())

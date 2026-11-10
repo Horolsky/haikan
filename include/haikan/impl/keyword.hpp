@@ -250,242 +250,242 @@ enum class Keyword : std::uint64_t
     /// Or 74
     Or,
 
-    /// If 75
-    If,
-
-    /// Elif 76
-    Elif,
-
-    /// Else 77
-    Else,
-
-    /// Transp 78
+    /// Transp 75
     Transp,
 
-    /// Cartesian 79
+    /// Cartesian 76
     Cartesian,
 
-    /// Reverse 80
+    /// Reverse 77
     Reverse,
 
-    /// Uniques 81
+    /// Uniques 78
     Uniques,
 
-    /// Items 82
+    /// Items 79
     Items,
 
-    /// Keys 83
+    /// Keys 80
     Keys,
 
-    /// Values 84
+    /// Values 81
     Values,
 
-    /// Enumerate 85
+    /// Enumerate 82
     Enumerate,
 
-    /// Flatten 86
+    /// Flatten 83
     Flatten,
 
-    /// ToList 87
+    /// ToList 84
     ToList,
 
-    /// First 88
+    /// First 85
     First,
 
-    /// Last 89
+    /// Last 86
     Last,
 
-    /// Rand 90
+    /// Rand 87
     Rand,
 
-    /// RandInt 91
+    /// RandInt 88
     RandInt,
 
-    /// Sequence 92
+    /// Sequence 89
     Sequence,
 
-    /// Arange 93
+    /// Arange 90
     Arange,
 
-    /// Parse 94
+    /// Parse 91
     Parse,
 
-    /// Str 95
+    /// Str 92
     Str,
 
-    /// Re 96
+    /// Re 93
     Re,
 
-    /// Fmt 97
+    /// Fmt 94
     Fmt,
 
-    /// Capitalize 98
+    /// Capitalize 95
     Capitalize,
 
-    /// LowerCase 99
+    /// LowerCase 96
     LowerCase,
 
-    /// UpperCase 100
+    /// UpperCase 97
     UpperCase,
 
-    /// Card 101
+    /// Card 98
     Card,
 
-    /// Size 102
+    /// Size 99
     Size,
 
-    /// Sum 103
+    /// Sum 100
     Sum,
 
-    /// Prod 104
+    /// Prod 101
     Prod,
 
-    /// Avg 105
+    /// Avg 102
     Avg,
 
-    /// Slide 106
+    /// Slide 103
     Slide,
 
-    /// Stride 107
+    /// Stride 104
     Stride,
 
-    /// Chunks 108
+    /// Chunks 105
     Chunks,
 
-    /// Repeat 109
+    /// Repeat 106
     Repeat,
 
-    /// Cat 110
+    /// Cat 107
     Cat,
 
-    /// Push 111
+    /// Push 108
     Push,
 
-    /// At 112
+    /// At 109
     At,
 
-    /// Del 113
+    /// Del 110
     Del,
 
-    /// Upd 114
+    /// Upd 111
     Upd,
 
-    /// Lookup 115
+    /// Lookup 112
     Lookup,
 
-    /// Cast 116
+    /// Cast 113
     Cast,
 
-    /// Id 117
+    /// Id 114
     Id,
 
-    /// Q 118
+    /// Q 115
     Q,
 
-    /// Fold 119
+    /// Fold 116
     Fold,
 
-    /// Map 120
+    /// Map 117
     Map,
 
-    /// Filter 121
+    /// Filter 118
     Filter,
 
-    /// Count 122
+    /// Count 119
     Count,
 
-    /// Each 123
+    /// Each 120
     Each,
 
-    /// Sort 124
+    /// Sort 121
     Sort,
 
-    /// Find 125
+    /// Find 122
     Find,
 
-    /// FindPtr 126
+    /// FindPtr 123
     FindPtr,
 
-    /// FindIdx 127
+    /// FindIdx 124
     FindIdx,
 
-    /// Min 128
+    /// Min 125
     Min,
 
-    /// Max 129
+    /// Max 126
     Max,
 
-    /// Argmin 130
+    /// Argmin 127
     Argmin,
 
-    /// Argmax 131
+    /// Argmax 128
     Argmax,
 
-    /// Recur 132
+    /// Recur 129
     Recur,
 
-    /// Unfold 133
+    /// Unfold 130
     Unfold,
 
-    /// Op 134
+    /// Op 131
     Op,
 
-    /// Bind 135
+    /// Bind 132
     Bind,
 
-    /// Fn 136
+    /// Fn 133
     Fn,
 
-    /// Link 137
+    /// Link 134
     Link,
 
-    /// Get 138
+    /// Get 135
     Get,
 
-    /// EnvLoad 139
+    /// EnvLoad 136
     EnvLoad,
 
-    /// EnvStore 140
+    /// EnvStore 137
     EnvStore,
 
-    /// Any 141
+    /// Any 138
     Any,
 
-    /// All 142
+    /// All 139
     All,
 
-    /// Saturate 143
+    /// Saturate 140
     Saturate,
 
-    /// Pipe 144
+    /// Pipe 141
     Pipe,
 
-    /// Tuple 145
+    /// Tuple 142
     Tuple,
 
-    /// Fork 146
+    /// Fork 143
     Fork,
 
-    /// Flip 147
+    /// Flip 144
     Flip,
 
-    /// Dbg 148
+    /// Dbg 145
     Dbg,
 
-    /// Eval 149
+    /// Eval 146
     Eval,
 
-    /// Try 150
+    /// Try 147
     Try,
 
-    /// Kwrd 151
+    /// Kwrd 148
     Kwrd,
 
-    /// Prms 152
+    /// Prms 149
     Prms,
 
-    /// Err 153
+    /// Err 150
     Err,
+
+    /// If 151
+    If,
+
+    /// Elif 152
+    Elif,
+
+    /// Else 153
+    Else,
 
     /// D 154
     D,

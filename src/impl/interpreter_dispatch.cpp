@@ -61,9 +61,6 @@ template <> sol::object Interpreter::Evaluate<Keyword::Round>(sol::object const&
 template <> sol::object Interpreter::Evaluate<Keyword::Sqrt>(sol::object const&, sol::object const&) const;
 template <> sol::object Interpreter::Evaluate<Keyword::Sign>(sol::object const&, sol::object const&) const;
 template <> sol::object Interpreter::Evaluate<Keyword::Near>(sol::object const&, sol::object const&) const;
-template <> sol::object Interpreter::Evaluate<Keyword::If>(sol::object const&, sol::object const&) const;
-template <> sol::object Interpreter::Evaluate<Keyword::Elif>(sol::object const&, sol::object const&) const;
-template <> sol::object Interpreter::Evaluate<Keyword::Else>(sol::object const&, sol::object const&) const;
 template <> sol::object Interpreter::Evaluate<Keyword::Transp>(sol::object const&, sol::object const&) const;
 template <> sol::object Interpreter::Evaluate<Keyword::Cartesian>(sol::object const&, sol::object const&) const;
 template <> sol::object Interpreter::Evaluate<Keyword::Reverse>(sol::object const&, sol::object const&) const;
@@ -152,9 +149,6 @@ sol::object Interpreter::Dispatch(Keyword const k, sol::object const& lhs, sol::
     case Keyword::Sqrt: result = Evaluate<Keyword::Sqrt>(lhs, rhs); break;
     case Keyword::Sign: result = Evaluate<Keyword::Sign>(lhs, rhs); break;
     case Keyword::Near: result = Evaluate<Keyword::Near>(lhs, rhs); break;
-    case Keyword::If: result = Evaluate<Keyword::If>(lhs, rhs); break;
-    case Keyword::Elif: result = Evaluate<Keyword::Elif>(lhs, rhs); break;
-    case Keyword::Else: result = Evaluate<Keyword::Else>(lhs, rhs); break;
     case Keyword::Transp: result = Evaluate<Keyword::Transp>(lhs, rhs); break;
     case Keyword::Cartesian: result = Evaluate<Keyword::Cartesian>(lhs, rhs); break;
     case Keyword::Reverse: result = Evaluate<Keyword::Reverse>(lhs, rhs); break;

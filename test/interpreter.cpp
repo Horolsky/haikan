@@ -72,6 +72,20 @@ static std::vector<TestEvalSample> const samples
         Pi | Mul(2) | Add(Pi | Neg),
         3.1415926535898
     },
+
+    {
+        42 | If(Gt(100), "Kek") | Else("Lol"),
+        "Lol"
+    },
+    {
+        42 | If(Lt(100), "Kek") | Else("Lol"),
+        "Kek"
+    },
+
+    {
+        42 | If(Gt(100), "Kek") | Elif(Ne("string"), 13) | Else("Lol"),
+        13
+    },
     // TODO: change Unfold and Recur syntax to [x, n] | Keyword(Fn)
     // {Unfold(0, Add(1))          , 4                      , {0,1,2,3,4}          },
     // {Unfold(1, Add(1))          , 4                      , {1,2,3,4,5}          },

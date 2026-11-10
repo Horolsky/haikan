@@ -104,7 +104,9 @@ struct LuaState::MemoryPool
         std::stringstream ss;
         ss << L;
 
-        HAIKAN_LOG(ERROR) << "Lua[" << ss.str() << "] panic: " << (message == nullptr ? "unknown error" : message);
+        {
+            HAIKAN_LOG(ERROR) << "Lua[" << ss.str() << "] panic: " << (message == nullptr ? "unknown error" : message);
+        }
         throw std::runtime_error(message == nullptr ? "lua panic" : message);
     }
 
