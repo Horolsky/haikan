@@ -24,9 +24,7 @@
 #include "haikan/impl/keyword_grammar.hpp"
 #include "haikan/impl/lua_json_conversion.hpp"
 #include "haikan/logger.hpp"
-#include "haikan/impl/keyword_to_str.hpp"
 #include "haikan/impl/lua_state.hpp"
-
 
 
 namespace haikan {
@@ -44,10 +42,49 @@ Encoding::Encoding(sol::object value)
             && as_table["data"] != sol::nil
         )
         {
-            keywords_ = as_table["keywords"].get<std::vector<Keyword>>();
-            depths_ = as_table["depths"].get<std::vector<std::size_t>>();
-            data_ = as_table["data"].get<std::vector<sol::object>>();
-            preprocess();
+            sol::table const keywords = as_table["keywords"];
+            sol::table const depths = as_table["depths"];
+            sol::table const data = as_table["data"];
+            auto const count = keywords.size();
+            keywords_.reserve(count);
+            depths_.reserve(count);
+            data_.reserve(count);
+            for (std::size_t i = 1; i <= count; ++i)
+            {
+                keywords_.push_back(keyword_from_str(keywords.get<char const*>(i)));
+                depths_.push_back(depths.get<std::size_t>(i));
+                data_.push_back(data[i]);
+            }
+
+            sol::object const types_object = as_table["types"];
+            if (types_object.get_type() == sol::type::table)
+            {
+                sol::table const types = types_object.as<sol::table>();
+                for (std::size_t i = 0; i < count; ++i)
+                {
+                    sol::object const type = types[i + 1];
+                    if (type.get_type() != sol::type::number)
+                    {
+                        continue;
+                    }
+
+                    auto const meta = get_rmeta(value.lua_state(), type.as<std::size_t>());
+                    if (!meta || !meta->deserialize)
+                    {
+                        continue;
+                    }
+
+                    sol::protected_function_result result = meta->deserialize(data_[i]);
+                    if (result.valid())
+                    {
+                        sol::object deserialized = result.get<sol::object>();
+                        if (deserialized != sol::nil)
+                        {
+                            data_[i] = std::move(deserialized);
+                        }
+                    }
+                }
+            }
             return;
         }
     }
@@ -194,6 +231,66 @@ bool Encoding::preprocess()
 
     return complete;
 }
+
+
+sol::object Encoding::to_object() const
+{
+    sol::state_view state = lua::global_state();
+    for (auto const& value : data_)
+    {
+        if (value.valid() && value.lua_state() != nullptr)
+        {
+            state = sol::state_view(value.lua_state());
+            break;
+        }
+    }
+
+    auto keywords_out = state.create_table(static_cast<int>(size()), 0);
+    auto depths_out = state.create_table(static_cast<int>(size()), 0);
+    auto data_out = state.create_table(static_cast<int>(size()), 0);
+    auto types_out = state.create_table(static_cast<int>(size()), 0);
+
+    for (std::size_t i = 0; i < size(); ++i)
+    {
+        auto const lua_index = i + 1;
+        keywords_out.set(lua_index, keyword_to_str(keywords_[i]));
+        depths_out.set(lua_index, depths_[i]);
+
+        auto const& value = data_[i];
+        if (value.valid() && value.get_type() == sol::type::userdata)
+        {
+            sol::userdata const userdata = value.as<sol::userdata>();
+            sol::object const metadata = userdata["meta"];
+            if (metadata.is<ReflectionMeta>())
+            {
+                ReflectionMeta const& meta = metadata.as<ReflectionMeta const&>();
+                if (meta.serialize)
+                {
+                    sol::protected_function_result result = meta.serialize(value);
+                    if (result.valid())
+                    {
+                        sol::object serialized = result.get<sol::object>();
+                        if (serialized != sol::nil)
+                        {
+                            data_out.set(lua_index, std::move(serialized));
+                            types_out.set(lua_index, meta.type_index_hash);
+                            continue;
+                        }
+                    }
+                }
+            }
+        }
+        data_out.set(lua_index, value);
+    }
+
+    return state.create_table_with(
+        "keywords", std::move(keywords_out),
+        "depths", std::move(depths_out),
+        "data", std::move(data_out),
+        "types", std::move(types_out)
+    );
+}
+
 
 EncodingView::EncodingView(Keyword const* keywords, std::size_t const* depths,
                            sol::object const* data, std::size_t size,

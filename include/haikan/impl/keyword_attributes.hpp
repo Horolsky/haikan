@@ -55,8 +55,8 @@ constexpr std::uint32_t keyword_attributes(Keyword const& oc)
     {
     case Keyword::_Literal: return is_literal | is_no_eval | is_unary;
     case Keyword::_Void: return is_unary;
-    case Keyword::_Continue: return is_unary;
-    case Keyword::_Resolve: return is_unary;
+    case Keyword::_Forward: return is_unary;
+    case Keyword::_Select: return is_unary;
     case Keyword::Noop: return is_autogen | is_const | is_no_eval | is_noop;
     case Keyword::Null: return is_autogen | is_const | is_no_eval;
     case Keyword::True: return is_autogen | is_const | is_no_eval | is_predicate;

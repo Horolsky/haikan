@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <boost/utility/string_view.hpp>
 #include "haikan/impl/keyword.hpp"
 #include "haikan/impl/interpreter.hpp"
 
@@ -15,12 +16,6 @@ enum class PayloadType : std::uint8_t
     Pass,
 };
 
-sol::table payload_mt()
-{
-    static sol::table table = lua::create_table(0, 0);
-    return table;
-}
-
 sol::object get_payload(sol::object const& object, PayloadType& type)
 {
     type = PayloadType::PlainValue;
@@ -30,31 +25,35 @@ sol::object get_payload(sol::object const& object, PayloadType& type)
     }
 
     sol::table const table = object.as<sol::table>();
-    sol::object const metatable = table[sol::metatable_key];
-    if (metatable != payload_mt())
+    sol::object const keywords_object = table["keywords"];
+    if (!keywords_object.is<sol::table>())
     {
         return object;
     }
 
-    sol::object const resolved = table["Match"];
-    if (resolved != sol::nil)
+    sol::object const opcode_object = keywords_object.as<sol::table>()[1];
+    if (opcode_object.get_type() != sol::type::string)
     {
-        type = PayloadType::Match;
-        return resolved;
+        return object;
     }
 
-    type = PayloadType::Pass;
-    return table["Pass"];
-}
+    boost::string_view const opcode = opcode_object.as<char const*>();
+    if (opcode == "_Select")
+    {
+        type = PayloadType::Match;
+    }
+    else if (opcode == "_Forward")
+    {
+        type = PayloadType::Pass;
+    }
+    else
+    {
+        return object;
+    }
 
-sol::object make_payload(PayloadType type, sol::object const& value)
-{
-    char const* const key = type == PayloadType::Match
-        ? "Match"
-        : "Pass";
-    sol::table table = lua::global_state().create_table_with(key, value);
-    table[sol::metatable_key] = payload_mt();
-    return table;
+    Encoding const encoding(object);
+    EncodingView const payload(encoding);
+    return payload.child(0).to_object();
 }
 
 bool evaluate_clause(Interpreter::Stack& stack, sol::object& result)
@@ -107,13 +106,13 @@ bool evaluate_clause(Interpreter::Stack& stack, sol::object& result)
             return true;
         }
 
-        result = make_payload(PayloadType::Pass, frame.value);
+        result = Expression::encodeNested(Keyword::_Forward, {Expression(frame.value)}).to_object();
         return false;
     }
 
     case 2:
     {
-        result = make_payload(PayloadType::Match, result);
+        result = Expression::encodeNested(Keyword::_Select, {Expression(result)}).to_object();
         return false;
     }
 
@@ -125,8 +124,8 @@ bool evaluate_clause(Interpreter::Stack& stack, sol::object& result)
 } // namespace
 
 
-template <> sol::object Interpreter::Evaluate<Keyword::_Continue>(sol::object const&, sol::object const& rhs) const { return rhs; }
-template <> sol::object Interpreter::Evaluate<Keyword::_Resolve>(sol::object const&, sol::object const& rhs) const { return rhs; }
+template <> sol::object Interpreter::Evaluate<Keyword::_Forward>(sol::object const&, sol::object const& rhs) const { return rhs; }
+template <> sol::object Interpreter::Evaluate<Keyword::_Select>(sol::object const&, sol::object const& rhs) const { return rhs; }
 
 template <> void Interpreter::Evaluate<Keyword::If>(Interpreter::Stack& stack)
 {

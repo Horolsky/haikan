@@ -10,8 +10,8 @@
 #include <boost/spirit/include/karma.hpp>
 
 #include "haikan/impl/expression.hpp"
+#include "haikan/impl/keyword.hpp"
 #include "haikan/impl/keyword_grammar.hpp"
-#include "haikan/impl/keyword_to_str.hpp"
 
 namespace haikan {
 namespace impl {

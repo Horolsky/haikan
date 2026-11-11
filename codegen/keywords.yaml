@@ -16,11 +16,11 @@ keyword_groups:
       - name: _Void
         brief: empty value
 
-      - name: _Continue
-        brief: Unresolved If/Elif unmatching argument
+      - name: _Forward
+        brief: Internal argument of unresolved If/Elif/Else clause
 
-      - name: _Resolve
-        brief: Unresoled If/Elif matching argument
+      - name: _Select
+        brief: Internal result of unresolved If/Elif/Else clause
 
   Constants:
     defaults:

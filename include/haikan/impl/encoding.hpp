@@ -60,6 +60,8 @@ struct Encoding
         return keywords_.empty();
     }
 
+    sol::object to_object() const;
+
 };
 
 class EncodingView

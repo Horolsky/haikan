@@ -16,7 +16,6 @@
  */
 
 
-#include "haikan/impl/keyword_to_str.hpp"
 #include "haikan/impl/keyword.hpp"
 
 namespace haikan {
@@ -30,8 +29,8 @@ char const* keyword_to_str(Keyword const& kw)
 
     case Keyword::_Literal: { return "_Literal"; break; }
     case Keyword::_Void: { return "_Void"; break; }
-    case Keyword::_Continue: { return "_Continue"; break; }
-    case Keyword::_Resolve: { return "_Resolve"; break; }
+    case Keyword::_Forward: { return "_Forward"; break; }
+    case Keyword::_Select: { return "_Select"; break; }
     case Keyword::Noop: { return "Noop"; break; }
     case Keyword::Null: { return "Null"; break; }
     case Keyword::True: { return "True"; break; }

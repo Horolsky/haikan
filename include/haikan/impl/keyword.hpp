@@ -19,6 +19,9 @@
 #include <cstdint>
 #include <type_traits>
 
+#include <boost/utility/string_view.hpp>
+
+
 namespace haikan {
 namespace impl {
 
@@ -34,11 +37,11 @@ enum class Keyword : std::uint64_t
     /// _Void 2
     _Void,
 
-    /// _Continue 3
-    _Continue,
+    /// _Forward 3
+    _Forward,
 
-    /// _Resolve 4
-    _Resolve,
+    /// _Select 4
+    _Select,
 
     /// Noop 5
     Noop,
@@ -511,6 +514,10 @@ using keyword_tag_t = std::integral_constant<Keyword, K>;
 
 template <Keyword K>
 constexpr keyword_tag_t<K> keyword_tag{};
+
+char const* keyword_to_str(Keyword const& kw);
+
+Keyword keyword_from_str(boost::string_view const str);
 
 
 } // namespace impl

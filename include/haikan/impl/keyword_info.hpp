@@ -11,7 +11,6 @@
 
 #include "haikan/impl/keyword.hpp"
 #include "haikan/impl/keyword_attributes.hpp"
-#include "haikan/impl/keyword_to_str.hpp"
 
 
 namespace haikan {

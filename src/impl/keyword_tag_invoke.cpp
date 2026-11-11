@@ -5,8 +5,8 @@
  */
 
 #include "haikan/impl/keyword_tag_invoke.hpp"
+#include "haikan/impl/keyword.hpp"
 #include "haikan/impl/keyword_grammar.hpp"
-#include "haikan/impl/keyword_to_str.hpp"
 
 
 namespace haikan {
@@ -33,11 +33,7 @@ Keyword tag_invoke(boost::json::value_to_tag<Keyword> const&, boost::json::value
     static KeywordGrammar const keyword_parser {};
 
     auto const& str = v.as_string();
-    auto iter = str.cbegin();
-    auto end = str.cend();
-    Keyword keyword_out {Keyword::Undefined};
-    static_cast<void>(boost::spirit::qi::parse(iter, end, keyword_parser, keyword_out));
-    return keyword_out;
+    return keyword_from_str(str.data());
 }
 
 }

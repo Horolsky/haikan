@@ -26,8 +26,8 @@ namespace impl {
 
 template <> sol::object Interpreter::Evaluate<Keyword::_Literal>(sol::object const&, sol::object const&) const;
 template <> sol::object Interpreter::Evaluate<Keyword::_Void>(sol::object const&, sol::object const&) const;
-template <> sol::object Interpreter::Evaluate<Keyword::_Continue>(sol::object const&, sol::object const&) const;
-template <> sol::object Interpreter::Evaluate<Keyword::_Resolve>(sol::object const&, sol::object const&) const;
+template <> sol::object Interpreter::Evaluate<Keyword::_Forward>(sol::object const&, sol::object const&) const;
+template <> sol::object Interpreter::Evaluate<Keyword::_Select>(sol::object const&, sol::object const&) const;
 template <> sol::object Interpreter::Evaluate<Keyword::Noop>(sol::object const&, sol::object const&) const;
 template <> sol::object Interpreter::Evaluate<Keyword::Null>(sol::object const&, sol::object const&) const;
 template <> sol::object Interpreter::Evaluate<Keyword::True>(sol::object const&, sol::object const&) const;
@@ -114,8 +114,8 @@ sol::object Interpreter::Dispatch(Keyword const k, sol::object const& lhs, sol::
     {
     case Keyword::_Literal: result = Evaluate<Keyword::_Literal>(lhs, rhs); break;
     case Keyword::_Void: result = Evaluate<Keyword::_Void>(lhs, rhs); break;
-    case Keyword::_Continue: result = Evaluate<Keyword::_Continue>(lhs, rhs); break;
-    case Keyword::_Resolve: result = Evaluate<Keyword::_Resolve>(lhs, rhs); break;
+    case Keyword::_Forward: result = Evaluate<Keyword::_Forward>(lhs, rhs); break;
+    case Keyword::_Select: result = Evaluate<Keyword::_Select>(lhs, rhs); break;
     case Keyword::Noop: result = Evaluate<Keyword::Noop>(lhs, rhs); break;
     case Keyword::Null: result = Evaluate<Keyword::Null>(lhs, rhs); break;
     case Keyword::True: result = Evaluate<Keyword::True>(lhs, rhs); break;

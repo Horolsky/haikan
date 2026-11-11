@@ -5,8 +5,8 @@
  */
 
 #include "haikan/impl/expression_grammar.hpp"
+#include "haikan/impl/keyword.hpp"
 #include "haikan/impl/keyword_grammar.hpp"
-#include "haikan/impl/keyword_to_str.hpp"
 
 #include <boost/iostreams/device/array.hpp>
 #include <boost/iostreams/stream.hpp>

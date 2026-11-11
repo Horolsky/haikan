@@ -3,7 +3,7 @@
 #include "haikan/impl/expression.hpp"
 #include "haikan/impl/operator_table.hpp"
 #include "haikan/impl/type_registry.hpp"
-#include "haikan/impl/keyword_to_str.hpp"
+#include "haikan/impl/keyword.hpp"
 
 namespace haikan
 {

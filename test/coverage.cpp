@@ -32,8 +32,8 @@ BOOST_DATA_TEST_CASE(EvalTestCoverage, utf::data::xrange(std::size_t{1ul}, stati
 {
     Keyword const keyword = static_cast<Keyword>(sample);
     if (keyword == Keyword::_Void) return;
-    if (keyword == Keyword::_Resolve) return;
-    if (keyword == Keyword::_Continue) return;
+    if (keyword == Keyword::_Select) return;
+    if (keyword == Keyword::_Forward) return;
     if (CoveredInTestEval().count(keyword) == 0)
     {
         BOOST_FAIL("Keyword " << boost::json::value_from(keyword) << " is not covered in TestEval");
