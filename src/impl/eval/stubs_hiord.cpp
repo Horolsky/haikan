@@ -5,11 +5,6 @@
 namespace haikan {
 namespace impl {
 
-
-template <> void Interpreter::Evaluate<Keyword::Map>(Interpreter::Stack&) {}
-template <> void Interpreter::Evaluate<Keyword::Filter>(Interpreter::Stack&) {}
-template <> void Interpreter::Evaluate<Keyword::Count>(Interpreter::Stack&) {}
-template <> void Interpreter::Evaluate<Keyword::Each>(Interpreter::Stack&) {}
 template <> void Interpreter::Evaluate<Keyword::Sort>(Interpreter::Stack&) {}
 template <> void Interpreter::Evaluate<Keyword::Find>(Interpreter::Stack&) {}
 template <> void Interpreter::Evaluate<Keyword::FindPtr>(Interpreter::Stack&) {}

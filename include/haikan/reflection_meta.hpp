@@ -33,8 +33,8 @@ struct ReflectionMeta
     std::size_t type_index_hash;
     std::size_t wrapper_type_index_hash;
     std::vector<std::string> members;
-    sol::protected_function serialize;
-    sol::protected_function deserialize;
+    std::function<sol::object(sol::object)> serialize;
+    std::function<sol::object(sol::object)> deserialize;
 
     // clone object to target state
     std::function<sol::object(lua_State*, sol::object)> migrate;

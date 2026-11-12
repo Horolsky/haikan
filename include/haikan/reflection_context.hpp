@@ -76,14 +76,6 @@ public:
             return state;
         }
 
-        template <class Function>
-        sol::protected_function make_function(Function&& function) const
-        {
-            return sol::make_object(
-                state.lua_state(), sol::as_function(std::forward<Function>(function)))
-                .template as<sol::protected_function>();
-        }
-
     private:
 
         friend class ReflectionContextFactory;
@@ -167,8 +159,6 @@ private:
         {
             action(ut);
         }
-        ut.set("serialize", meta.serialize);
-        ut.set("deserialize", meta.deserialize);
         ut.set("meta", register_metadata(L, meta));
 
         HAIKAN_LOG(DEBUG) << "reflection initializing for " << meta.type_name;
@@ -194,12 +184,6 @@ private:
         container.push();
         if (lua_getmetatable(L.lua_state(), -1) != 0)
         {
-            lua_pushliteral(L.lua_state(), "serialize");
-            sol::stack::push(L.lua_state(), meta.serialize);
-            lua_rawset(L.lua_state(), -3);
-            lua_pushliteral(L.lua_state(), "deserialize");
-            sol::stack::push(L.lua_state(), meta.deserialize);
-            lua_rawset(L.lua_state(), -3);
             lua_pushliteral(L.lua_state(), "meta");
             sol::stack::push(L.lua_state(), lua_meta);
             lua_rawset(L.lua_state(), -3);

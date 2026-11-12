@@ -20,7 +20,6 @@ namespace utf = boost::unit_test;
 using namespace haikan;
 using namespace haikan::impl;
 
-
 // For ordinary complex parameters:
 // Enter → EvalParam → ResumeFrame → ExecuteResolved → Return
 
@@ -86,6 +85,10 @@ static std::vector<TestEvalSample> const samples
         42 | If(Gt(100), "Kek") | Elif(Ne("string"), 13) | Else("Lol"),
         13
     },
+    {
+        V{1,2,3,4} | Map(Mul(10)),
+        V{10,20,30,40}
+    }
     // TODO: change Unfold and Recur syntax to [x, n] | Keyword(Fn)
     // {Unfold(0, Add(1))          , 4                      , {0,1,2,3,4}          },
     // {Unfold(1, Add(1))          , 4                      , {1,2,3,4,5}          },

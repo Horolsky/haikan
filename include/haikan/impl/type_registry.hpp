@@ -168,12 +168,8 @@ struct type_codec
         auto meta = get_rmeta(state, type<T>);
         if (meta && meta->serialize)
         {
-            sol::protected_function_result result = meta->serialize(
+            return meta->serialize(
                 sol::make_object(state.lua_state(), std::ref(const_cast<T&>(value))));
-            if (result.valid())
-            {
-                return result.template get<sol::object>();
-            }
         }
         return reflect_serialize_fallback<T>::serialize(value, state);
     }
@@ -183,15 +179,10 @@ struct type_codec
         auto meta = get_rmeta(sol::state_view(object.lua_state()), type<T>);
         if (meta && meta->deserialize)
         {
-            sol::protected_function_result result = meta->deserialize(object);
-            if (result.valid())
+            auto value = reflect_serialize_fallback<T>::deserialize(meta->deserialize(object));
+            if (value)
             {
-                auto value = reflect_serialize_fallback<T>::deserialize(
-                    result.template get<sol::object>());
-                if (value)
-                {
-                    return value;
-                }
+                return value;
             }
         }
         return reflect_serialize_fallback<T>::deserialize(object);
@@ -497,7 +488,7 @@ class TypeRegistrar
             : sol::make_object(state, std::move(value.value()));
     }
 
-    static sol::object serialize_impl(T const& value, sol::this_state lua_state)
+    static sol::object serialize_impl(T const& value, lua_State* lua_state)
     {
         sol::state_view state(lua_state);
         sol::table result = state.create_table(0, static_cast<int>(boost::mp11::mp_size<Descr>::value));
@@ -565,12 +556,14 @@ class TypeRegistrar
         sol::function next = make_reflect_default_next_fn(meta.members, ctx.state_view());
         ctx.usertype_set(sol::meta_function::pairs, make_reflect_default_pairs_fn(next));
         ctx.usertype_set(sol::meta_function::next, next);
-        meta.serialize = ctx.make_function(&ThisType::serialize_impl);
-        meta.deserialize = ctx.make_function([](sol::object object) -> sol::object {
+        meta.serialize = [](sol::object object) {
+            return ThisType::serialize_impl(object.as<T const&>(), object.lua_state());
+        };
+        meta.deserialize = [](sol::object object) -> sol::object {
             auto value = ThisType::deserialize_impl(object);
             return value ? sol::make_object(object.lua_state(), std::move(value.value()))
                          : sol::make_object(object.lua_state(), sol::nil);
-        });
+        };
         for (auto& action: registration_config<T>::get().actions)
         {
             action(ctx);
@@ -614,10 +607,10 @@ class TypeRegistrar
         ctx.usertype_set("num", &enum_type::value);
         ctx.usertype_set(sol::meta_function::to_string, &enum_type::to_string);
         auto& meta = ctx.reflection_meta();
-        meta.serialize = ctx.make_function([](enum_type const& value, sol::this_state state) {
-            return sol::make_object(state.L, value.to_string());
-        });
-        meta.deserialize = ctx.make_function([](sol::object object) -> sol::object {
+        meta.serialize = [](sol::object object) {
+            return sol::make_object(object.lua_state(), object.as<enum_type const&>().to_string());
+        };
+        meta.deserialize = [](sol::object object) -> sol::object {
             boost::optional<enum_type> value;
             if (object.is<enum_type>())
             {
@@ -633,21 +626,21 @@ class TypeRegistrar
             }
             return value ? sol::make_object(object.lua_state(), value.value())
                          : sol::make_object(object.lua_state(), sol::nil);
-        });
+        };
     }
 
     static void initialize_container(ReflectionContextFactory& factory)
     {
         auto ctx = factory.make_registration_context(type<T>);
         auto& meta = ctx.reflection_meta();
-        meta.serialize = ctx.make_function([](T const& value, sol::this_state state) {
-            return array_codec<T>::serialize(value, sol::state_view(state));
-        });
-        meta.deserialize = ctx.make_function([](sol::object object) -> sol::object {
+        meta.serialize = [](sol::object object) {
+            return array_codec<T>::serialize(object.as<T const&>(), sol::state_view(object.lua_state()));
+        };
+        meta.deserialize = [](sol::object object) -> sol::object {
             auto value = array_codec<T>::deserialize(object);
             return value ? sol::make_object(object.lua_state(), std::move(value.value()))
                          : sol::make_object(object.lua_state(), sol::nil);
-        });
+        };
     }
 
     static void initialize(ReflectionContextFactory& factory)

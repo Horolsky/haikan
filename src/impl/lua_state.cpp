@@ -6,6 +6,8 @@
 
 #include "haikan/impl/lua_state.hpp"
 
+#include <iostream>
+
 #include <algorithm>
 #include <array>
 #include <cstddef>
@@ -359,10 +361,9 @@ void LuaState::reset()
 
 LuaState::~LuaState()
 {
-    std::stringstream ss;
-    ss << this;
-    HAIKAN_LOG(DEBUG) << "LuaState::~LuaState()[" << ss.str() << "]";
-
+    // std::stringstream ss;
+    // ss << this;
+    std::cerr << "LuaState::~LuaState()[" << this << "]\n";
     if (state_ != nullptr)
     {
         lua_close(state_);

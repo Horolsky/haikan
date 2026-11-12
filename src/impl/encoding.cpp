@@ -79,14 +79,10 @@ Encoding::Encoding(sol::object value)
                         continue;
                     }
 
-                    sol::protected_function_result result = meta->deserialize(data_[i]);
-                    if (result.valid())
+                    sol::object deserialized = meta->deserialize(data_[i]);
+                    if (deserialized != sol::nil)
                     {
-                        sol::object deserialized = result.get<sol::object>();
-                        if (deserialized != sol::nil)
-                        {
-                            data_[i] = std::move(deserialized);
-                        }
+                        data_[i] = std::move(deserialized);
                     }
                 }
             }
@@ -291,16 +287,12 @@ sol::object Encoding::to_object() const
                 ReflectionMeta const& meta = metadata.as<ReflectionMeta const&>();
                 if (meta.serialize)
                 {
-                    sol::protected_function_result result = meta.serialize(value);
-                    if (result.valid())
+                    sol::object serialized = meta.serialize(value);
+                    if (serialized != sol::nil)
                     {
-                        sol::object serialized = result.get<sol::object>();
-                        if (serialized != sol::nil)
-                        {
-                            data_out.set(lua_index, std::move(serialized));
-                            types_out.set(lua_index, meta.type_index_hash);
-                            continue;
-                        }
+                        data_out.set(lua_index, std::move(serialized));
+                        types_out.set(lua_index, meta.type_index_hash);
+                        continue;
                     }
                 }
             }
@@ -417,10 +409,10 @@ sol::object EncodingView::to_object() const
                 ReflectionMeta const& meta = metadata.as<ReflectionMeta const&>();
                 if (meta.serialize)
                 {
-                    sol::protected_function_result result = meta.serialize(value);
-                    if (result.valid() && (result.get<sol::object>() != sol::nil))
+                    sol::object result = meta.serialize(value);
+                    if (result != sol::nil)
                     {
-                        data_out.set(lua_index, result.get<sol::object>());
+                        data_out.set(lua_index, std::move(result));
                         continue;
                     }
                 }
