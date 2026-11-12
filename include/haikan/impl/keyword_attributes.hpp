@@ -45,6 +45,7 @@ constexpr std::uint32_t is_autogen     = 1 << 17;
 constexpr std::uint32_t is_sideeffect  = 1 << 18;
 constexpr std::uint32_t is_single_form = 1 << 19;
 constexpr std::uint32_t is_no_eval     = 1 << 20;
+constexpr std::uint32_t is_internal    = 1 << 21;
 }
 
 
@@ -53,10 +54,10 @@ constexpr std::uint32_t keyword_attributes(Keyword const& oc)
     using namespace attr;
     switch (oc)
     {
-    case Keyword::_Literal: return is_literal | is_no_eval | is_unary;
-    case Keyword::_Void: return is_unary;
-    case Keyword::_Forward: return is_unary;
-    case Keyword::_Select: return is_unary;
+    case Keyword::_Literal: return is_internal | is_literal | is_no_eval | is_unary;
+    case Keyword::_Void: return is_internal | is_unary;
+    case Keyword::_Forward: return is_internal | is_unary;
+    case Keyword::_Select: return is_internal | is_unary;
     case Keyword::Noop: return is_autogen | is_const | is_no_eval | is_noop;
     case Keyword::Null: return is_autogen | is_const | is_no_eval;
     case Keyword::True: return is_autogen | is_const | is_no_eval | is_predicate;

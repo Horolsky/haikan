@@ -106,13 +106,13 @@ bool evaluate_clause(Interpreter::Stack& stack, sol::object& result)
             return true;
         }
 
-        result = Expression::encodeNested(Keyword::_Forward, {Expression(frame.value)}).to_object();
+        result = Encoding(Keyword::_Forward, {Encoding(frame.value)}).to_object();
         return false;
     }
 
     case 2:
     {
-        result = Expression::encodeNested(Keyword::_Select, {Expression(result)}).to_object();
+        result = Encoding(Keyword::_Select, {Encoding(result)}).to_object();
         return false;
     }
 

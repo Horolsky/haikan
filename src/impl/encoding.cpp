@@ -31,6 +31,11 @@ namespace haikan {
 namespace impl {
 
 
+Encoding::Encoding(Keyword const& keyword)
+{
+    push_back(keyword, 0, sol::nil);
+}
+
 Encoding::Encoding(sol::object value)
 {
 
@@ -110,6 +115,26 @@ Encoding::Encoding(sol::object value)
 }
 
 
+
+
+
+Encoding::Encoding(Keyword const& keyword, std::move_iterator<Encoding const*> begin, std::move_iterator<Encoding const*> const end)
+    : Encoding(keyword)
+{
+    auto total_size = size();
+    for (auto it = begin; it != end; ++it)
+    {
+        total_size += (*it).size();
+    }
+    keywords_.reserve(total_size);
+    depths_.reserve(total_size);
+    data_.reserve(total_size);
+
+    while(begin != end)
+    {
+        append_to_root(std::move((*begin++)));
+    }
+}
 
 std::size_t Encoding::size() const
 {
@@ -543,7 +568,8 @@ bool EncodingView::is_const() const
             || (a & attr::is_preproc)
             || (a & attr::is_noop)
             || (a & attr::is_error)
-            || (a & attr::is_const);
+            || (a & attr::is_const)
+            || (a & attr::is_internal);
     }
 }
 

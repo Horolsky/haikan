@@ -250,3 +250,33 @@ BOOST_AUTO_TEST_CASE(Demo3)
     BOOST_ASSERT(result.is<double>());
     BOOST_CHECK_CLOSE(result.as<double>(), 42, 1E-12);
 }
+
+
+BOOST_AUTO_TEST_CASE(IfElif)
+{
+    using namespace haikan;
+
+    Expression expr = 42 | If(Lt(11), "lol") | Elif(Eq(42), "kek") | Else("fail");
+
+    std::stringstream ss;
+    sol::object result;
+    {
+        EvalContext ctx = EvalContext::make();
+        Interpreter vm {{}, expr, ctx};
+        result = vm.evaluate();
+        ss << '\n' << ctx.log;
+    }
+    auto expected = R"(
+      ┌── 42 | Lt(11) = false
+   ┌── 42 | If(Lt(11), "lol") = _Forward(42)
+   │   ┌── 42 | Eq(42) = true
+   ├── _Forward(42) | Elif(Eq(42), "kek") = _Select("kek")
+   ├── _Select("kek") | Else("fail") = "kek"
+□  42 | If(Lt(11), "lol") | Elif(Eq(42), "kek") | Else("fail") = "kek"
+)";
+
+    BOOST_CHECK_EQUAL(ss.str(), expected);
+
+    BOOST_ASSERT(result.is<std::string>());
+    BOOST_CHECK_EQUAL(result.as<std::string>(), "kek");
+}

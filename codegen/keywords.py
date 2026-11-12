@@ -139,6 +139,8 @@ class Keyword:
             attrs.add('is_sideeffect')
         if self.SingleForm:
             attrs.add('is_single_form')
+        if self.IsInternal:
+            attrs.add('is_internal')
 
         return ' | '.join(sorted(list(attrs)))
 

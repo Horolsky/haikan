@@ -35,9 +35,23 @@ struct Encoding
 
     Encoding() = default;
 
-    explicit Encoding(std::nullptr_t) = delete;
+    explicit Encoding(Keyword const& keyword);
 
     explicit Encoding(sol::object value);
+
+
+    Encoding(Keyword const& keyword, std::move_iterator<Encoding const*> begin, std::move_iterator<Encoding const*> const end);
+
+    template <template <class...> class Container>
+    Encoding(Keyword const& keyword, Container<Encoding> subexpressions)
+        : Encoding(keyword, std::make_move_iterator(subexpressions.begin()), std::make_move_iterator(subexpressions.end()))
+    {
+    }
+
+    Encoding(Keyword const& keyword, std::initializer_list<Encoding> subexpressions)
+        : Encoding(keyword, std::make_move_iterator(subexpressions.begin()), std::make_move_iterator(subexpressions.end()))
+    {
+    }
 
     std::size_t size() const;
 
