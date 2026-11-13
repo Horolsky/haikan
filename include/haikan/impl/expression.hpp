@@ -145,7 +145,9 @@ public:
     /// Pack expression results into an array. \see haikan::Fork.
     friend Expression operator&(Expression lhs, Expression rhs)
     {
-        return Expression(encodeNested(impl::Keyword::Fork, {lhs, rhs}));
+        // return Expression(encodeNested(impl::Keyword::Fork, {lhs, rhs}));
+        return Expression::unfold_left_assoc(Keyword::Fork, std::move(lhs), std::move(rhs));
+
     }
 
     /// Inline named function, equivalent to Fn(link + expr)

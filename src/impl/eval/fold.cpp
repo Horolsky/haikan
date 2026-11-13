@@ -26,6 +26,18 @@ template <> void Interpreter::Evaluate<Keyword::Fold>(Interpreter::Stack& stack)
         }
     }
 
+    if (frame.state != &Interpreter::Return && register_.is<bool>())
+    {
+        auto const operation = frame.expr.child(0).opcode();
+        auto const value = register_.as<bool>();
+
+        if ((operation == Keyword::And && !value) ||
+            (operation == Keyword::Or && value))
+        {
+            frame.state = &Interpreter::Return;
+        }
+    }
+
     if (frame.state != &Interpreter::Return)
     {
         sol::table source = frame.value.as<sol::table>();

@@ -107,7 +107,15 @@ static std::vector<TestEvalSample> const samples
         Vi{2,4,8,17} | Map(
             Fork(Gt(0), (Mod(2)|Eq(0)), Lt(100)) | Fold(And)),
         Vb{true,true,true,false}
-    }
+    },
+    {
+        Vb{true,false,true,true} | Fold(And),
+        false
+    },
+    {
+        17 | Lt(0) & Eq(17) & True | Fold(Or),
+        true
+    },
     // TODO: change Unfold and Recur syntax to [x, n] | Keyword(Fn)
     // {Unfold(0, Add(1))          , 4                      , {0,1,2,3,4}          },
     // {Unfold(1, Add(1))          , 4                      , {1,2,3,4,5}          },
@@ -303,4 +311,35 @@ BOOST_AUTO_TEST_CASE(IfElif)
 
     BOOST_ASSERT(result.is<std::string>());
     BOOST_CHECK_EQUAL(result.as<std::string>(), "kek");
+}
+
+
+BOOST_AUTO_TEST_CASE(FoldShortCirc)
+{
+    using namespace haikan;
+
+    Expression expr = Vb{true,false,true,true} | Fold(And);
+
+    std::stringstream ss;
+    sol::object result;
+    {
+        EvalContext ctx = EvalContext::make();
+        Interpreter vm {{}, expr, ctx};
+        result = vm.evaluate();
+        ss << '\n' << ctx.log;
+    }
+
+// TODO: fix redundant eval logs for initial (with default value)
+// expression and next one in tree, which is the same.
+// It comes from default nil argument, that is omitted in eval log, so
+// in explicit form it would be NIL | arg | ... and then arg | ...
+    auto expected = R"(
+   ┌── {true,false} | And = false
+□  {true,false,true,true} | Fold(And) = false
+)";
+
+    BOOST_CHECK_EQUAL(ss.str(), expected);
+
+    BOOST_ASSERT(result.is<bool>());
+    BOOST_CHECK(not result.as<bool>());
 }
