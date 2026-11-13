@@ -39,6 +39,7 @@ using namespace haikan::impl;
 
 using Vr = std::vector<double>;
 using Vi = std::vector<std::int64_t>;
+using Vb = std::list<bool>;
 struct TestEvalSample
 {
     Expression expr;
@@ -101,6 +102,11 @@ static std::vector<TestEvalSample> const samples
     {
         Vi{1,2,3,4,5} | Filter(Mod(2) | Eq(1)),
         Vi{1,3,5}
+    },
+    {
+        Vi{2,4,8,17} | Map(
+            Fork(Gt(0), (Mod(2)|Eq(0)), Lt(100)) | Fold(And)),
+        Vb{true,true,true,false}
     }
     // TODO: change Unfold and Recur syntax to [x, n] | Keyword(Fn)
     // {Unfold(0, Add(1))          , 4                      , {0,1,2,3,4}          },
@@ -114,8 +120,9 @@ static std::vector<TestEvalSample> const samples
 BOOST_DATA_TEST_CASE(Evaluate, TestSamples(), sample)
 {
     impl::TypeRegistry tr{};
-        tr.Add(type<std::vector<double>>);
-        tr.Add(type<std::vector<std::int64_t>>);
+        tr.Add(type<Vr>);
+        tr.Add(type<Vi>);
+        tr.Add(type<Vb>); 
         tr.init(lua::global_state());
 
     Logger::set_max_level(Logger::DEBUG);

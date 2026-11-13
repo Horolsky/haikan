@@ -1226,7 +1226,7 @@ keyword_groups:
         brief: Reduce sequence with binary operator
         details: |-
           To set a specific initial value, use composition with Push, e.g.
-          `Push(0) | Fold(Add)`
+          `x | Push(0) | Fold(Add)`
 
           For reverse operation, see Unfold
         domain: [list, fn]
