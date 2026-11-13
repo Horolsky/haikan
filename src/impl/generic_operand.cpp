@@ -7,6 +7,8 @@
 #include "haikan/impl/generic_operand.hpp"
 #include "haikan/impl/operators.hpp"
 
+#include <cmath>
+
 
 namespace haikan {
 namespace impl {
@@ -65,6 +67,22 @@ GenericOperand evaluate(F&& f, GenericOperand const& lhs, GenericOperand const& 
     {
     case sol::type::nil:   result = f(lhs.lua_state(), sol::nil, sol::nil); break;
     case sol::type::number: result = f(lhs.lua_state(), lhs.as<double>(), rhs.as<double>()); break;
+    // {
+    //     if (lhs.is<double>() || rhs.is<double>())
+    //     {
+    //         result = f(lhs.lua_state(), lhs.as<double>(), rhs.as<double>());
+    //     }
+    //     else if (lhs.is<std::uint64_t>() || rhs.is<std::uint64_t>())
+    //     {
+    //         result = f(lhs.lua_state(), lhs.as<std::uint64_t>(), rhs.as<std::uint64_t>());
+    //     }
+    //     else
+    //     {
+    //         result = f(lhs.lua_state(), lhs.as<std::int64_t>(), rhs.as<std::int64_t>());
+    //     }
+
+    //     break;
+    // }
     case sol::type::string: result = f(lhs.lua_state(), lhs.as<std::string>(), rhs.as<std::string>()); break;
     case sol::type::boolean: result = f(lhs.lua_state(), lhs.as<bool>(), rhs.as<bool>()); break;
     case sol::type::table: result = f(lhs.lua_state(), lhs.as<sol::table>(), rhs.as<sol::table>());
@@ -74,8 +92,6 @@ GenericOperand evaluate(F&& f, GenericOperand const& lhs, GenericOperand const& 
     }
     return GenericOperand{result};
 }
-
-
 
 template <class F>
 GenericOperand evaluate(F&& f, GenericOperand const& arg)
@@ -98,6 +114,7 @@ GenericOperand operator+(GenericOperand const& lhs, GenericOperand const& rhs)  
 GenericOperand operator-(GenericOperand const& lhs, GenericOperand const& rhs)  { return evaluate(op::minus()        , lhs, rhs); }
 GenericOperand operator*(GenericOperand const& lhs, GenericOperand const& rhs)  { return evaluate(op::multiply()    , lhs, rhs); }
 GenericOperand operator/(GenericOperand const& lhs, GenericOperand const& rhs)  { return evaluate(op::divide()       , lhs, rhs); }
+GenericOperand operator%(GenericOperand const& lhs, GenericOperand const& rhs)  { return evaluate(op::modulo()       , lhs, rhs); }
 GenericOperand operator==(GenericOperand const& lhs, GenericOperand const& rhs) { return evaluate(op::equal_to()     , lhs, rhs); }
 GenericOperand operator!=(GenericOperand const& lhs, GenericOperand const& rhs) { return evaluate(op::not_equal_to() , lhs, rhs); }
 GenericOperand operator<(GenericOperand const& lhs, GenericOperand const& rhs)  { return evaluate(op::less()         , lhs, rhs); }

@@ -50,6 +50,7 @@ struct GenericOperand : public sol::object
     friend GenericOperand operator-(GenericOperand const&, GenericOperand const&);
     friend GenericOperand operator*(GenericOperand const&, GenericOperand const&);
     friend GenericOperand operator/(GenericOperand const&, GenericOperand const&);
+    friend GenericOperand operator%(GenericOperand const&, GenericOperand const&);
     friend GenericOperand operator==(GenericOperand const&, GenericOperand const&);
     friend GenericOperand operator!=(GenericOperand const&, GenericOperand const&);
     friend GenericOperand operator<(GenericOperand const&, GenericOperand const&);

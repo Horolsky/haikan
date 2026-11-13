@@ -8,6 +8,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cmath>
 #include <iterator>
 #include <type_traits>
 #include <utility>
@@ -35,6 +36,13 @@ namespace haikan {
 namespace impl {
 template <class T>
 using has_boolean = std::is_convertible<T, bool>;
+
+template <class T1, class T2>
+struct has_modulo : std::integral_constant<bool,
+    boost::has_modulus<T1, T2>::value ||
+    (std::is_arithmetic<T1>::value && std::is_arithmetic<T2>::value &&
+     (std::is_floating_point<T1>::value || std::is_floating_point<T2>::value))>
+{};
 }
 
 
@@ -214,24 +222,36 @@ static sol::object evaluate(std::true_type, lua_State* L, T1&& x, T2&& y)
 }
 };
 
-struct modulo : impl::operator_base<modulo, boost::has_modulus>
+struct modulo : impl::operator_base<modulo, impl::has_modulo>
 {
 using operator_base::evaluate;
 
 template <class T1, class T2>
-static sol::object evaluate_zero(std::true_type, lua_State* L, T1&& x, T2&& y)
+static sol::object evaluate_modulo(std::true_type, lua_State* L, T1&& x, T2&& y)
+{
+    return sol::make_object(L, std::fmod(x, y));
+}
+
+template <class T1, class T2>
+static sol::object evaluate_modulo(std::false_type, lua_State* L, T1&& x, T2&& y)
+{
+    return sol::make_object(L, x % y);
+}
+
+template <class Real, class T1, class T2>
+static sol::object evaluate_zero(std::true_type, Real real, lua_State* L, T1&& x, T2&& y)
 {
     if (HAIKAN_UNLIKELY(y == 0))
     {
         return sol::make_object(L, error("zero division", impl::type_name<modulo>()));
     }
-    return sol::make_object(L, x % y);
+    return evaluate_modulo(real, L, std::forward<T1>(x), std::forward<T2>(y));
 }
 
-template <class T1, class T2>
-static sol::object evaluate_zero(std::false_type, lua_State* L, T1&& x, T2&& y)
+template <class Real, class T1, class T2>
+static sol::object evaluate_zero(std::false_type, Real real, lua_State* L, T1&& x, T2&& y)
 {
-    return sol::make_object(L, x % y);
+    return evaluate_modulo(real, L, std::forward<T1>(x), std::forward<T2>(y));
 }
 
 template <class T1, class T2>
@@ -239,8 +259,11 @@ static sol::object evaluate(std::true_type, lua_State* L, T1&& x, T2&& y)
 {
     constexpr bool x_is_arithmetic = std::is_arithmetic<std::remove_cv_t<std::remove_reference_t<T1>>>::value;
     constexpr bool y_is_arithmetic = std::is_arithmetic<std::remove_cv_t<std::remove_reference_t<T2>>>::value;
+    constexpr bool x_is_real = std::is_floating_point<std::remove_cv_t<std::remove_reference_t<T1>>>::value;
+    constexpr bool y_is_real = std::is_floating_point<std::remove_cv_t<std::remove_reference_t<T2>>>::value;
     using maybe_zero_div = std::integral_constant<bool, x_is_arithmetic && y_is_arithmetic>;
-    return evaluate_zero(maybe_zero_div{}, L, std::forward<T1>(x), std::forward<T2>(y));
+    using real = std::integral_constant<bool, x_is_real || y_is_real>;
+    return evaluate_zero(maybe_zero_div{}, real{}, L, std::forward<T1>(x), std::forward<T2>(y));
 }
 };
 

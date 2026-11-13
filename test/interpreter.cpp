@@ -37,7 +37,8 @@ using namespace haikan::impl;
 
 */
 
-using V = std::vector<double>;
+using Vr = std::vector<double>;
+using Vi = std::vector<std::int64_t>;
 struct TestEvalSample
 {
     Expression expr;
@@ -56,7 +57,7 @@ std::vector<TestEvalSample> const& TestSamples()
 static std::vector<TestEvalSample> const samples
 {
     {
-        V {1,2,3,4.25E1} | Fold(Add) & Size | Div,
+        Vr {1,2,3,4.25E1} | Fold(Add) & Size | Div,
         1.2125E1
     },
     {
@@ -86,8 +87,20 @@ static std::vector<TestEvalSample> const samples
         13
     },
     {
-        V{1,2,3,4} | Map(Mul(10)),
-        V{10,20,30,40}
+        Vr{1,2,3,4} | Map(Mul(10)),
+        Vr{10,20,30,40}
+    },
+    {
+        5 | Mod(3) | Eq(2),
+        true
+    },
+    {
+        Vr{1,2,3,4,5} | Filter(Mod(2) | Eq(1)),
+        Vr{1,3,5}
+    },
+    {
+        Vi{1,2,3,4,5} | Filter(Mod(2) | Eq(1)),
+        Vi{1,3,5}
     }
     // TODO: change Unfold and Recur syntax to [x, n] | Keyword(Fn)
     // {Unfold(0, Add(1))          , 4                      , {0,1,2,3,4}          },
@@ -102,6 +115,7 @@ BOOST_DATA_TEST_CASE(Evaluate, TestSamples(), sample)
 {
     impl::TypeRegistry tr{};
         tr.Add(type<std::vector<double>>);
+        tr.Add(type<std::vector<std::int64_t>>);
         tr.init(lua::global_state());
 
     Logger::set_max_level(Logger::DEBUG);
@@ -184,8 +198,8 @@ BOOST_AUTO_TEST_CASE(Demo2)
         tr.Add(type<std::vector<double>>);
         tr.init(lua::global_state());
 
-    using V = std::vector<double>;
-    Expression expr = V{1,2,3,4.25E1} | Fold(Add) & Size | Div;
+    using Vr = std::vector<double>;
+    Expression expr = Vr{1,2,3,4.25E1} | Fold(Add) & Size | Div;
 
     std::stringstream ss;
     sol::object result;
@@ -226,8 +240,8 @@ BOOST_AUTO_TEST_CASE(Demo3)
         tr.Add(type<std::vector<double>>);
         tr.init(lua::global_state());
 
-    using V = std::vector<double>;
-    Expression expr = V{2, 3} | Add | Mul(Pi | Add(Pi | Neg)) | Add(Q(42));
+    using Vr = std::vector<double>;
+    Expression expr = Vr{2, 3} | Add | Mul(Pi | Add(Pi | Neg)) | Add(Q(42));
 
     std::stringstream ss;
     sol::object result;
