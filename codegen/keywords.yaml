@@ -1226,7 +1226,7 @@ keyword_groups:
         brief: Reduce sequence with binary operator
         details: |-
           To set a specific initial value, use composition with Push, e.g.
-          `x | Push(0) | Fold(Add)`
+          `Push(0) | Fold(Add)`
 
           For reverse operation, see Unfold
         domain: [list, fn]
@@ -1615,14 +1615,14 @@ keyword_groups:
 
           (Add(1), Mul(2)) ≡ Tuple(Add(1), Mul(2))
 
-      - name: Fork
+      - name: Juxt
         signature: Variadic
         brief: Pack results from enveloped functions into an array
         details: |-
-          Parallel composition operator:
+          Function juxtaposition operator:
 
           ```
-          x | Fork(f1, f2, ..., fn) ↦ [f1(x0), f2(x), ..., fn(x)]
+          x | Juxt(f1, f2, ..., fn) ↦ [f1(x), f2(x), ..., fn(x)]
           ```
         domain: any
         codomain: list
@@ -1630,19 +1630,19 @@ keyword_groups:
           - label: functions
             type: list[expr]
         examples: |-
-          [1,2,3] | Fork(Reduce(Add), Size) ↦ [6,3]
-          [1,2,3] | Fork(42, Card, Id) ↦ [42, 3, [1,2,3]]
+          [1,2,3] | Juxt(Reduce(Add), Size) ↦ [6,3]
+          [1,2,3] | Juxt(42, Card, Id) ↦ [42, 3, [1,2,3]]
 
           **Infix operator form (ampersand):**
 
-          Add(1) & Mul(2) ≡ Fork(Add(1), Mul(2))
+          Add(1) & Mul(2) ≡ Juxt(Add(1), Mul(2))
           [1,2,3] | Reduce(Add) & Size ↦ [6,3]
           [1,2,3] | Reduce(Add) & Size | Div ↦ 2
 
-          Note that the Fork is not associative,
+          Note that the Juxt is not associative,
           therefore an infix operator chain is not unfolded
           as it is done for variadic Pipe or Tuple:
-          a & b & c ≡ (a & b) & c ≡ Fork(Fork(a, b), c)
+          a & b & c ≡ (a & b) & c ≡ Juxt(Juxt(a, b), c)
 
       - name: Flip
         signature: Binary

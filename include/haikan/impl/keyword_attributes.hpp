@@ -38,7 +38,7 @@ constexpr std::uint32_t is_quote       = 1 << 10;
 constexpr std::uint32_t is_preproc     = 1 << 11;
 constexpr std::uint32_t is_error       = 1 << 12;
 constexpr std::uint32_t is_pipe        = 1 << 13;
-constexpr std::uint32_t is_fork        = 1 << 14;
+constexpr std::uint32_t is_juxt        = 1 << 14;
 constexpr std::uint32_t is_overload    = 1 << 15;
 constexpr std::uint32_t is_infix_chain = 1 << 16;
 constexpr std::uint32_t is_autogen     = 1 << 17;
@@ -196,7 +196,7 @@ constexpr std::uint32_t keyword_attributes(Keyword const& oc)
     case Keyword::Saturate: return is_hiord | is_no_eval | is_predicate | is_variadic;
     case Keyword::Pipe: return is_hiord | is_no_eval | is_pipe | is_variadic;
     case Keyword::Tuple: return is_hiord | is_no_eval | is_variadic;
-    case Keyword::Fork: return is_fork | is_hiord | is_no_eval | is_variadic;
+    case Keyword::Juxt: return is_hiord | is_juxt | is_no_eval | is_variadic;
     case Keyword::Flip: return is_binary | is_hiord | is_no_eval;
     case Keyword::Dbg: return is_binary | is_hiord | is_no_eval;
     case Keyword::Eval: return is_binary | is_hiord | is_no_eval;

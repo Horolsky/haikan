@@ -2028,34 +2028,34 @@ Pack expressions into an tuple without evaluation
 
  * `(Add(1), Mul(2)) `$\equiv$` Tuple(Add(1), Mul(2))`
 
-### Fork
+### Juxt
 
 *Signature*: [Variadic](../user-guide/expressions.md#syntax)
 
 
 Pack results from enveloped functions into an array
 
-Parallel composition operator:
+Function juxtaposition operator:
 
 ```
-x | Fork(f1, f2, ..., fn) ↦ [f1(x0), f2(x), ..., fn(x)]
+x | Juxt(f1, f2, ..., fn) ↦ [f1(x), f2(x), ..., fn(x)]
 ```
 
 *Examples*:
 
- * `[1,2,3] | Fork(Reduce(Add), Size) `$\mapsto$` [6,3]`
- * `[1,2,3] | Fork(42, Card, Id) `$\mapsto$` [42, 3, [1,2,3]]`
+ * `[1,2,3] | Juxt(Reduce(Add), Size) `$\mapsto$` [6,3]`
+ * `[1,2,3] | Juxt(42, Card, Id) `$\mapsto$` [42, 3, [1,2,3]]`
 
 **Infix operator form (ampersand):**
 
- * `Add(1) & Mul(2) `$\equiv$` Fork(Add(1), Mul(2))`
+ * `Add(1) & Mul(2) `$\equiv$` Juxt(Add(1), Mul(2))`
  * `[1,2,3] | Reduce(Add) & Size `$\mapsto$` [6,3]`
  * `[1,2,3] | Reduce(Add) & Size | Div `$\mapsto$` 2`
 
-Note that the Fork is not associative,
+Note that the Juxt is not associative,
 therefore an infix operator chain is not unfolded
 as it is done for variadic Pipe or Tuple:
- * `a & b & c `$\equiv$` (a & b) & c `$\equiv$` Fork(Fork(a, b), c)`
+ * `a & b & c `$\equiv$` (a & b) & c `$\equiv$` Juxt(Juxt(a, b), c)`
 
 ### Flip
 

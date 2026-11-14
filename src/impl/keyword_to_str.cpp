@@ -169,7 +169,7 @@ char const* keyword_to_str(Keyword const& kw)
     case Keyword::Saturate: { return "Saturate"; break; }
     case Keyword::Pipe: { return "Pipe"; break; }
     case Keyword::Tuple: { return "Tuple"; break; }
-    case Keyword::Fork: { return "Fork"; break; }
+    case Keyword::Juxt: { return "Juxt"; break; }
     case Keyword::Flip: { return "Flip"; break; }
     case Keyword::Dbg: { return "Dbg"; break; }
     case Keyword::Eval: { return "Eval"; break; }

@@ -77,7 +77,7 @@ static std::vector<TestEvalSample> const samples
     },
     {
         Vi{2,4,8,17} | Map(
-            Fork(Gt(0), (Mod(2)|Eq(0)), Lt(100)) | Fold(And)),
+            Juxt(Gt(0), (Mod(2)|Eq(0)), Lt(100)) | Fold(And)),
         Vb{true,true,true,false}
     },
     {
@@ -85,7 +85,7 @@ static std::vector<TestEvalSample> const samples
         false
     },
     {
-        17 | Fork(Lt(0), Eq(17), True) | Fold(Or),
+        17 | Juxt(Lt(0), Eq(17), True) | Fold(Or),
         true
     },
 
@@ -324,7 +324,7 @@ static std::vector<TestEvalSample> const samples
     // {L{} | Slide(-1) | Kwrd   , "Err"   },
     // {L{} | Try(Slide(-1))     , nullptr },
 
-    // {L{2,2,3,3} | Fork(Size|4, Size, Card) , {true, 4, 2}   },
+    // {L{2,2,3,3} | Juxt(Size|4, Size, Card) , {true, 4, 2}   },
     // {L{2,2,3,3} | (Size|4) & Size & Card   , {{true, 4}, 2} },
     // {L{1,2,3}   | At(0) & At(2)            , {1,3}          },
     // {L{2,2,3,3} | Reduce(Add) & Size | Div , 2.5            },

@@ -180,7 +180,7 @@ impl::SignatureVariadic<::haikan::impl::Keyword::All> const HAIKAN_KEYWORD_INIT 
 impl::SignatureVariadic<::haikan::impl::Keyword::Saturate> const HAIKAN_KEYWORD_INIT Saturate = {};
 impl::SignatureVariadic<::haikan::impl::Keyword::Pipe> const HAIKAN_KEYWORD_INIT Pipe = {};
 impl::SignatureVariadic<::haikan::impl::Keyword::Tuple> const HAIKAN_KEYWORD_INIT Tuple = {};
-impl::SignatureVariadic<::haikan::impl::Keyword::Fork> const HAIKAN_KEYWORD_INIT Fork = {};
+impl::SignatureVariadic<::haikan::impl::Keyword::Juxt> const HAIKAN_KEYWORD_INIT Juxt = {};
 impl::SignatureBinary<::haikan::impl::Keyword::Flip> const HAIKAN_KEYWORD_INIT Flip = {};
 impl::SignatureBinary<::haikan::impl::Keyword::Dbg> const HAIKAN_KEYWORD_INIT Dbg = {};
 impl::SignatureBinary<::haikan::impl::Keyword::Dbg> const HAIKAN_KEYWORD_INIT Debug = Dbg;

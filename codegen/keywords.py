@@ -131,8 +131,8 @@ class Keyword:
             attrs.add('is_no_eval')
         if self.Name == 'Pipe':
             attrs.add('is_pipe')
-        if self.Name == 'Fork':
-            attrs.add('is_fork')
+        if self.Name == 'Juxt':
+            attrs.add('is_juxt')
         if self.Name == 'Op':
             attrs.add('is_overload')
         if self.Name in ('Rand', 'RandInt', 'EnvStore', 'EnvLoad'):

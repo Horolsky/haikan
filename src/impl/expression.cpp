@@ -86,7 +86,7 @@ Expression operator<<(Expression link, Expression referent)
 
 // Expression operator&(Expression lhs, Expression rhs)
 // {
-//     return Expression(Expression::encodeNested(Keyword::Fork, {lhs, rhs}));
+//     return Expression(Expression::encodeNested(Keyword::Juxt, {lhs, rhs}));
 
 // }
 

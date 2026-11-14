@@ -52,7 +52,7 @@ template <> void Interpreter::Evaluate<Keyword::All>(Interpreter::Stack&);
 template <> void Interpreter::Evaluate<Keyword::Saturate>(Interpreter::Stack&);
 template <> void Interpreter::Evaluate<Keyword::Pipe>(Interpreter::Stack&);
 template <> void Interpreter::Evaluate<Keyword::Tuple>(Interpreter::Stack&);
-template <> void Interpreter::Evaluate<Keyword::Fork>(Interpreter::Stack&);
+template <> void Interpreter::Evaluate<Keyword::Juxt>(Interpreter::Stack&);
 template <> void Interpreter::Evaluate<Keyword::Flip>(Interpreter::Stack&);
 template <> void Interpreter::Evaluate<Keyword::Dbg>(Interpreter::Stack&);
 template <> void Interpreter::Evaluate<Keyword::Eval>(Interpreter::Stack&);
@@ -98,7 +98,7 @@ void Interpreter::DispatchHiOrd()
     case Keyword::Saturate: Evaluate<Keyword::Saturate>(stack_); break;
     case Keyword::Pipe: Evaluate<Keyword::Pipe>(stack_); break;
     case Keyword::Tuple: Evaluate<Keyword::Tuple>(stack_); break;
-    case Keyword::Fork: Evaluate<Keyword::Fork>(stack_); break;
+    case Keyword::Juxt: Evaluate<Keyword::Juxt>(stack_); break;
     case Keyword::Flip: Evaluate<Keyword::Flip>(stack_); break;
     case Keyword::Dbg: Evaluate<Keyword::Dbg>(stack_); break;
     case Keyword::Eval: Evaluate<Keyword::Eval>(stack_); break;

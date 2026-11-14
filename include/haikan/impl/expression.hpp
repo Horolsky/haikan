@@ -142,10 +142,10 @@ public:
         return Expression::unfold_left_assoc(Keyword::Tuple, std::move(lhs), std::move(rhs));
     }
 
-    /// Pack expression results into an array. \see haikan::Fork.
+    /// Pack expression results into an array. \see haikan::Juxt.
     friend Expression operator&(Expression lhs, Expression rhs)
     {
-        return Expression(encodeNested(impl::Keyword::Fork, {lhs, rhs}));
+        return Expression(encodeNested(impl::Keyword::Juxt, {lhs, rhs}));
     }
 
     /// Inline named function, equivalent to Fn(link + expr)

@@ -457,8 +457,8 @@ enum class Keyword : std::uint64_t
     /// Tuple 142
     Tuple,
 
-    /// Fork 143
-    Fork,
+    /// Juxt 143
+    Juxt,
 
     /// Flip 144
     Flip,

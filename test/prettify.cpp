@@ -61,8 +61,8 @@ BOOST_AUTO_TEST_CASE(PrettifyExpression)
     // for non-associative Tuple
     TEST_PRETIFY( Tuple(Tuple((Q, Q), Q), Q)                        )
 
-    // no infix sugar for singleton Pipe and Fork
-    TEST_PRETIFY(   Pipe(Fork(All))                                 )
+    // no infix sugar for singleton Pipe and Juxt
+    TEST_PRETIFY(   Pipe(Juxt(All))                                 )
     TEST_PRETIFY(   Pipe(All & Any)                                 )
     TEST_PRETIFY(   Saturate(Eq(23), 42, Any(27, 13) | Not)         )
 

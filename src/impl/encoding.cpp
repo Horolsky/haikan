@@ -540,7 +540,7 @@ bool EncodingView::is_const() const
         }
         return false;
     }
-    else if ((a & attr::is_fork) && (size() > 1))
+    else if ((a & attr::is_juxt) && (size() > 1))
     {
         std::size_t next{1};
         while(next < size())

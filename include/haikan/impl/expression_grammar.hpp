@@ -38,7 +38,7 @@ struct ExpressionGrammar : boost::spirit::karma::grammar<OutputIterator, Encodin
         auto const keyword_to_string  = phoenix::bind(&ExpressionGrammar::keyword_to_string, _val);
         auto const children           = phoenix::bind(&EncodingView::children, _val);
         auto const is_infix_pipe      = phoenix::bind(&ExpressionGrammar::is_infix_pipe, _val);
-        auto const is_infix_fork      = phoenix::bind(&ExpressionGrammar::is_infix_fork, _val);
+        auto const is_infix_juxt      = phoenix::bind(&ExpressionGrammar::is_infix_juxt, _val);
         auto const is_infix_tuple     = phoenix::bind(&ExpressionGrammar::is_infix_tuple, _val);
         auto const is_complete_flip   = phoenix::bind(&ExpressionGrammar::is_complete_flip, _val);
 
@@ -48,7 +48,7 @@ struct ExpressionGrammar : boost::spirit::karma::grammar<OutputIterator, Encodin
             | eps(is_link)          << karma::lazy(serialize)
             | eps(is_valid_link)    << link[_1 = children]
             | eps(is_infix_pipe)    << pipe[_1 = children]
-            | eps(is_infix_fork)    << fork[_1 = children]
+            | eps(is_infix_juxt)    << juxt[_1 = children]
             | eps(is_infix_tuple)   << tuple[_1 = children]
             | eps(is_complete_flip) << flip[_1 = children]
             | keyword;
@@ -59,19 +59,19 @@ struct ExpressionGrammar : boost::spirit::karma::grammar<OutputIterator, Encodin
             | eps(is_link)          << karma::lazy(serialize)
             | eps(is_valid_link)    << nested_link[_1 = children]
             | eps(is_infix_pipe)    << nested_pipe[_1 = children]
-            | eps(is_infix_fork)    << nested_fork[_1 = children]
+            | eps(is_infix_juxt)    << nested_juxt[_1 = children]
             | eps(is_infix_tuple)   << tuple[_1 = children]
             | eps(is_complete_flip) << flip[_1 = children]
             | keyword;
 
         pipe         = subexpr % lit(" | ");
-        fork         = subexpr % lit(" & ");
+        juxt         = subexpr % lit(" & ");
         link         = subexpr % lit(" << ");
         flip         = lit('~') << subexpr;
         tuple        = lit('(') << subexpr % lit(", ") << ')';
         nested_link  = lit('(') << subexpr % lit(" << ") << ')';
         nested_pipe  = lit('(') << subexpr % lit(" | ") << ')';
-        nested_fork  = lit('(') << subexpr % lit(" & ") << ')';
+        nested_juxt  = lit('(') << subexpr % lit(" & ") << ')';
         parameters   = lit('(') << -(start % lit(", ")) << ')';
 
         keyword = string[_1 = keyword_to_string]
@@ -99,9 +99,9 @@ private:
         return is(expression, Keyword::Pipe) && expression.arity() > 1;
     }
 
-    static bool is_infix_fork(EncodingView const& expression)
+    static bool is_infix_juxt(EncodingView const& expression)
     {
-        return is(expression, Keyword::Fork) && expression.arity() == 2;
+        return is(expression, Keyword::Juxt) && expression.arity() == 2;
     }
 
     static bool is_infix_tuple(EncodingView const& expression)
@@ -131,7 +131,7 @@ private:
 
     boost::spirit::karma::rule<OutputIterator, EncodingView()> start, subexpr, keyword;
     boost::spirit::karma::rule<OutputIterator, std::vector<EncodingView>()>
-        parameters, fork, pipe, tuple, link, flip, nested_pipe, nested_fork, nested_link;
+        parameters, juxt, pipe, tuple, link, flip, nested_pipe, nested_juxt, nested_link;
 };
 
 

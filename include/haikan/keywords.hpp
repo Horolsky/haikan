@@ -742,12 +742,12 @@ extern impl::SignatureVariadic<::haikan::impl::Keyword::Tuple> const Tuple;
 
 /// \brief Pack results from enveloped functions into an array
 /// \details
-/// Parallel composition operator:
+/// Function juxtaposition operator:
 /// 
 /// ```
-/// x | Fork(f1, f2, ..., fn) ↦ [f1(x0), f2(x), ..., fn(x)]
+/// x | Juxt(f1, f2, ..., fn) ↦ [f1(x), f2(x), ..., fn(x)]
 /// ```
-extern impl::SignatureVariadic<::haikan::impl::Keyword::Fork> const Fork;
+extern impl::SignatureVariadic<::haikan::impl::Keyword::Juxt> const Juxt;
 
 /// \brief Flip design-time and eval-time parameters.
 /// \details

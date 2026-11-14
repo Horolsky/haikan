@@ -5,7 +5,7 @@
 namespace haikan {
 namespace impl {
 
-template <> void Interpreter::Evaluate<Keyword::Fork>(Interpreter::Stack& stack)
+template <> void Interpreter::Evaluate<Keyword::Juxt>(Interpreter::Stack& stack)
 {
     auto& frame = stack.front();
 
