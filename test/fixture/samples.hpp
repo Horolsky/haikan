@@ -24,4 +24,9 @@ struct TestEvalSample
 };
 
 
+using Vr = std::vector<double>;
+using Vi = std::vector<std::int64_t>;
+using Vb = std::list<bool>;
+
+
 std::vector<TestEvalSample> const& TestSamples();
