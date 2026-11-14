@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(PrettifyExpressionTostaticBuffer)
     char buff[100];
 
     e.prettify_to(buff);
-    BOOST_CHECK_EQUAL(buff, "(Fold(Add) & Size) | Div | Eq(2.5E0) | Not");
+    BOOST_CHECK_EQUAL(buff, "(Fold(Add) & Size) | Div | Eq(2.5) | Not");
 }
 
 
@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(PrettifyExpression)
     { std::stringstream ss; (e).prettify_to(ss); \
         BOOST_CHECK_EQUAL(ss.str(), #e); }
 
-    TEST_PRETIFY(   (Fold(Add) & Size) | Div | Eq(2.5E0) | Not      )
+    TEST_PRETIFY(   (Fold(Add) & Size) | Div | Eq(2.5) | Not      )
     TEST_PRETIFY(   Eq(Pi | Div(2))                                 )
     TEST_PRETIFY(   "%s%d" | Fmt(Pi | Div(2), 2 | Add(2))           )
     TEST_PRETIFY(   Recur(42, Map(Add(2) | Div(E)))                 )

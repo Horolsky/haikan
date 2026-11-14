@@ -85,7 +85,7 @@ static std::vector<TestEvalSample> const samples
         false
     },
     {
-        17 | Lt(0) & Eq(17) & True | Fold(Or),
+        17 | Fork(Lt(0), Eq(17), True) | Fold(Or),
         true
     },
 
