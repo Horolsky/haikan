@@ -1,0 +1,46 @@
+/**
+ * @file
+ * @copyright (c) Copyright 2024-2025 Zenseact AB
+ * @license SPDX-License-Identifier: Apache-2.0
+ */
+
+#pragma once
+
+#include <array>
+#include <functional>
+#include <boost/json.hpp>
+
+namespace haikan {
+namespace impl {
+
+/// @brief Slice array with inclusive boundaries and subsignal cherry-pick
+/// @param src source array
+/// @param jp JSON Pointer for subsignal cherry-pick
+/// @param start start index, 0-based, inclusive; negative value yields reverse index;
+/// @param stop stop index, 0-based, inclusive; negative value yields reverse index;
+/// @param step step value, negative value yields reverse iteration
+/// @return slice array
+boost::json::array slice(boost::json::array const& src, boost::json::string_view jp, std::int64_t const start, std::int64_t const stop, std::int64_t const step);
+
+/// @brief Slice array with inclusive boundaries
+/// @param src source array
+/// @param start start index, 0-based, inclusive; negative value yields reverse index;
+/// @param stop stop index, 0-based, inclusive; negative value yields reverse index;
+/// @param step step value, negative value yields reverse iteration
+/// @return slice array
+boost::json::array slice(boost::json::array const& src, std::int64_t const start, std::int64_t const stop, std::int64_t const step);
+
+boost::json::string slice(boost::json::string_view const src, std::int64_t const start, std::int64_t const stop, std::int64_t const step);
+
+using js_array_slice_gen = std::function<boost::json::array::iterator()>;
+using js_array_slice_const_gen = std::function<boost::json::array::const_iterator()>;
+using js_string_slice_gen = std::function<boost::json::string_view::const_iterator()>;
+
+js_array_slice_gen             make_slice_generator(boost::json::array& src           , std::int64_t const start, std::int64_t const stop, std::int64_t const step);
+js_array_slice_const_gen make_slice_const_generator(boost::json::array const& src     , std::int64_t const start, std::int64_t const stop, std::int64_t const step);
+js_string_slice_gen      make_slice_const_generator(boost::json::string_view const src, std::int64_t const start, std::int64_t const stop, std::int64_t const step);
+
+std::array<std::int64_t, 3> str_to_slice_idx(boost::json::string_view slice_expr);
+
+} // namespace impl
+} // namespace haikan

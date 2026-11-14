@@ -1,0 +1,9 @@
+--- a/third_party/libc/glibc/helpers.bzl
++++ b/third_party/libc/glibc/helpers.bzl
+@@ -1,5 +1,6 @@
+ def glibc_includes(cpu):
+ 
+     x86_64_variant = [
+         "sysdeps/unix/sysv/linux/x86_64/64".format(cpu),
++        "sysdeps/x86",
+     ] if cpu == "x86_64" else []
